@@ -1,0 +1,84 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#262b32"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/menu_settings"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="设置"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/menu_about"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="关于"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/menu_exit"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="退出"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/menu_font_color"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="字体颜色"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/menu_backgroud_color"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="背景颜色"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+</LinearLayout>

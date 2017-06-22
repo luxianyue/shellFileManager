@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">FileManager2</string>
+    <string name="sort_by_size_max">大小 (从大到小)</string>
+    <string name="sort_by_size_min">大小 (从小到大)</string>
+    <string name="sort_name_max">名称 (从大到小)</string>
+    <string name="sort_by_name_min">名称 (从小到大)</string>
+    <string name="sort_by_date_old">日期 (最旧)</string>
+    <string name="sort_by_date_new">日期 (最新)</string>
+    <string name="sort_by_type">类型</string>
+    <string name="select_file_sort">选择排序模式</string>
+</resources>

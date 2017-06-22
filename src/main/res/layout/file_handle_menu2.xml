@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearlayout_filehandle2"
+    android:layout_width="match_parent"
+    android:layout_height="35dp"
+    android:background="#262b32"
+    android:orientation="horizontal"
+    android:visibility="gone">
+
+    <TextView
+        android:id="@+id/tv_paste"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="复制到此"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="15dp"
+        android:layout_gravity="center_vertical"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/tv_create"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="新建"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="15dp"
+        android:layout_gravity="center_vertical"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/tv_cancle"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="取消"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="15dp"
+        android:layout_gravity="center_vertical"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/tv_property2"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="属性"
+        android:textColor="#ffffff" />
+</LinearLayout>

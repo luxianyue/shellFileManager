@@ -1,0 +1,66 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#262b32"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="新建..."
+        android:textColor="#ffffff"
+        android:textSize="20sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/floor_menu_add_file"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="文件"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/floor_menu_add_folder"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="文件夹"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="SD卡"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+</LinearLayout>

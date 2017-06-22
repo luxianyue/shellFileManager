@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearlayout_filehandle1"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#262b32"
+    android:visibility="gone">
+
+    <ImageView
+        android:id="@+id/image_copy"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/floor_menu_height"
+        android:layout_marginLeft="8dp"
+        android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
+        android:clickable="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_menu_copy" />
+
+    <ImageView
+        android:id="@+id/image_cut"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/floor_menu_height"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
+        android:clickable="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_menu_cut" />
+
+    <ImageView
+        android:id="@+id/image_delete"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/floor_menu_height"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
+        android:clickable="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_menu_delete" />
+
+    <ImageView
+        android:id="@+id/image_rename"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/floor_menu_height"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
+        android:clickable="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_menu_edit" />
+
+    <CheckBox
+        android:id="@+id/checkbox_handle_menu"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/floor_menu_height"
+        android:layout_weight="1"
+        android:button="@null"
+        android:drawableLeft="@drawable/btn_check_holo_light2"
+      />
+
+    <ImageView
+        android:id="@+id/image_property"
+        android:layout_width="1dp"
+        android:layout_height="@dimen/floor_menu_height"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
+        android:clickable="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_menu_about" />
+
+    <ImageView
+        android:id="@+id/image_menu"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/floor_menu_height"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
+        android:clickable="true"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_menu_menu" />
+</LinearLayout>

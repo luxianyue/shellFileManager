@@ -1,0 +1,127 @@
+<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#262b32"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/select_file_sort"
+        android:textColor="#ffffff"
+        android:textSize="20sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <RadioButton
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floor_menu_sort_radio_height"
+        android:button="@null"
+        android:drawableRight="@drawable/btn_radio_holo_dark"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="@string/sort_by_type"
+        android:textColor="#ffffff"
+        android:textSize="@dimen/floor_menu_front_size" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <RadioButton
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floor_menu_sort_radio_height"
+        android:button="@null"
+        android:drawableRight="@drawable/btn_radio_holo_dark"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="@string/sort_by_date_new"
+        android:textColor="#ffffff"
+        android:textSize="@dimen/floor_menu_front_size" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <RadioButton
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floor_menu_sort_radio_height"
+        android:button="@null"
+        android:drawableRight="@drawable/btn_radio_holo_dark"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="@string/sort_by_date_old"
+        android:textColor="#ffffff"
+        android:textSize="@dimen/floor_menu_front_size" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <RadioButton
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floor_menu_sort_radio_height"
+        android:button="@null"
+        android:drawableRight="@drawable/btn_radio_holo_dark"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="@string/sort_by_name_min"
+        android:textColor="#ffffff"
+        android:textSize="@dimen/floor_menu_front_size" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <RadioButton
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floor_menu_sort_radio_height"
+        android:button="@null"
+        android:drawableRight="@drawable/btn_radio_holo_dark"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="@string/sort_name_max"
+        android:textColor="#ffffff"
+        android:textSize="@dimen/floor_menu_front_size" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <RadioButton
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floor_menu_sort_radio_height"
+        android:button="@null"
+        android:drawableRight="@drawable/btn_radio_holo_dark"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="@string/sort_by_size_min"
+        android:textColor="#ffffff"
+        android:textSize="@dimen/floor_menu_front_size" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <RadioButton
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floor_menu_sort_radio_height"
+        android:button="@null"
+        android:drawableRight="@drawable/btn_radio_holo_dark"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp"
+        android:text="@string/sort_by_size_max"
+        android:textColor="#ffffff"
+        android:textSize="@dimen/floor_menu_front_size" />
+</RadioGroup>
