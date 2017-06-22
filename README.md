@@ -1,0 +1,2 @@
+# shellFileManager
+基于命令的方式类似于RootExplorer的android平台文件管理器
