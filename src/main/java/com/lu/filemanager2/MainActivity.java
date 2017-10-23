@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -15,31 +14,40 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.lu.App;
 import com.lu.adapter.FragmentAdapter;
+import com.lu.activity.BasedActivity;
 import com.lu.fragment.ContentFragment;
+import com.lu.model.FileItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class MainActivity extends BasedActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
 
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private TabLayout mTabLayout;
+    private ViewPager mViewPager;
 
-    private LinearLayout linearLayoutFloorMenuBar;
-    private LinearLayout linearLayoutFileHandleMenu1;
-    private LinearLayout linearLayoutFileHandleMenu2;
+    private LinearLayout mLinearLayoutFloorMenuBar;
+    private LinearLayout mLinearLayoutFileHandleMenu1;
+    private LinearLayout mLinearLayoutFileHandleMenu2;
 
-    private PopupWindow popupWindowFloorBarMenu;
-    private PopupWindow popupWindowFloorBarAdd;
-    private PopupWindow popupWindowFloorBarSort;
-    private PopupWindow popupWindowFloorBarSearch;
+    private PopupWindow mPopupWindowFloorBarMenu;
+    private PopupWindow mPopupWindowFloorBarAdd;
+    private PopupWindow mPopupWindowFloorBarSort;
+    private PopupWindow mPopupWindowFloorBarSearch;
 
-    private int[] clickLocation;
+    private int[] mClickLocation;
     private static final int menu = 1;
     private static final int add = 2;
+
+    private boolean isFloorMenu2Mode;
+
+    private Set<FileItem> mCheckItems;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,7 +56,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         initLayout();
         setListener();
-        tabLayout.setupWithViewPager(viewPager);
+
+        App.initMyLs();
+
+        mTabLayout.setupWithViewPager(mViewPager);
         List<Fragment> list = new ArrayList<>();
         list.add(new ContentFragment());
         list.add(new ContentFragment());
@@ -59,15 +70,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         list2.add("title2");
         //list2.add("title1");
         //list2.add("title2");
-        viewPager.setAdapter(new FragmentAdapter(list, list2, getSupportFragmentManager()));
+        mViewPager.setAdapter(new FragmentAdapter(list, list2, getSupportFragmentManager()));
     }
 
     private void initLayout() {
-        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        viewPager = (ViewPager) findViewById(R.id.view_pager);
-        linearLayoutFloorMenuBar = (LinearLayout) findViewById(R.id.linearlayout_floor_menu_bar);
-        linearLayoutFileHandleMenu1 = (LinearLayout) findViewById(R.id.linearlayout_filehandle1);
-        linearLayoutFileHandleMenu2 = (LinearLayout) findViewById(R.id.linearlayout_filehandle2);
+        mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        mViewPager = (ViewPager) findViewById(R.id.view_pager);
+        mLinearLayoutFloorMenuBar = (LinearLayout) findViewById(R.id.linearlayout_floor_menu_bar);
+        mLinearLayoutFileHandleMenu1 = (LinearLayout) findViewById(R.id.linearlayout_filehandle1);
+        mLinearLayoutFileHandleMenu2 = (LinearLayout) findViewById(R.id.linearlayout_filehandle2);
     }
 
     private void setListener() {
@@ -82,6 +93,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.image_cut).setOnClickListener(this);
         findViewById(R.id.image_delete).setOnClickListener(this);
         findViewById(R.id.image_rename).setOnClickListener(this);
+
+        findViewById(R.id.tv_create).setOnClickListener(this);
+        findViewById(R.id.tv_paste).setOnClickListener(this);
+        findViewById(R.id.tv_cancle).setOnClickListener(this);
+
         ((CheckBox)findViewById(R.id.checkbox_handle_menu)).setOnCheckedChangeListener(this);
         findViewById(R.id.image_property).setOnClickListener(this);
         findViewById(R.id.image_menu).setOnClickListener(this);
@@ -98,19 +114,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case KeyEvent.KEYCODE_BACK:
                 //处理返回键
                 //找到当前显示的fragment
-                for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-                    if (fragment != null && fragment instanceof ContentFragment) {
-                        if (((ContentFragment) fragment).isShowToUser()) {
-                            if (((ContentFragment) fragment).onKeyBack()) {
-                                return true;
-                            }
-                            break;
-                        }
-                    }
+                if (checkBoxIsCheck()) {
+                    return true;
                 }
-
+                ContentFragment contentFragment = getCurrentShowFragment();
+                if (contentFragment.onKeyBack()) {
+                    return true;
+                }
+                if (contentFragment.isItemOpera()) {
+                    setShowWhichFoolMenuBar(0);
+                    contentFragment.operaItem(false, 0);
+                    contentFragment.cancelCheckedItem();
+                    return true;
+                }
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    public boolean checkBoxIsCheck() {
+        CheckBox box = (CheckBox) findViewById(R.id.checkbox_handle_menu);
+        if (box.isChecked()) {
+            box.setChecked(false);
+            return true;
+        }
+        return false;
+    }
+
+    private ContentFragment getCurrentShowFragment() {
+        for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+            if (fragment != null && fragment instanceof ContentFragment) {
+                if (((ContentFragment)fragment).isShowToUser()) {
+                    return (ContentFragment) fragment;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -119,81 +157,106 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.floor_menu_add:
                 int location[] = getIntArray();
                 v.getLocationOnScreen(location);
-                if (popupWindowFloorBarAdd == null) {
+                if (mPopupWindowFloorBarAdd == null) {
                     DisplayMetrics metrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    popupWindowFloorBarAdd = initPopupWindow(R.layout.floor_menu_add, (int) (metrics.widthPixels / ((float) 2.3)));
-                    popupWindowFloorBarAdd.getContentView().findViewById(R.id.floor_menu_add_file).setOnClickListener(this);
-                    popupWindowFloorBarAdd.getContentView().findViewById(R.id.floor_menu_add_folder).setOnClickListener(this);
+                    mPopupWindowFloorBarAdd = initPopupWindow(R.layout.floor_menu_add, (int) (metrics.widthPixels / ((float) 2.3)));
+                    mPopupWindowFloorBarAdd.getContentView().findViewById(R.id.floor_menu_add_file).setOnClickListener(this);
+                    mPopupWindowFloorBarAdd.getContentView().findViewById(R.id.floor_menu_add_folder).setOnClickListener(this);
                 }
-                popupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location[0] + v.getWidth()/2  - 1, location[1] - popupWindowFloorBarAdd.getHeight() - 10);
+                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location[0] + v.getWidth()/2  - 1, location[1] - mPopupWindowFloorBarAdd.getHeight() - 10);
                 break;
             case R.id.floor_menu_search:
                 int locationSearch[] = getIntArray();
                 v.getLocationOnScreen(locationSearch);
-                if (popupWindowFloorBarSearch == null) {
+                if (mPopupWindowFloorBarSearch == null) {
                     DisplayMetrics metrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    popupWindowFloorBarSearch = initPopupWindow(R.layout.floor_menu_search, (int) (metrics.widthPixels*1.5 / ((float) 2)));
+                    mPopupWindowFloorBarSearch = initPopupWindow(R.layout.floor_menu_search, (int) (metrics.widthPixels*1.5 / ((float) 2)));
                 }
-                popupWindowFloorBarSearch.showAtLocation(v, Gravity.CENTER_HORIZONTAL, 0, v.getHeight()/2);
+                mPopupWindowFloorBarSearch.showAtLocation(v, Gravity.CENTER_HORIZONTAL, 0, v.getHeight()/2);
                 break;
             case R.id.floor_menu_sort:
                 int locationSort[] = getIntArray();
                 v.getLocationOnScreen(locationSort);
-                if (popupWindowFloorBarSort == null) {
+                if (mPopupWindowFloorBarSort == null) {
                     DisplayMetrics metrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    popupWindowFloorBarSort = initPopupWindow(R.layout.floor_menu_sort, (int) (metrics.widthPixels*1.5 / ((float) 2)));
+                    mPopupWindowFloorBarSort = initPopupWindow(R.layout.floor_menu_sort, (int) (metrics.widthPixels*1.5 / ((float) 2)));
                 }
-                popupWindowFloorBarSort.showAtLocation(v, Gravity.CENTER, 0, 0);
+                mPopupWindowFloorBarSort.showAtLocation(v, Gravity.CENTER, 0, 0);
                 break;
             case R.id.floor_menu_close:
                 break;
             case R.id.floor_menu_refresh:
+                getCurrentShowFragment().refresh();
                 break;
             case R.id.floor_menu_menu:
                 int location2[] = getIntArray();
                 v.getLocationOnScreen(location2);
-                if (popupWindowFloorBarMenu == null) {
+                if (mPopupWindowFloorBarMenu == null) {
                     DisplayMetrics metrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(metrics);
-                    popupWindowFloorBarMenu = initPopupWindow(R.layout.app_menu, (int) (metrics.widthPixels / ((float) 2.3)));
-                    popupWindowFloorBarMenu.getContentView().findViewById(R.id.menu_settings).setOnClickListener(this);
-                    popupWindowFloorBarMenu.getContentView().findViewById(R.id.menu_about).setOnClickListener(this);
-                    popupWindowFloorBarMenu.getContentView().findViewById(R.id.menu_exit).setOnClickListener(this);
+                    mPopupWindowFloorBarMenu = initPopupWindow(R.layout.app_menu, (int) (metrics.widthPixels / ((float) 2.3)));
+                    mPopupWindowFloorBarMenu.getContentView().findViewById(R.id.menu_settings).setOnClickListener(this);
+                    mPopupWindowFloorBarMenu.getContentView().findViewById(R.id.menu_about).setOnClickListener(this);
+                    mPopupWindowFloorBarMenu.getContentView().findViewById(R.id.menu_exit).setOnClickListener(this);
                 }
-                popupWindowFloorBarMenu.showAtLocation(v, Gravity.NO_GRAVITY, location2[0] + v.getWidth() - popupWindowFloorBarMenu.getWidth() - 1, location2[1] - popupWindowFloorBarMenu.getHeight() - 5);
+                mPopupWindowFloorBarMenu.showAtLocation(v, Gravity.NO_GRAVITY, location2[0] + v.getWidth() - mPopupWindowFloorBarMenu.getWidth() - 1, location2[1] - mPopupWindowFloorBarMenu.getHeight() - 5);
                 break;
             case R.id.image_copy:
-                System.out.println("image_copy");
+                System.out.println("menu1_image_copy");
+                mCheckItems = getCurrentShowFragment().getCheckedItem();
+                isFloorMenu2Mode = true;
+                ((TextView)findViewById(R.id.tv_paste)).setText("复制到此");
+                setShowWhichFoolMenuBar(2);
+                getCurrentShowFragment().operaItem(true, 0);
                 break;
             case R.id.image_cut:
-                System.out.println("image_cut");
+                System.out.println("menu1_image_cut");
+                mCheckItems = getCurrentShowFragment().getCheckedItem();
+                isFloorMenu2Mode = true;
+                ((TextView)findViewById(R.id.tv_paste)).setText("移动到此");
+                setShowWhichFoolMenuBar(2);
+                getCurrentShowFragment().operaItem(true, 0);
+                //getCurrentShowFragment().cancelAllCheckedItem();
                 break;
             case R.id.image_delete:
-                System.out.println("image_delete");
+                System.out.println("menu1_image_delete");
+                getCurrentShowFragment().del(getCurrentShowFragment().getCheckedItem());
                 break;
             case R.id.image_rename:
-                System.out.println("image_rename");
+                System.out.println("menu1_image_rename");
                 break;
             case R.id.image_property:
-                System.out.println("image_property");
+                System.out.println("menu1_image_property");
                 break;
             case R.id.image_menu:
                 System.out.println("image_menu");
                 break;
             case R.id.tv_paste:
-                System.out.println("tv_paste");
+                System.out.println("menu2_tv_paste");
+                //ContentFragment fragment = getCurrentShowFragment();
+                //getCurrentShowFragment().operaItem(true, 1);
+                if ("复制到此".equals(((TextView)v).getText().toString())) {
+                    getCurrentShowFragment().copy(mCheckItems);
+                } else {
+                    getCurrentShowFragment().cut(mCheckItems);
+                }
+                setShowWhichFoolMenuBar(0);
                 break;
             case R.id.tv_create:
-                System.out.println("tv_create");
+                System.out.println("menu2_tv_create");
                 break;
             case R.id.tv_cancle:
-                System.out.println("tv_cancle");
+                System.out.println("menu2_tv_cancle");
+                isFloorMenu2Mode = false;
+                getCurrentShowFragment().cancelCheckedItem();
+                getCurrentShowFragment().operaItem(false, 0);
+                setShowWhichFoolMenuBar(0);
                 break;
             case R.id.tv_property2:
-                System.out.println("tv_property2");
+                System.out.println("menu2_tv_property2");
                 break;
             case R.id.menu_exit:
                 finish();
@@ -201,26 +264,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private void setShowWhichFoolMenuBar(int which) {
+        if (which == 1) {
+            mLinearLayoutFloorMenuBar.setVisibility(View.GONE);
+            mLinearLayoutFileHandleMenu2.setVisibility(View.GONE);
+            mLinearLayoutFileHandleMenu1.setVisibility(View.VISIBLE);
+        } else if (which == 2) {
+            mLinearLayoutFloorMenuBar.setVisibility(View.GONE);
+            mLinearLayoutFileHandleMenu1.setVisibility(View.GONE);
+            mLinearLayoutFileHandleMenu2.setVisibility(View.VISIBLE);
+        } else {
+            mLinearLayoutFileHandleMenu1.setVisibility(View.GONE);
+            mLinearLayoutFileHandleMenu2.setVisibility(View.GONE);
+            mLinearLayoutFloorMenuBar.setVisibility(View.VISIBLE);
+        }
+    }
+
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        System.out.println(isChecked);
+        ContentFragment fragment = getCurrentShowFragment();
+        if (fragment != null) {
+            if (isChecked) {
+                fragment.checkAllItem();
+            } else {
+                fragment.cancelCheckedItem();
+                setShowWhichFoolMenuBar(0);
+            }
+        }
     }
 
     public void onCheckBoxClick(boolean isChecked) {
-        if (isChecked) {
-            linearLayoutFloorMenuBar.setVisibility(View.GONE);
-            linearLayoutFileHandleMenu1.setVisibility(View.VISIBLE);
-        } else {
-            linearLayoutFileHandleMenu1.setVisibility(View.GONE);
-            linearLayoutFloorMenuBar.setVisibility(View.VISIBLE);
+        if (!isFloorMenu2Mode) {
+            if (isChecked) {
+                setShowWhichFoolMenuBar(1);
+            } else {
+                setShowWhichFoolMenuBar(0);
+                checkBoxIsCheck();
+            }
         }
     }
 
     private int[] getIntArray() {
-        if (clickLocation != null) {
-            return clickLocation;
+        if (mClickLocation != null) {
+            return mClickLocation;
         }
-        return clickLocation = new int[2];
+        return mClickLocation = new int[2];
     }
 
     private PopupWindow initPopupWindow(int layoutId, int width) {
@@ -236,7 +324,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-
         super.onDestroy();
     }
 }

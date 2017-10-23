@@ -24,6 +24,10 @@ import com.lu.model.FileItem;
 import com.lu.utils.FileUtil;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -37,11 +41,28 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
 
     private static final String TAG = "FileListAdapter";
 
+    private Set<FileItem> mCheckFileItem;
+    private List<CheckBox> mCheckedBox;
+    private List<CheckBox> mCheckBoxList;
+    //private Set<String> mCheckItemPath;
+
+    private boolean isItemOpera;
+
     public FileListAdapter(Context context) {
         this.context = context;
+        mCheckFileItem = new HashSet<>();
+        mCheckedBox = new ArrayList<>();
+        mCheckBoxList = new ArrayList<>();
+        //mCheckItemPath = new HashSet<>();
         mLayoutInflater = LayoutInflater.from(context);
         mExecutorService = Executors.newFixedThreadPool(5);
     }
+
+    @Override
+    public void beforeSetList() {
+        //mCheckBoxList.clear();
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         FileItem item = mList.get(position);
@@ -63,14 +84,20 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         }
 
         //System.out.println(TAG + ": "+item.getAbsolutePath());
+        if (isItemOpera) {
+            holder.fileCheckBox.setVisibility(View.INVISIBLE);
+        } else {
+            holder.fileCheckBox.setVisibility(View.VISIBLE);
+        }
+        //mCheckBoxList.add(holder.fileCheckBox);
         holder.fileCheckBox.setTag(position);
         holder.fileCheckBox.setChecked(item.isCheck());
         holder.fileName.setText(item.getName());
-        holder.fileSize.setText(item.getSize());
+        holder.fileSize.setText(FileUtil.getFileCountOrSize(item.isFolder(), item.getSize(), item.getCount()));
         holder.fileTime.setText(item.getDate());
         Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
 
-        switch (item.getType()) {
+        switch (FileUtil.getFileType(item.getName())) {
             case FileUtil.FILE_IMAGE:
                 Glide.with(context).load(item.getPath())
                         .placeholder(R.drawable.ic_progress) //加载时的占位图
@@ -116,7 +143,15 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
 
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        mList.get((Integer) buttonView.getTag()).setCheck(isChecked);
+        FileItem item = mList.get((Integer) buttonView.getTag());
+        item.setCheck(isChecked);
+        if (isChecked) {
+            mCheckFileItem.add(item);
+            mCheckedBox.add((CheckBox) buttonView);
+        } else {
+            mCheckFileItem.remove(item);
+            //mCheckedBox.remove(buttonView);
+        }
         ((MainActivity)context).onCheckBoxClick(itemIsChecked());
     }
 
@@ -125,14 +160,34 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
      * @return
      */
     public boolean itemIsChecked() {
-        boolean isCheck = false;
-        for (FileItem checkItem : mList) {
-            if (checkItem.isCheck()) {
-                isCheck = true;
-                break;
+        return mCheckFileItem.size() > 0 ? true : false;
+    }
+
+    public void checkFileItem(boolean isCheck) {
+        if (isCheck){
+            for (FileItem item : mList) {
+                item.setCheck(isCheck);
+                mCheckFileItem.add(item);
             }
+            /*for (CheckBox box : mCheckBoxList) {
+                box.setChecked(isCheck);
+            }*/
+            notifyDataSetChanged();
+        } else {
+            for (FileItem item : mCheckFileItem) {
+                item.setCheck(isCheck);
+            }
+            for (CheckBox box : mCheckedBox) {
+                box.setChecked(isCheck);
+            }
+            mCheckFileItem.clear();
+            mCheckedBox.clear();
         }
-        return isCheck;
+        //notifyDataSetChanged();
+    }
+
+    public Set<FileItem> getCheckFileItem() {
+        return mCheckFileItem;
     }
 
     class LoadAPKIconRunnable implements Runnable{
@@ -169,15 +224,30 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         };
     }
 
-    public void release() {
-        mExecutorService.shutdown();
-    }
-
     class ViewHolder {
         ImageView fileIcon;
         TextView fileName;
         TextView fileTime;
         TextView fileSize;
         CheckBox fileCheckBox;
+    }
+    public void release() {
+        mExecutorService.shutdown();
+    }
+
+    public void setItemOpera(boolean itemOpera) {
+        isItemOpera = itemOpera;
+        notifyDataSetChanged();
+    }
+
+    public boolean isItemOpera() {
+        return isItemOpera;
+    }
+
+    public void clearCheckedBox() {
+        for (CheckBox box : mCheckedBox) {
+            box.setChecked(false);
+        }
+        mCheckedBox.clear();
     }
 }

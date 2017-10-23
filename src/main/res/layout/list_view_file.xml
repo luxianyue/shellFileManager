@@ -10,8 +10,7 @@
         android:layout_width="55dp"
         android:layout_height="55dp"
         android:layout_gravity="center_vertical"
-        android:layout_marginLeft="5dp"
-        android:src="@drawable/folder_blue" />
+        android:layout_marginLeft="5dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,9 +25,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="6dp"
             android:layout_marginTop="5dp"
-            android:text="oidcom/androidcom"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -40,7 +37,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
-                android:text="125M"
                 android:textColor="@color/tvFileSize"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -50,7 +46,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
-                android:text="2011-11-12 21:15"
                 android:textColor="@color/tvFileTime"
                 android:textSize="12sp"
                 android:textStyle="bold" />

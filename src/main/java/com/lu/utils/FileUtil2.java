@@ -61,43 +61,43 @@ public class FileUtil2 {
         FileItem item = null;
         for(File file : filePath.listFiles()) {
             item = new FileItem();
-            item.setName(file.getName());
-            item.setFolder(file.isDirectory());
+            //item.setName(file.getName());
+            //item.setFolder(file.isDirectory());
             //item.setTime(file.lastModified()+"");
             //item.setAbsolutePath(file.getAbsolutePath());
             if (file.isDirectory()) {
-                item.setIcon(R.drawable.folder_blue);
-                item.setSize(file.canRead() ? file.list().length + "项" : "0项");
+                //item.setIcon(R.drawable.folder_blue);
+                //item.setSize(file.canRead() ? file.list().length + "项" : "0项");
             } else {
                 if (isImage(file.getName())) {
                     if (!file.getName().toLowerCase().endsWith(".gif")) {
-                        item.setType(FileUtil.FILE_IMAGE);
+                        //item.setType(FileUtil.FILE_IMAGE);
                     } else {
-                        item.setType(FileUtil.FILE_GIF);
+                        //item.setType(FileUtil.FILE_GIF);
                     }
                 }
 
                 if (isAudio(file.getName())) {
-                    item.setType(FileUtil.FILE_AUDIO);
+                    //item.setType(FileUtil.FILE_AUDIO);
                 }
 
                 if (isVideo(file.getName())) {
-                    item.setType(FileUtil.FILE_VIDEO);
+                    //item.setType(FileUtil.FILE_VIDEO);
                 }
 
                 if (isCompress(file.getName())) {
-                    item.setType(FileUtil.FILE_COMPRESS);
+                    //item.setType(FileUtil.FILE_COMPRESS);
                 }
 
                 if (isText(file.getName())) {
-                    item.setType(FileUtil.FILE_TEXT);
+                    //item.setType(FileUtil.FILE_TEXT);
                 }
 
                 if (file.getName().toLowerCase().endsWith(".apk")) {
-                    item.setType(FileUtil.FILE_APK);
+                    //item.setType(FileUtil.FILE_APK);
                 }
-                item.setIcon(R.drawable.unknown);
-                item.setSize(getFormatByte(file.length()));
+                //item.setIcon(R.drawable.unknown);
+                //item.setSize(getFormatByte(file.length()));
             }
             mItemList.add(item);
         }

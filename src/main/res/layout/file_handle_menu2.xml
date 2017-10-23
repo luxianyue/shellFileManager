@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/linearlayout_filehandle2"
     android:layout_width="match_parent"
-    android:layout_height="35dp"
+    android:layout_height="40dp"
     android:background="#262b32"
     android:orientation="horizontal"
     android:visibility="gone">
@@ -10,8 +10,9 @@
     <TextView
         android:id="@+id/tv_paste"
         android:layout_width="0dp"
-        android:layout_height="35dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
         android:clickable="true"
         android:gravity="center"
         android:text="复制到此"
@@ -26,8 +27,9 @@
     <TextView
         android:id="@+id/tv_create"
         android:layout_width="0dp"
-        android:layout_height="35dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
         android:clickable="true"
         android:gravity="center"
         android:text="新建"
@@ -42,8 +44,9 @@
     <TextView
         android:id="@+id/tv_cancle"
         android:layout_width="0dp"
-        android:layout_height="35dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
         android:clickable="true"
         android:gravity="center"
         android:text="取消"
@@ -58,8 +61,9 @@
     <TextView
         android:id="@+id/tv_property2"
         android:layout_width="0dp"
-        android:layout_height="35dp"
+        android:layout_height="40dp"
         android:layout_weight="1"
+        android:background="@drawable/menupressed_backgroud"
         android:clickable="true"
         android:gravity="center"
         android:text="属性"

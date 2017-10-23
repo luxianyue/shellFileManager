@@ -35,7 +35,10 @@ public abstract class BasedAdapter<T> extends BaseAdapter {
     }
 
     public void setList(List<T> mList) {
+        beforeSetList();
         this.mList = mList;
         notifyDataSetChanged();
     }
+
+    public abstract void beforeSetList();
 }

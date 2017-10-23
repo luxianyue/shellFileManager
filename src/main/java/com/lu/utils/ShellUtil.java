@@ -16,12 +16,15 @@ import java.util.regex.Pattern;
 import android.os.Handler;
 import android.os.Message;
 
+import com.alibaba.fastjson.JSON;
+import com.lu.App;
 import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
 
 public class ShellUtil {
 
     private static final String
+            MY_LS = "myls",
             LS_FILE_ALL = "ls -al",
             LS_FILE_EXCEPT_HIDE = "ls -l",
             LS_FILE_ALL_FOR_LINK = "ls -aF",
@@ -29,7 +32,10 @@ public class ShellUtil {
             CD = "cd",
             SU = "su",
             PWD = "pwd",
-            SHELL = "sh";
+            SHELL = "/system/bin/sh";
+
+    private static final String MOUNT_RW = "mount -o remount,rw ";
+    private static final String MOUNT_RO = "mount -o remount,ro ";
 
     public static final int
             FLAG_LS_FILE_ALL = 1,
@@ -53,6 +59,9 @@ public class ShellUtil {
     private String permissionCommand;
 
     private boolean isGetRoot = true;
+
+    //当前shell进程pid
+    private int shellPid;
 
 
     //时间
@@ -88,10 +97,11 @@ public class ShellUtil {
         //processBuilder.redirectErrorStream(true);
         try {
             //申请获取终端
-            mProcess = Runtime.getRuntime().exec(SHELL);
+            mProcess = new ProcessBuilder(SHELL).start();
             mInStream = mProcess.getInputStream();
             mErrorStream = mProcess.getErrorStream();
             mOutStream = mProcess.getOutputStream();
+            //exeCommand("echo pid$$");
             //开启线程用来处理命令执行后的相关信息，正常结果和错误结果
             new Thread(new ResultThread(this, 1)).start();
             new Thread(new ResultThread(this, 2)).start();
@@ -130,13 +140,23 @@ public class ShellUtil {
      *
      * @param command
      */
-    public synchronized void exeCommand(String command) {
+    public void exeCommand(String command) {
         try {
             if (mOutStream != null) {
-                currentCommand = command;
-                mOutStream.write((command + "\n").getBytes());
-                if (currentCommand.startsWith("cd ") || currentCommand.equals(SU)){
+                commandQueue.offer(command);
+                System.out.println("exeCommand--------------------------->" + command);
+                if (command.startsWith("cd ")){
+                    mOutStream.write((command + "\n").getBytes());
                     mOutStream.write(("echo $?\n").getBytes());
+                } else if (command.equals(SU)){
+                    mOutStream.write((command + "\n").getBytes());
+                    /*try {
+                        System.out.println("------------------------666666>" + mProcess.waitFor());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }*/
+                } else {
+                    mOutStream.write((command + "\n").getBytes());
                 }
             }
         } catch (IOException e) {
@@ -160,135 +180,30 @@ public class ShellUtil {
             }
 
             List<FileItem> itemList = null;
-            List<FileItem> linkFiles = null;
             FileItem item;
-            boolean isHasLink = false;
-            boolean isNull = true;
             String currentPath = null;
+            String command = null;
             while ((content = mBr.readLine()) != null) {
-                //System.out.println("command-->:" + currentCommand + " --conten--->:" +content);
-                if (currentCommand.equals(LS_FILE_EXCEPT_HIDE)){
-                    char type = content.charAt(0);
-                    if (isNull) {
+                if (currentCommand == null) {
+                    currentCommand = commandQueue.poll();
+                }
+                System.out.println("currentCommand-------->" + currentCommand + ",  content--->" + content);
+                if (currentCommand.startsWith(App.myls)) {
+                    if (itemList == null) {
                         itemList = new ArrayList<>();
-                        isNull = false;
                     }
-                    item = new FileItem();
-
-                    matcher = patternTime.matcher(content);
-                    if (matcher.find()){
-                        item.setTime(matcher.group().trim());
-                        item.setName(content.substring(matcher.end()).trim());
-                    }
-
-                    matcher = patternYear.matcher(content);
-                    if (matcher.find()) {
-                        item.setDate(matcher.group().trim());
-                    }
-
-                    // ("d":目录，"-":文件;"c":字符型设备;"b":块设备; "l" 链接类型)
-                    if (type == 'd'){
-                        //文件夹
-                        item.setFolder(true);
-                        item.setIcon(R.drawable.folder_blue);
-                    } else if (type == '-'){
-                        //文件
-                        item.setIcon(R.drawable.unknown);
-                        matcher = patternSize.matcher(content);
-                        if (matcher.find()) {
-                            item.setSize(FileUtil.getFormatByte(Long.parseLong(matcher.group().trim())));
-                        }
-                        if (FileUtil.isImageFile(item.getName())) {
-                            item.setType(FileUtil.FILE_IMAGE);
-                        } else if (FileUtil.isGifFile(item.getName())) {
-                            item.setType(FileUtil.FILE_GIF);
-                        } else if (FileUtil.isAudioFile(item.getName())) {
-                            item.setType(FileUtil.FILE_AUDIO);
-                        } else if (FileUtil.isVideoFile(item.getName())) {
-                            item.setType(FileUtil.FILE_VIDEO);
-                        } else if (FileUtil.isTextFile(item.getName())) {
-                            item.setType(FileUtil.FILE_TEXT);
-                        } else if (FileUtil.isApkFile(item.getName())) {
-                            item.setType(FileUtil.FILE_APK);
-                        } else if (FileUtil.isCompressFile(item.getName())) {
-                            item.setType(FileUtil.FILE_COMPRESS);
-                        }
-                    } else if (type == 'l') {
-                        //链接文件
-                        isHasLink = true;
-                        item.setLink(true);
-                        item.setIcon(R.drawable.unknown);
-                        matcher = patternLink.matcher(item.getName());
-                        if (matcher.find()) {
-                            //   sdcard -> /mnt/sdcard
-                            item.setLinkTo(item.getName().substring(matcher.end()));
-                            item.setName(item.getName().substring(0, matcher.start()));
-                        }
-                        if (linkFiles == null) {
-                            linkFiles = new ArrayList<>();
-                        }
-                        linkFiles.add(item);
-                    } else if (type == 'c') {
-                        item.setIcon(R.drawable.unknown);
-                    } else if (type == 'b') {
-                        item.setIcon(R.drawable.unknown);
-                    } else {
-                        item.setIcon(R.drawable.unknown);
-                    }
-
-                    if ("/".equals(currentPath)) {
-                        item.setPath(currentPath + item.getName());
-                    } else {
-                        item.setPath(currentPath + "/" + item.getName());
-                    }
-
+                    item = JSON.parseObject(content, FileItem.class);
                     itemList.add(item);
-                } else if (currentCommand.equals(LS_FILE_ALL_FOR_LINK_EXCEPT_HIDE)) {
-                    if (content.substring(0, 2).equals("ld")) {
-                        for (FileItem fitem : linkFiles) {
-                            if (fitem.getName().equals(content.substring(3))) {
-                                fitem.setLinkPath(true);
-                                fitem.setIcon(R.drawable.folder_blue);
-                                break;
-                            }
-                        }
-                    }
-
                 }
 
+                //System.out.println("=========================================");
                 if (!mBr.ready()) {
-                    if (currentCommand.startsWith("cd ")){
-                        if (content.charAt(0) == '0') {
-                            exeCommand(PWD);
-                        }
-                    } else if (currentCommand.equals(PWD)) {
-                        currentPath = content;
-                        exeCommand(LS_FILE_EXCEPT_HIDE);
-                    } else if(currentCommand.equals(LS_FILE_EXCEPT_HIDE)){
-                        if (isHasLink) {
-                            isHasLink = false;
-                            exeCommand(LS_FILE_ALL_FOR_LINK_EXCEPT_HIDE);
-                        } else {
-                            fileList = itemList;
-                            isNull = true;
-                            mHandler.sendEmptyMessage(1);
-                        }
-                    } else if (currentCommand.equals(LS_FILE_ALL_FOR_LINK_EXCEPT_HIDE)) {
-                        linkFiles.clear();
+                    //currentCommand = null;
+                    if (currentCommand.startsWith(App.myls)) {
                         fileList = itemList;
-                        isNull = true;
+                        itemList = null;
                         mHandler.sendEmptyMessage(1);
-                    } else if (currentCommand.equals(SU)) {
-                        if (content.charAt(0) == '0') {
-                            //取得了root权限
-                            isGetRoot = true;
-                            exeCommand(permissionCommand);
-                        } else {
-                            //未取得root权限
-                            isGetRoot = false;
-                        }
                     }
-
                 }
             }
 

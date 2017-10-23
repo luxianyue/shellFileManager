@@ -1,5 +1,6 @@
 package com.lu.utils;
 
+import com.lu.App;
 import com.lu.model.FileItem;
 
 import java.util.List;
@@ -49,6 +50,9 @@ public class FileUtil implements ShellUtil.OnResultListener {
         mShellUtil.setResultListener(this);
     }
 
+    public ShellUtil getmShellUtil() {
+        return mShellUtil;
+    }
     /*public static FileUtil getInstance() {
         return new FileUtil();
     }*/
@@ -73,16 +77,23 @@ public class FileUtil implements ShellUtil.OnResultListener {
      * @param path
      */
     public void listAllFile(String path) {
-        mShellUtil.exeCommand("cd " + path);
+        mShellUtil.exeCommand(App.myls + " -f \"" + path + "\"");
+        //mShellUtil.exeCommand("myls " + path);
     }
 
     /**
-     * 列出路径path文件目录里的所有文件
-     * @param path
+     * 复制文件
      */
-    private void listFile(String path) {
+    public void copy(String src, String dest) {
+        mShellUtil.exeCommand("cp -r " + src + " " + dest);
+    }
 
+    public void cut(String src, String dest) {
+        mShellUtil.exeCommand("mv " + src + " " + dest);
+    }
 
+    public void del(String src) {
+        mShellUtil.exeCommand("rm -rf " + src);
     }
 
     @Override
@@ -97,6 +108,17 @@ public class FileUtil implements ShellUtil.OnResultListener {
         if (mLoadFileListener != null) {
             mLoadFileListener.onError(msg);
         }
+    }
+
+    public static int getFileType(String name) {
+        if (isImageFile(name))    return FILE_IMAGE;
+        if (isGifFile(name))      return FILE_GIF;
+        if (isAudioFile(name))    return FILE_AUDIO;
+        if (isVideoFile(name))    return FILE_VIDEO;
+        if (isTextFile(name))     return FILE_TEXT;
+        if (isApkFile(name))      return FILE_APK;
+        if (isCompressFile(name)) return FILE_COMPRESS;
+        return FILE_OTHER;
     }
 
     /**
@@ -217,6 +239,14 @@ public class FileUtil implements ShellUtil.OnResultListener {
             return true;
         }
         return false;
+    }
+
+    public static String getFileCountOrSize(boolean isFolder, long size, long count) {
+        if (isFolder) {
+            return count + "项";
+        } else {
+            return getFormatByte(size);
+        }
     }
 
     /**

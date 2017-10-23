@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FileManager2</string>
+    <string name="app_name">shellFileManager</string>
     <string name="sort_by_size_max">大小 (从大到小)</string>
     <string name="sort_by_size_min">大小 (从小到大)</string>
     <string name="sort_name_max">名称 (从大到小)</string>
