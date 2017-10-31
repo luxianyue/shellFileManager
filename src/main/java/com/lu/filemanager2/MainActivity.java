@@ -1,6 +1,8 @@
 package com.lu.filemanager2;
 
 import android.graphics.drawable.ColorDrawable;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -14,6 +16,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,12 +25,14 @@ import com.lu.adapter.FragmentAdapter;
 import com.lu.activity.BasedActivity;
 import com.lu.fragment.ContentFragment;
 import com.lu.model.FileItem;
+import com.lu.utils.FileUtil;
+import com.lu.utils.SharePreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends BasedActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class MainActivity extends BasedActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, RadioGroup.OnCheckedChangeListener {
 
     private TabLayout mTabLayout;
     private ViewPager mViewPager;
@@ -56,7 +61,6 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
         setContentView(R.layout.activity_main);
         initLayout();
         setListener();
-
         App.initMyLs();
 
         mTabLayout.setupWithViewPager(mViewPager);
@@ -183,6 +187,9 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                     DisplayMetrics metrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(metrics);
                     mPopupWindowFloorBarSort = initPopupWindow(R.layout.floor_menu_sort, (int) (metrics.widthPixels*1.5 / ((float) 2)));
+                    RadioGroup radioGroup = (RadioGroup) mPopupWindowFloorBarSort.getContentView().findViewById(R.id.radio_group_sort);
+                    radioGroup.check(SharePreferenceUtils.getFileSortButtonId());
+                    radioGroup.setOnCheckedChangeListener(this);
                 }
                 mPopupWindowFloorBarSort.showAtLocation(v, Gravity.CENTER, 0, 0);
                 break;
@@ -325,5 +332,40 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    //排序的radioGroup button
+    @Override
+    public void onCheckedChanged(RadioGroup group, int checkedId) {
+        switch (checkedId) {
+            case R.id.sort_type:
+                getCurrentShowFragment().sort(FileUtil.SORT_BY_FILE_TYPE);
+                SharePreferenceUtils.saveFileSort(0);
+                break;
+            case R.id.sort_date_asc:
+                getCurrentShowFragment().sort(FileUtil.SORT_BY_FILE_DATE_ASC);
+                SharePreferenceUtils.saveFileSort(1);
+                break;
+            case R.id.sort_date_desc:
+                getCurrentShowFragment().sort(FileUtil.SORT_BY_FILE_DATE_DESC);
+                SharePreferenceUtils.saveFileSort(2);
+                break;
+            case R.id.sort_name_asc:
+                getCurrentShowFragment().sort(FileUtil.SORT_BY_FILE_NAME_ASC);
+                SharePreferenceUtils.saveFileSort(3);
+                break;
+            case R.id.sort_name_desc:
+                getCurrentShowFragment().sort(FileUtil.SORT_BY_FILE_NAME_DESC);
+                SharePreferenceUtils.saveFileSort(4);
+                break;
+            case R.id.sort_size_asc:
+                getCurrentShowFragment().sort(FileUtil.SORT_BY_FILE_SIZE_ASC);
+                SharePreferenceUtils.saveFileSort(5);
+                break;
+            case R.id.sort_size_desc:
+                getCurrentShowFragment().sort(FileUtil.SORT_BY_FILE_SIZE_DESC);
+                SharePreferenceUtils.saveFileSort(6);
+                break;
+        }
     }
 }

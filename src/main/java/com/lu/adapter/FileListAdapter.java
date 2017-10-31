@@ -93,7 +93,7 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         holder.fileCheckBox.setTag(position);
         holder.fileCheckBox.setChecked(item.isCheck());
         holder.fileName.setText(item.getName());
-        holder.fileSize.setText(FileUtil.getFileCountOrSize(item.isFolder(), item.getSize(), item.getCount()));
+        holder.fileSize.setText(FileUtil.getFileCountOrSize(item.isFolder(), item.size(), item.count()));
         holder.fileTime.setText(item.getDate());
         Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
 

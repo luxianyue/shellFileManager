@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 
+import com.lu.utils.SharePreferenceUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,6 +33,7 @@ public class App extends android.app.Application {
         mContext = this;
         mActivities = new ArrayList<>();
         exePath = getFilesDir().getParentFile().getAbsolutePath();
+        SharePreferenceUtils.init(this);
     }
 
     public static boolean initMyLs() {

@@ -17,6 +17,7 @@ import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
 import com.lu.utils.FileUtil;
+import com.lu.utils.SharePreferenceUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -53,6 +54,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         if (mFileListAdapter == null) {
             mFileListAdapter = new FileListAdapter(getActivity());
         }
+
+        FileUtil.userSortMode = SharePreferenceUtils.getFileSortMode();
 
     }
 
@@ -136,6 +139,11 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         mFileListAdapter.setItemOpera(false);
         cancelCheckedItem();
         fileUtil.listAllFile(currentPath);
+    }
+
+    public void sort(int whichSort) {
+        fileUtil.sortFileItem(mFileListAdapter.getList(), whichSort);
+        mFileListAdapter.notifyDataSetChanged();
     }
 
     public void operaItem(boolean opera, int action) {

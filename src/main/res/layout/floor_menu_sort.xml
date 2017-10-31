@@ -1,4 +1,5 @@
 <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/radio_group_sort"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="#262b32"
@@ -19,6 +20,7 @@
         android:background="#67717e" />
 
     <RadioButton
+        android:id="@+id/sort_type"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floor_menu_sort_radio_height"
         android:button="@null"
@@ -35,6 +37,7 @@
         android:background="#67717e" />
 
     <RadioButton
+        android:id="@+id/sort_date_desc"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floor_menu_sort_radio_height"
         android:button="@null"
@@ -51,6 +54,7 @@
         android:background="#67717e" />
 
     <RadioButton
+        android:id="@+id/sort_date_asc"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floor_menu_sort_radio_height"
         android:button="@null"
@@ -67,6 +71,7 @@
         android:background="#67717e" />
 
     <RadioButton
+        android:id="@+id/sort_name_asc"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floor_menu_sort_radio_height"
         android:button="@null"
@@ -83,6 +88,7 @@
         android:background="#67717e" />
 
     <RadioButton
+        android:id="@+id/sort_name_desc"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floor_menu_sort_radio_height"
         android:button="@null"
@@ -99,6 +105,7 @@
         android:background="#67717e" />
 
     <RadioButton
+        android:id="@+id/sort_size_asc"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floor_menu_sort_radio_height"
         android:button="@null"
@@ -115,6 +122,7 @@
         android:background="#67717e" />
 
     <RadioButton
+        android:id="@+id/sort_size_desc"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floor_menu_sort_radio_height"
         android:button="@null"

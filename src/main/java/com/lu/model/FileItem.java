@@ -91,8 +91,12 @@ public class FileItem {
     /**
      * 文件的大小
      */
-    public long getSize() {
-        return s;
+    public long size() {
+        return isFolder() ? 0 : s;
+    }
+
+    public long lastModified() {
+        return 0;
     }
 
     /**
@@ -141,7 +145,7 @@ public class FileItem {
     /**
      * 文件夹里所包含的文件数量
      */
-    public long getCount() {
+    public long count() {
         return ct;
     }
 

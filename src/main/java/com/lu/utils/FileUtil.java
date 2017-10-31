@@ -3,6 +3,8 @@ package com.lu.utils;
 import com.lu.App;
 import com.lu.model.FileItem;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -11,12 +13,12 @@ import java.util.List;
 
 public class FileUtil implements ShellUtil.OnResultListener {
 
-    private static final long KB = 1l << 10;
-    private static final long MB = 1l << 20;
-    private static final long GB = 1l << 30;
-    private static final long TB = 1l << 40;
-    private static final long PB = 1l << 50;
-    private static final long EB = 1l << 60;
+    private static final long KB = 1L << 10;
+    private static final long MB = 1L << 20;
+    private static final long GB = 1L << 30;
+    private static final long TB = 1L << 40;
+    private static final long PB = 1L << 50;
+    private static final long EB = 1L << 60;
 
     public static final int FILE_AUDIO = 12;
     public static final int FILE_VIDEO = 13;
@@ -39,15 +41,29 @@ public class FileUtil implements ShellUtil.OnResultListener {
     private static final int LOAD_FILE_COMPLETE = 100;
     private static final int LOAD_FILE_FAILURE = 101;
 
+
+    public static final int SORT_BY_FILE_TYPE = 0;
+    public static final int SORT_BY_FILE_DATE_ASC = 1;
+    public static final int SORT_BY_FILE_DATE_DESC = 2;
+    public static final int SORT_BY_FILE_NAME_ASC = 3;
+    public static final int SORT_BY_FILE_NAME_DESC = 4;
+    public static final int SORT_BY_FILE_SIZE_ASC = 5;
+    public static final int SORT_BY_FILE_SIZE_DESC = 6;
+
+    public static int userSortMode;
+
     private OnLoadFileListener mLoadFileListener;
 
     private static ShellUtil mShellUtil;
 
     private static FileUtil instance;
 
+    private static FileComparator mFileComparator;
+
     private FileUtil (){
         mShellUtil = ShellUtil.getInstance();
         mShellUtil.setResultListener(this);
+        mFileComparator = new FileComparator();
     }
 
     public ShellUtil getmShellUtil() {
@@ -85,21 +101,30 @@ public class FileUtil implements ShellUtil.OnResultListener {
      * 复制文件
      */
     public void copy(String src, String dest) {
-        mShellUtil.exeCommand("cp -r " + src + " " + dest);
+        mShellUtil.exeCommand("cp -r \"" + src + "\" \"" + dest + "\"");
     }
 
     public void cut(String src, String dest) {
-        mShellUtil.exeCommand("mv " + src + " " + dest);
+        mShellUtil.exeCommand("mv \"" + src + "\" \"" + dest + "\"");
     }
 
     public void del(String src) {
-        mShellUtil.exeCommand("rm -rf " + src);
+        mShellUtil.exeCommand("rm -rf \"" + src + "\"");
     }
 
     @Override
     public void onLoadComplet(List<FileItem> list) {
         if (mLoadFileListener != null) {
+            sortFileItem(list, userSortMode);
             mLoadFileListener.onLoadComplete(list);
+        }
+    }
+
+    public void sortFileItem(List<FileItem> list, int which) {
+        FileComparator.which = which;
+        userSortMode = which;
+        if (list != null) {
+            Collections.sort(list, mFileComparator);
         }
     }
 
@@ -268,7 +293,7 @@ public class FileUtil implements ShellUtil.OnResultListener {
             formatByte = toSaveTwoDot(byteNumber * 1d / TB, 2) + "T";
         } else if (byteNumber < EB && byteNumber >= PB) {
             formatByte = toSaveTwoDot(byteNumber * 1d / PB, 2) + "P";
-        } else if (byteNumber == EB) {
+        } else if (byteNumber >= EB) {
             formatByte = toSaveTwoDot(byteNumber * 1d / EB, 2) + "E";
         }
 
@@ -295,6 +320,81 @@ public class FileUtil implements ShellUtil.OnResultListener {
         }
 
         return str;
+    }
+
+    static class FileComparator implements Comparator<FileItem> {
+        public static int which = SORT_BY_FILE_TYPE;
+
+        @Override
+        public int compare(FileItem first, FileItem second) {
+            switch (which) {
+                case SORT_BY_FILE_TYPE:
+                    //类型
+                    if (first.isFolder() && second.isFolder()) {
+                        return first.getName().toLowerCase().compareTo(second.getName().toLowerCase());
+                    }
+                    if (first.isFolder() && !second.isFolder()) {
+                        return -1;
+                    }
+                    if (!first.isFolder() && second.isFolder()) {
+                        return 1;
+                    }
+                    int index = first.getName().lastIndexOf(".");
+                    int index2 = second.getName().lastIndexOf(".");
+                    if (index != -1 && index2 == -1) {
+                        return 1;
+                    }
+                    if (index == -1 && index2 != -1) {
+                        return -1;
+                    }
+
+                    return first.getName().substring(index + 1).toLowerCase().compareTo(second.getName().substring(index2 + 1).toLowerCase());
+                case SORT_BY_FILE_DATE_ASC:
+                    //日期 升序
+                    if (first.lastModified() < second.lastModified()) {
+                        return -1;
+                    }
+                    if (first.lastModified() > second.lastModified()) {
+                        return 1;
+                    }
+                    return 0;
+                case SORT_BY_FILE_DATE_DESC:
+                    //日期降序
+                    if (first.lastModified() < second.lastModified()) {
+                        return 1;
+                    }
+                    if (first.lastModified() > second.lastModified()) {
+                        return -1;
+                    }
+                    return 0;
+                case SORT_BY_FILE_NAME_ASC:
+                    //名称 升序
+                    return first.getName().toLowerCase().compareTo(second.getName().toLowerCase());
+                case SORT_BY_FILE_NAME_DESC:
+                    //名称降序
+                    return second.getName().toLowerCase().compareTo(first.getName().toLowerCase());
+                case SORT_BY_FILE_SIZE_ASC:
+                    //大小 升序
+                    if (first.size() < second.size()) {
+                        return -1;
+                    }
+                    if (first.size() > second.size()) {
+                        return 1;
+                    }
+                    return 0;
+                case SORT_BY_FILE_SIZE_DESC:
+                    //大小降序
+                    if (first.size() < second.size()) {
+                        return 1;
+                    }
+                    if (first.size() > second.size()) {
+                        return -1;
+                    }
+                    return 0;
+                default:
+                    return 0;
+            }
+        }
     }
 
     /**
