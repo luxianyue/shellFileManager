@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <android.support.percent.PercentRelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:descendantFocusability="blocksDescendants"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/iv_directory"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginLeft="5dp"
+            android:scaleType="centerInside"/>
+
+
+        <TextView
+            android:id="@+id/tv_file_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="3dp"
+            android:layout_marginTop="8dp"
+            android:layout_toRightOf="@id/iv_directory"
+            android:textColor="#FF000000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_file_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/iv_directory"
+            android:layout_below="@id/tv_file_name"
+            android:layout_alignLeft="@id/tv_file_name"
+            android:textColor="@color/tvFileSize"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_file_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_toRightOf="@id/tv_file_size"
+            android:layout_alignTop="@id/tv_file_size"
+            android:textColor="@color/tvFileTime"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_file_permission"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:layout_toRightOf="@id/tv_file_time"
+            android:layout_alignTop="@id/tv_file_time"
+            android:textColor="@color/tvFileTime"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <CheckBox
+            android:id="@+id/checkbox_file"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginRight="3dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:button="@null"
+            android:drawableLeft="@drawable/btn_check_holo_light"
+            android:paddingLeft="10dp"/>
+
+    </android.support.percent.PercentRelativeLayout>
+</layout>
+

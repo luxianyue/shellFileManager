@@ -7,4 +7,7 @@
     <color name="tvFileTime">#999999</color>
     <color name="tvFileSize">#999999</color>
     <color name="tvFileName">#999999</color>
+
+    <!--permission set color start-->
+    <color name="per_setfont_color">#dcdada</color>
 </resources>

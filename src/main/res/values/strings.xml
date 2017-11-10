@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">shellFileManager</string>
+
     <string name="sort_by_size_max">大小 (从大到小)</string>
     <string name="sort_by_size_min">大小 (从小到大)</string>
     <string name="sort_name_max">名称 (从大到小)</string>
@@ -8,4 +9,74 @@
     <string name="sort_by_date_new">日期 (最新)</string>
     <string name="sort_by_type">类型</string>
     <string name="select_file_sort">选择排序模式</string>
+
+    <string name="option">选项</string>
+    <string name="del">删除</string>
+    <string name="rename">重命名</string>
+    <string name="copy">复制</string>
+    <string name="move">移动</string>
+    <string name="permission_set">权限设定</string>
+    <string name="property">属性</string>
+    <string name="compress_sel_file">压缩所选文件</string>
+    <string name="compress_sel_dir">压缩所选文件夹</string>
+    <string name="create_link">创建链接</string>
+    <string name="send_to">发送到</string>
+    <string name="look_as_text">以文本方式查看</string>
+    <string name="edit_as_text">以文本方式编辑</string>
+    <string name="file_open_way">打开方式</string>
+
+    <string name="read">读</string>
+    <string name="write">写</string>
+    <string name="execute">执行</string>
+    <string name="owner">所有者</string>
+    <string name="user_group">用户组</string>
+    <string name="other">其他</string>
+    <string name="set_uid">设置UID</string>
+    <string name="set_gid">设置GID</string>
+    <string name="set_sticky">设置粘滞位</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="input_octal">输入八进制</string>
+    <string name="octal_number">八进制</string>
+    <string name="apply_all_childfile_and_childdir">同时应用到所有子文件和子文件夹</string>
+    <string name="not_apply_childfile">不应用到子文件</string>
+
+    <string name="name">名称</string>
+    <string name="path">路径</string>
+    <string name="permission">权限</string>
+    <string name="size">大小</string>
+    <string name="time_stamp">时间戳</string>
+
+    <string name="name_colon">名称：</string>
+    <string name="path_colon">路径：</string>
+    <string name="perm_colon">权限：</string>
+    <string name="size_colon">大小：</string>
+    <string name="time_colon">时间戳：</string>
+    <string name="owner_colon">所有者：</string>
+    <string name="usergroup_colon">用户组：</string>
+    <string name="linkto_colon">链接到：</string>
+    <string name="counting">正在计算...</string>
+
+    <string name="term">项</string>
+    <string name="upper_dir">上层文件夹</string>
+    <string name="new_create">新建...</string>
+    <string name="dir">文件夹</string>
+    <string name="file">文件</string>
+    <string name="tab">选项卡</string>
+    <string name="root_dir">根目录</string>
+    <string name="root_dir_tab">根目录标签</string>
+    <string name="phone_dir_tab">本机目录标签</string>
+    <string name="phone_storage">本机存储</string>
+
+    <string name="copy_here">复制到此</string>
+    <string name="move_here">移动到此</string>
+    <string name="search">搜索：</string>
+    <string name="refresh">刷新</string>
+    <string name="setting">设置</string>
+    <string name="about">关于</string>
+    <string name="exit">退出</string>
+
+    <string name="font_color">字体颜色</string>
+    <string name="bg_color">背景颜色</string>
+
 </resources>

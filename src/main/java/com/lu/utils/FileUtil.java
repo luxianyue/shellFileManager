@@ -1,8 +1,17 @@
 package com.lu.utils;
 
+import android.content.Context;
+import android.os.Environment;
+import android.os.storage.StorageManager;
+
 import com.lu.App;
+import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
 
+import java.io.File;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -97,6 +106,10 @@ public class FileUtil implements ShellUtil.OnResultListener {
         //mShellUtil.exeCommand("myls " + path);
     }
 
+    public void countDirSize(String path) {
+        mShellUtil.exeCommand(App.myls + " -s \"" + path + "\"");
+    }
+
     /**
      * 复制文件
      */
@@ -113,10 +126,17 @@ public class FileUtil implements ShellUtil.OnResultListener {
     }
 
     @Override
-    public void onLoadComplet(List<FileItem> list) {
+    public void onLoadComplete(List<FileItem> list) {
         if (mLoadFileListener != null) {
             sortFileItem(list, userSortMode);
             mLoadFileListener.onLoadComplete(list);
+        }
+    }
+
+    @Override
+    public void onLoadComplete(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onLoadComplete(str);
         }
     }
 
@@ -132,6 +152,82 @@ public class FileUtil implements ShellUtil.OnResultListener {
     public void onError(String msg) {
         if (mLoadFileListener != null) {
             mLoadFileListener.onError(msg);
+        }
+    }
+
+    public static int[] getFilePermissionNum(String per) {
+        int flagSet = 0, owner = 0, user = 0, other = 0;
+        int num = 0;
+        for (int i = 0; i < per.length(); i++) {
+            num = getPerNum(per.charAt(i));
+            if (i < 3) {
+                if (num != 's' && num != 'S') {
+                    owner += num;
+                    continue;
+                }
+                if (num == 's'){
+                    flagSet += 4;
+                    owner += 1;
+                    continue;
+                }
+                if (num == 'S') {
+                    flagSet += 4;
+                }
+                continue;
+            }
+            if (i > 2 && i < 6) {
+                if (num != 's' && num != 'S') {
+                    user += num;
+                    continue;
+                }
+                if (num == 's'){
+                    flagSet += 2;
+                    user += 1;
+                    continue;
+                }
+                if (num == 'S') {
+                    flagSet += 2;
+                }
+                continue;
+            }
+
+            if (num != 't' && num != 'T') {
+                other += num;
+                continue;
+            }
+            if (num == 't'){
+                flagSet += 1;
+                other += 1;
+                continue;
+            }
+            if (num == 'T') {
+                flagSet += 1;
+            }
+        }
+        int pers[] = {flagSet, owner, user, other};
+        //System.out.println("" + flagSet + owner + user + other);
+        return pers;
+
+    }
+
+    private static int getPerNum(char per) {
+        switch (per) {
+            case 'r':
+                return 4;
+            case 'w':
+                return 2;
+            case 'x':
+                return 1;
+            case 's':
+                return 's';
+            case 'S':
+                return 'S';
+            case 't':
+                return 't';
+            case 'T':
+                return 'T';
+            default:
+                    return 0;
         }
     }
 
@@ -266,12 +362,14 @@ public class FileUtil implements ShellUtil.OnResultListener {
         return false;
     }
 
-    public static String getFileCountOrSize(boolean isFolder, long size, long count) {
-        if (isFolder) {
-            return count + "项";
-        } else {
-            return getFormatByte(size);
+    public static String getFileCountOrSize(boolean isUpper, boolean isFolder, long size, long count) {
+        if (isUpper) {
+            return App.context().getString(R.string.upper_dir);
         }
+        if (isFolder) {
+            return count + App.context().getString(R.string.term);
+        }
+        return getFormatByte(size);
     }
 
     /**
@@ -398,10 +496,60 @@ public class FileUtil implements ShellUtil.OnResultListener {
     }
 
     /**
+     * 通过反射调用获取内置存储和外置sd卡根路径(通用)
+     * @return
+     */
+    public static List<String> getStoragePath(Context context) {
+        StorageManager mStorageManager = (StorageManager) context.getApplicationContext().getSystemService(Context.STORAGE_SERVICE);
+        Class<?> storageVolumeClazz = null;
+        List<String> pathList = new ArrayList<>();
+        try {
+            storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
+            Method getVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
+            Method getPath = storageVolumeClazz.getMethod("getPath");
+            Method isRemovable = storageVolumeClazz.getMethod("isRemovable");
+            Object result = getVolumeList.invoke(mStorageManager);
+            final int length = Array.getLength(result);
+            String phonePath = Environment.getExternalStorageDirectory().toString();
+            for (int i = 0; i < length; i++) {
+                Object storageVolumeElement = Array.get(result, i);
+                String path = (String) getPath.invoke(storageVolumeElement);
+                if (!new File(path).exists()) {
+                    continue;
+                }
+                if (phonePath.equals(path)) {
+                    pathList.add(0, path);
+                }
+                if (path.toLowerCase().contains("sdcard")) {
+                    pathList.add(1, path);
+                } else {
+                    pathList.add(path);
+                }
+                //boolean removable = (Boolean) isRemovable.invoke(storageVolumeElement);
+
+            }
+            /*for (String path : pathList) {
+                if (path.toLowerCase().contains("sdcard")) {
+                    hasSDCard = true;
+                    SDCardPath = path;
+                    break;
+                } else {
+                    hasSDCard = false;
+                }
+            }*/
+            return pathList;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return pathList;
+    }
+
+    /**
      * 加载文件时状态的接口
      */
     public interface OnLoadFileListener {
         void onLoadComplete(List<FileItem> items);
+        void onLoadComplete(String str);
         void onError(String msg);
     }
 

@@ -1,13 +1,13 @@
 {
   "buildFiles": [
-    "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android.mk"
+    "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android-myls.mk"
   ],
   "cleanCommands": [
-    "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\debug\\lib clean"
+    "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android-myls.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\debug\\lib clean"
   ],
   "libraries": {
     "myls-debug-x86": {
-      "buildCommand": "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\debug\\lib E:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/debug/obj/local/x86/myls",
+      "buildCommand": "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android-myls.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d1 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/debug/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\debug\\lib E:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/debug/obj/local/x86/myls",
       "toolchain": "toolchain-x86",
       "abi": "x86",
       "artifactName": "myls",

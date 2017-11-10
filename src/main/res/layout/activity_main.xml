@@ -1,36 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <HorizontalScrollView
-        android:id="@+id/scroll_view_path"
-        android:layout_width="match_parent"
-        android:layout_height="30dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="#998866"
-            android:text="dfffh/fhfghgg/gfdd/ddtdfgdfgg" />
-    </HorizontalScrollView>
-
-    <android.support.design.widget.TabLayout
-        android:id="@+id/tab_layout"
-        android:layout_width="match_parent"
-        android:layout_height="30dp"
-        android:background="@color/colorPrimary" />
-
-    <android.support.v4.view.ViewPager
-        android:id="@+id/view_pager"
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="3" />
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical">
 
-    <include layout="@layout/floor_menu_bar" />
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            app:tabMode="scrollable"
+            android:background="#5f8ba0" />
 
-    <include layout="@layout/file_handle_menu1" />
+        <com.lu.view.MyViewPager
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="3" />
 
-    <include layout="@layout/file_handle_menu2" />
-</LinearLayout>
+        <include android:id="@+id/floor_menu_bar" layout="@layout/floor_menu_bar" />
+
+        <include android:id="@+id/file_handle_menu1" layout="@layout/file_handle_menu1" />
+
+        <include android:id="@+id/file_handle_menu2" layout="@layout/file_handle_menu2" />
+
+        <com.github.chrisbanes.photoview.PhotoView
+            android:id="@+id/main_photo_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"/>
+    </LinearLayout>
+</layout>

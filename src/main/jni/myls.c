@@ -16,8 +16,8 @@
 #include <errno.h>
 
 #define MAX_PATH 256
-const mode_t mode_p[] = {S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, S_IWOTH, S_IXOTH};
-const char rwx[] = {'r', 'w', 'x', 'r', 'w', 'x', 'r', 'w', 'x'};
+const mode_t mode_p[] = {S_IRUSR, S_IWUSR, S_IXUSR, S_IRGRP, S_IWGRP, S_IXGRP, S_IROTH, S_IWOTH, S_IXOTH, S_ISUID, S_ISGID, S_ISVTX};
+const char rwx[] = {'r', 'w', 'x', 'r', 'w', 'x', 'r', 'w', 'x', 's', 's', 't'};
 
 static void get_file_permission(unsigned mode, char* per);
 static char get_file_type(unsigned mode);
@@ -85,10 +85,11 @@ static void ls_file_info(char *path, char* name) {
     group2gid(st.st_gid, group);
 
     //date and time
-    char str_time[17];
+    /*char str_time[17];
     time_t te = st.st_mtime;
     struct tm *t = localtime(&te);
     strftime(str_time, sizeof(str_time), "%Y-%m-%d %H:%M", t);
+     */
 
     //permission and type of file
     char per_ty[12];
@@ -107,17 +108,17 @@ static void ls_file_info(char *path, char* name) {
             stat(link_to, &link_file);
             per_ty[1] = get_file_type(link_file.st_mode);
             if (per_ty[1] == 'd') {
-                printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%s','n':'%s','p':'%s','lt':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, str_time, name, path, link_to, get_file_count(path));
+                printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s','lt':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, link_to, get_file_count(path));
             } else {
-                printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%s','n':'%s','p':'%s','lt':'%s'}\n", per_ty, user, group, (long long)st.st_size, str_time, name, path, link_to);
+                printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s','lt':'%s'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, link_to);
             }
             break;
         }
         case S_IFDIR:
-            printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%s','n':'%s','p':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, str_time, name, path, get_file_count(path));
+            printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, get_file_count(path));
             break;
         default:
-            printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%s','n':'%s','p':'%s'}\n", per_ty, user, group, (long long)st.st_size, str_time, name, path);
+            printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path);
             break;
     }
     //printf("\n");
@@ -157,6 +158,21 @@ static void get_file_permission(unsigned mode, char* per) {
         } else {
             per[i + 2] = '-';
         }
+    }
+    if (mode & mode_p[9]) {
+        if (per[4] != '-')
+            per[4] = 's';
+        else per[4] = 'S';
+    }
+    if (mode & mode_p[10]) {
+        if (per[7] != '-')
+            per[7] = 's';
+        else per[7] = 'S';
+    }
+    if (mode & mode_p[11]) {
+        if (per[10] != '-')
+            per[10] = 't';
+        else per[10] = 'T';
     }
 }
 

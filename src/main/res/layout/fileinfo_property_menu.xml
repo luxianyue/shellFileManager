@@ -1,0 +1,112 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#262b32">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center_vertical"
+            android:paddingLeft="15dp"
+            android:text="@string/property"
+            android:textColor="#ffffff"
+            android:textSize="20sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:background="#67717e" />
+
+        <TextView
+            android:id="@+id/property_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:layout_below="@id/view1"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <TextView
+            android:id="@+id/property_path"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <TextView
+            android:id="@+id/property_permission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <TextView
+            android:id="@+id/property_size"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <TextView
+            android:id="@+id/property_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <TextView
+            android:id="@+id/property_owner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <TextView
+            android:id="@+id/property_usergroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <TextView
+            android:id="@+id/property_linkto"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:paddingLeft="15dp"
+            android:layout_marginTop="5dp"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="5dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/property_confirm"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="@string/confirm"
+        android:textColor="#f4f3f3"
+        android:textSize="@dimen/floor_menu_front_size" />
+
+</LinearLayout>

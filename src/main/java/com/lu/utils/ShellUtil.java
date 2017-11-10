@@ -186,24 +186,30 @@ public class ShellUtil {
             while ((content = mBr.readLine()) != null) {
                 if (currentCommand == null) {
                     currentCommand = commandQueue.poll();
+                    System.out.println("currentCommand-------->" + currentCommand + ",  content--->" + content);
                 }
-                System.out.println("currentCommand-------->" + currentCommand + ",  content--->" + content);
-                if (currentCommand.startsWith(App.myls)) {
+                if (currentCommand.startsWith(App.myls + " -f")) {
                     if (itemList == null) {
                         itemList = new ArrayList<>();
                     }
                     item = JSON.parseObject(content, FileItem.class);
                     itemList.add(item);
                 }
+                if (currentCommand.startsWith(App.myls + " -s")) {
+
+                }
 
                 //System.out.println("=========================================");
                 if (!mBr.ready()) {
-                    //currentCommand = null;
-                    if (currentCommand.startsWith(App.myls)) {
+                    if (currentCommand.startsWith(App.myls + " -f")) {
                         fileList = itemList;
                         itemList = null;
                         mHandler.sendEmptyMessage(1);
                     }
+                    if (currentCommand.startsWith(App.myls + " -s")) {
+                        mHandler.obtainMessage(2, content).sendToTarget();
+                    }
+                    currentCommand = null;
                 }
             }
 
@@ -228,6 +234,9 @@ public class ShellUtil {
             }
 
             while ((content = mErrorBr.readLine()) != null) {
+                if (currentCommand == null) {
+                    currentCommand = commandQueue.poll();
+                }
                 System.out.println("command-error->:" + currentCommand + " -error-conten--->:" +content);
                 sb.append(content + "\n");
                 if (!mErrorBr.ready()){
@@ -237,11 +246,15 @@ public class ShellUtil {
                     if (result.toLowerCase().contains("permission denied")) {
                         if (isGetRoot) {
                             permissionCommand = currentCommand;
-                            exeCommand(SU);
+                            currentCommand = null;
+                            exeCommand(SU + "\necho $?");
                         }
                     } else if (result.toLowerCase().contains("read-only file system")) {
 
+                    } else {
+                        currentCommand = null;
                     }
+
                 }
             }
 
@@ -265,10 +278,14 @@ public class ShellUtil {
                 case 1:
                     //System.out.println("result--->" + cmdUtil.result);
                     if (cmdUtil.resultListener != null) {
-                        cmdUtil.resultListener.onLoadComplet(cmdUtil.fileList);
+                        cmdUtil.resultListener.onLoadComplete(cmdUtil.fileList);
                     }
                     break;
-
+                case 2:
+                    if (cmdUtil.resultListener != null) {
+                        cmdUtil.resultListener.onLoadComplete(msg.obj.toString());
+                    }
+                    break;
                 case -1:
                     //System.out.println("error result--->" + cmdUtil.result);
                     if (cmdUtil.resultListener != null) {
@@ -305,8 +322,8 @@ public class ShellUtil {
     }
 
     public interface OnResultListener {
-        void onLoadComplet(List<FileItem> list);
-
+        void onLoadComplete(List<FileItem> list);
+        void onLoadComplete(String str);
         void onError(String msg);
     }
 

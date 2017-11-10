@@ -8,7 +8,7 @@ import com.lu.filemanager2.R;
 
 public class FileItem {
     //date and time
-    public String dt;
+    public long dt;
     //link to
     public String lt;
     //type and permission of file
@@ -36,6 +36,14 @@ public class FileItem {
 
     private String minor;
 
+    public FileItem(){}
+
+    public FileItem(boolean isUpper){
+        this.isUpper = isUpper;
+        this.n = "..";
+        this.tp = "d0rwxrwxrwx";
+    }
+
     /**
      * 文件是否被选中
      */
@@ -46,6 +54,10 @@ public class FileItem {
      */
     private boolean isOpera;
 
+    /**
+     * 上层文件夹的标志
+     */
+    public boolean isUpper;
 
     public String getName() {
         return n;
@@ -80,7 +92,7 @@ public class FileItem {
     /**
      * 链接文件所链接的路径
      */
-    public String getLinkTo() {
+    public String linkTo() {
         return lt;
     }
 
@@ -95,22 +107,11 @@ public class FileItem {
         return isFolder() ? 0 : s;
     }
 
+    /**
+     * 文件最后修改的时间 dt 为秒级别
+     */
     public long lastModified() {
-        return 0;
-    }
-
-    /**
-     * 文件最后修改的日期
-     */
-    public String getDate() {
-        return dt != null ? dt.split("\\s+")[0] : null;
-    }
-
-    /**
-     * 文件最后修改的时间
-     */
-    public String getTime() {
-        return dt != null ? dt.split("\\s+")[1] : null;
+        return dt * 1000;
     }
 
     /**
@@ -118,6 +119,13 @@ public class FileItem {
      */
     public String getPath() {
         return p;
+    }
+
+    /**
+     * 文件的权限
+     */
+    public String getPer() {
+        return tp.length() > 2 ? tp.substring(2) : "";
     }
 
     /**

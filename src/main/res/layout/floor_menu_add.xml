@@ -9,7 +9,7 @@
         android:layout_height="50dp"
         android:gravity="center_vertical"
         android:paddingLeft="15dp"
-        android:text="新建..."
+        android:text="@string/new_create"
         android:textColor="#ffffff"
         android:textSize="20sp" />
 
@@ -26,7 +26,7 @@
         android:clickable="true"
         android:gravity="center_vertical"
         android:paddingLeft="15dp"
-        android:text="文件"
+        android:text="@string/file"
         android:textSize="@dimen/floor_menu_front_size"
         android:textColor="#ffffff" />
 
@@ -43,7 +43,7 @@
         android:clickable="true"
         android:gravity="center_vertical"
         android:paddingLeft="15dp"
-        android:text="文件夹"
+        android:text="@string/dir"
         android:textSize="@dimen/floor_menu_front_size"
         android:textColor="#ffffff" />
 
@@ -53,13 +53,31 @@
         android:background="#67717e" />
 
     <TextView
+        android:id="@+id/floor_menu_add_roottab"
         android:layout_width="match_parent"
         android:layout_height="45dp"
         android:background="@drawable/app_menu_backgroud"
         android:clickable="true"
         android:gravity="center_vertical"
         android:paddingLeft="15dp"
-        android:text="SD卡"
+        android:text="@string/root_dir_tab"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />
+
+    <TextView
+        android:id="@+id/floor_menu_add_phonetab"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/phone_dir_tab"
         android:textSize="@dimen/floor_menu_front_size"
         android:textColor="#ffffff" />
 

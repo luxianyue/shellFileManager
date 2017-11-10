@@ -5,14 +5,26 @@
     android:descendantFocusability="beforeDescendants"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tv_current_path"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="sdgvdhdfg" />
+    <HorizontalScrollView
+        android:id="@+id/scroll_view_path"
+        android:layout_width="match_parent"
+        android:layout_height="30dp">
+
+        <TextView
+            android:id="@+id/tv_current_path"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="3dp"
+            android:textSize="16sp"
+            android:textColor="#121111"/>
+    </HorizontalScrollView>
+    <!--<View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#67717e" />-->
 
     <ListView
-        android:id="@+id/list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </LinearLayout>

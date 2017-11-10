@@ -36,6 +36,10 @@ public class App extends android.app.Application {
         SharePreferenceUtils.init(this);
     }
 
+    public static Context context() {
+        return mContext;
+    }
+
     public static boolean initMyLs() {
         if (new File(exePath + "/myls").exists()) {
             myls = exePath + "/myls";
@@ -44,7 +48,7 @@ public class App extends android.app.Application {
         InputStream fis = null;
         OutputStream out = null;
         try {
-            fis = mContext.getAssets().open(Build.CPU_ABI + "/myls");
+            fis = mContext.getAssets().open("libs/" + Build.CPU_ABI + "/myls");
             out = new FileOutputStream(exePath + "/myls");
             int len = 0;
             byte buf[] = new byte[1024];

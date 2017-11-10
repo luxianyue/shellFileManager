@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.databinding.DataBindingUtil;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
@@ -20,8 +21,10 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
+import com.lu.filemanager2.databinding.ListViewFile2Binding;
 import com.lu.model.FileItem;
 import com.lu.utils.FileUtil;
+import com.lu.utils.TimeUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -69,12 +72,14 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         ViewHolder holder;
         if (convertView == null) {
             holder = new ViewHolder();
-            convertView = mLayoutInflater.inflate(R.layout.list_view_file, null);
-            holder.fileIcon = (ImageView) convertView.findViewById(R.id.iv_directory);
-            holder.fileName = (TextView) convertView.findViewById(R.id.tv_file_name);
-            holder.fileTime = (TextView) convertView.findViewById(R.id.tv_file_time);
-            holder.fileSize = (TextView) convertView.findViewById(R.id.tv_file_size);
-            holder.fileCheckBox = (CheckBox) convertView.findViewById(R.id.checkbox_file);
+            ListViewFile2Binding viewBind = DataBindingUtil.inflate(mLayoutInflater, R.layout.list_view_file2, null, false);
+            convertView = viewBind.getRoot();
+            holder.fileIcon = viewBind.ivDirectory;
+            holder.fileName = viewBind.tvFileName;
+            holder.fileTime = viewBind.tvFileTime;
+            holder.fileSize = viewBind.tvFileSize;
+            holder.filePermiss = viewBind.tvFilePermission;
+            holder.fileCheckBox = viewBind.checkboxFile;
             //checkbox设置是否选中状态监听和点击监听
             holder.fileCheckBox.setOnCheckedChangeListener(this);
 
@@ -90,11 +95,18 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
             holder.fileCheckBox.setVisibility(View.VISIBLE);
         }
         //mCheckBoxList.add(holder.fileCheckBox);
+        if (item.isUpper) {
+            holder.fileCheckBox.setVisibility(View.GONE);
+            holder.fileTime.setVisibility(View.GONE);
+            holder.filePermiss.setVisibility(View.GONE);
+        }
         holder.fileCheckBox.setTag(position);
         holder.fileCheckBox.setChecked(item.isCheck());
         holder.fileName.setText(item.getName());
-        holder.fileSize.setText(FileUtil.getFileCountOrSize(item.isFolder(), item.size(), item.count()));
-        holder.fileTime.setText(item.getDate());
+        holder.fileSize.setText(FileUtil.getFileCountOrSize(item.isUpper, item.isFolder(), item.size(), item.count()));
+        holder.fileTime.setText(TimeUtils.getFormatDateTime(item.lastModified()));
+        holder.filePermiss.setText(item.getPer());
+
         Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
 
         switch (FileUtil.getFileType(item.getName())) {
@@ -152,7 +164,7 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
             mCheckFileItem.remove(item);
             //mCheckedBox.remove(buttonView);
         }
-        ((MainActivity)context).onCheckBoxClick(itemIsChecked());
+        ((MainActivity)context).onCheckBoxClick(itemIsChecked(), mCheckFileItem.size());
     }
 
     /**
@@ -229,6 +241,7 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         TextView fileName;
         TextView fileTime;
         TextView fileSize;
+        TextView filePermiss;
         CheckBox fileCheckBox;
     }
     public void release() {

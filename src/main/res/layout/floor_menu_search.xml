@@ -9,7 +9,7 @@
         android:layout_height="40dp"
         android:gravity="bottom"
         android:paddingLeft="15dp"
-        android:text="搜索："
+        android:text="@string/search"
         android:textColor="#ffffff"
         android:textSize="20sp" />
 
@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:paddingLeft="15dp"
-        android:text="文件"
+        android:text="@string/file"
         android:singleLine="true"
         android:background="@null"
         android:textCursorDrawable="@drawable/edit_cursor_bg"
@@ -42,7 +42,7 @@
         android:clickable="true"
         android:gravity="center"
         android:paddingLeft="15dp"
-        android:text="取消"
+        android:text="@string/cancel"
         android:textSize="@dimen/floor_menu_front_size"
         android:textColor="#ffffff" />
 
@@ -59,7 +59,7 @@
         android:clickable="true"
         android:gravity="center"
         android:paddingLeft="15dp"
-        android:text="确定"
+        android:text="@string/confirm"
         android:textSize="@dimen/floor_menu_front_size"
         android:textColor="#ffffff" />
 </LinearLayout>

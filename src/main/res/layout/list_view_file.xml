@@ -24,13 +24,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="6dp"
-            android:layout_marginTop="5dp"
-            android:textStyle="bold"/>
+            android:layout_marginTop="8dp"
+            android:textColor="#FF000000"
+            android:textSize="16sp"
+            />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp">
+            android:layout_marginTop="1dp">
 
             <TextView
                 android:id="@+id/tv_file_size"
@@ -43,6 +45,15 @@
 
             <TextView
                 android:id="@+id/tv_file_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:textColor="@color/tvFileTime"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_file_permission"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="8dp"
