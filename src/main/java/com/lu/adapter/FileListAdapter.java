@@ -50,6 +50,7 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
     //private Set<String> mCheckItemPath;
 
     private boolean isItemOpera;
+    private boolean canRemoveCb = true;
 
     public FileListAdapter(Context context) {
         this.context = context;
@@ -161,9 +162,14 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
             mCheckFileItem.add(item);
             mCheckedBox.add((CheckBox) buttonView);
         } else {
-            mCheckFileItem.remove(item);
-            //mCheckedBox.remove(buttonView);
+            if (mCheckFileItem.size() > 0) {
+                mCheckFileItem.remove(item);
+            }
+            if (mCheckedBox.size() > 0 && canRemoveCb) {
+                mCheckedBox.remove(buttonView);
+            }
         }
+        System.out.println("checkBox size-->" + mCheckedBox.size());
         ((MainActivity)context).onCheckBoxClick(itemIsChecked(), mCheckFileItem.size());
     }
 
@@ -177,9 +183,16 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
 
     public void checkFileItem(boolean isCheck) {
         if (isCheck){
-            for (FileItem item : mList) {
-                item.setCheck(isCheck);
-                mCheckFileItem.add(item);
+            if (mList.get(0).isUpper) {
+                for (int i = 1; i < mList.size(); i++) {
+                    mList.get(i).setCheck(isCheck);
+                    mCheckFileItem.add(mList.get(i));
+                }
+            } else {
+                for (FileItem item : mList) {
+                    item.setCheck(isCheck);
+                    mCheckFileItem.add(item);
+                }
             }
             /*for (CheckBox box : mCheckBoxList) {
                 box.setChecked(isCheck);
@@ -189,10 +202,12 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
             for (FileItem item : mCheckFileItem) {
                 item.setCheck(isCheck);
             }
+            mCheckFileItem.clear();
+            canRemoveCb = false;
             for (CheckBox box : mCheckedBox) {
                 box.setChecked(isCheck);
             }
-            mCheckFileItem.clear();
+            canRemoveCb = true;
             mCheckedBox.clear();
         }
         //notifyDataSetChanged();

@@ -23,7 +23,7 @@ public class App extends android.app.Application {
 
     protected static List<Activity> mActivities;
     private static String exePath;
-    public static String myls;
+    public static String tools;
 
     private static Context mContext;
 
@@ -40,27 +40,27 @@ public class App extends android.app.Application {
         return mContext;
     }
 
-    public static boolean initMyLs() {
-        if (new File(exePath + "/myls").exists()) {
-            myls = exePath + "/myls";
+    public static boolean initTools() {
+        if (new File(exePath + "/tools").exists()) {
+            tools = exePath + "/tools";
             return true;
         }
         InputStream fis = null;
         OutputStream out = null;
         try {
-            fis = mContext.getAssets().open("libs/" + Build.CPU_ABI + "/myls");
-            out = new FileOutputStream(exePath + "/myls");
+            fis = mContext.getAssets().open("libs/" + Build.CPU_ABI + "/tools");
+            out = new FileOutputStream(exePath + "/tools");
             int len = 0;
             byte buf[] = new byte[1024];
             while ((len = fis.read(buf)) != -1) {
                 out.write(buf, 0, len);
             }
-            File exe = new File(exePath + "/myls");
+            File exe = new File(exePath + "/tools");
             if (exe.exists()) {
                 exe.setReadable(true, false);
                 exe.setWritable(true, false);
                 exe.setExecutable(true, false);
-                myls = exe.getAbsolutePath();
+                tools = exe.getAbsolutePath();
                 return true;
             }
             return false;

@@ -78,7 +78,7 @@ public class FileUtil implements ShellUtil.OnResultListener {
     public ShellUtil getmShellUtil() {
         return mShellUtil;
     }
-    /*public static FileUtil getInstance() {
+    /*public static FileUtil get() {
         return new FileUtil();
     }*/
 
@@ -102,27 +102,51 @@ public class FileUtil implements ShellUtil.OnResultListener {
      * @param path
      */
     public void listAllFile(String path) {
-        mShellUtil.exeCommand(App.myls + " -f \"" + path + "\"");
-        //mShellUtil.exeCommand("myls " + path);
+        mShellUtil.exeCommand(App.tools + " -f " + getS(path));
+        //mShellUtil.exeCommand("tools " + path);
     }
 
     public void countDirSize(String path) {
-        mShellUtil.exeCommand(App.myls + " -s \"" + path + "\"");
+        mShellUtil.exeCommand(App.tools + " -s " + getS(path));
     }
 
     /**
      * 复制文件
      */
     public void copy(String src, String dest) {
-        mShellUtil.exeCommand("cp -r \"" + src + "\" \"" + dest + "\"");
+        mShellUtil.exeCommand(App.tools + " -cp " + getS(src) + " " + getS(dest));
     }
 
     public void cut(String src, String dest) {
-        mShellUtil.exeCommand("mv \"" + src + "\" \"" + dest + "\"");
+        mShellUtil.exeCommand(App.tools + " -mv " + getS(src) + " " + getS(dest));
     }
 
     public void del(String src) {
-        mShellUtil.exeCommand("rm -rf \"" + src + "\"");
+        mShellUtil.exeCommand(App.tools + " -del " + getS(src));
+    }
+
+    public void mountRW(String dev, String name) {
+        mShellUtil.exeCommand(ShellUtil.MOUNT_RW + getS(dev) + " " + getS(name));
+    }
+
+    public void mountRO(String dev, String name) {
+        mShellUtil.exeCommand(ShellUtil.MOUNT_RO + getS(dev) + " " + getS(name));
+    }
+
+    public void createDir(String path) {
+        mShellUtil.exeCommand(App.tools + " -nd " + getS(path));
+    }
+
+    public void createFile(String path) {
+        mShellUtil.exeCommand(App.tools + " -nf " + getS(path));
+    }
+
+    public void rename(String oldN, String newN) {
+        mShellUtil.exeCommand(App.tools + " -rn " + getS(oldN) + " " + getS(newN));
+    }
+
+    private static synchronized String getS(String str) {
+        return "\"" + str + "\"";
     }
 
     @Override
@@ -137,6 +161,27 @@ public class FileUtil implements ShellUtil.OnResultListener {
     public void onLoadComplete(String str) {
         if (mLoadFileListener != null) {
             mLoadFileListener.onLoadComplete(str);
+        }
+    }
+
+    @Override
+    public void onRenameComplete(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onRenameComplete(str);
+        }
+    }
+
+    @Override
+    public void onCreateDirComplete(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onCreateDirComplete(str);
+        }
+    }
+
+    @Override
+    public void onCreateFileComplete(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onCreateFileComplete(str);
         }
     }
 
@@ -550,6 +595,9 @@ public class FileUtil implements ShellUtil.OnResultListener {
     public interface OnLoadFileListener {
         void onLoadComplete(List<FileItem> items);
         void onLoadComplete(String str);
+        void onRenameComplete(String str);
+        void onCreateDirComplete(String str);
+        void onCreateFileComplete(String str);
         void onError(String msg);
     }
 

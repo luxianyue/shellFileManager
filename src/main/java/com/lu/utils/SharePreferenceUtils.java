@@ -63,7 +63,7 @@ public class SharePreferenceUtils {
         editor.commit();
     }
 
-    public static synchronized void saveFragmentState(int index, String initDir, String currentPath, boolean isShowToUser) {
+    public static void saveFragmentState(int index, String initDir, String currentPath, boolean isShowToUser) {
         SharedPreferences.Editor editor = mSp.edit();
         editor.putInt("tab_" + index, index);
         editor.putString("tab_s_" + index, currentPath);
@@ -77,7 +77,7 @@ public class SharePreferenceUtils {
         editor.commit();
     }
 
-    public static synchronized String[] getSavedFragmentState(int index) {
+    public static String[] getSavedFragmentState(int index) {
         int ind = mSp.getInt("tab_" + index, -1);
         String path = getCurrentPath(index);
         String initDir = getInitDir(index);

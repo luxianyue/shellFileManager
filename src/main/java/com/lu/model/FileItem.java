@@ -1,5 +1,7 @@
 package com.lu.model;
 
+import android.widget.CheckBox;
+
 import com.lu.filemanager2.R;
 
 /**
@@ -170,7 +172,7 @@ public class FileItem {
     }
 
     public void setCheck(boolean check) {
-        isCheck = check;
+        isCheck = isUpper ? false : check;
     }
 
     public int getType() {

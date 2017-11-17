@@ -2,14 +2,11 @@ package com.lu.view;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.lu.filemanager2.R;
@@ -19,19 +16,23 @@ import com.lu.filemanager2.databinding.PermissionSetMenuBinding;
  * Created by bulefin on 2017/11/9.
  */
 
-public class ViewManager {
-    private static ViewManager mViewManager;
+public class DialogManager {
+    private static DialogManager mDialogManager;
     private AlertDialog mPropertyDialog;
+    private AlertDialog mTipDialog;
     private TextView mPropertyTv[];
     private Object mPermissionSet[];
     private CheckBox mPerCheckBoxs[];
+    private Object mNewFileOrDir[];
+    private Object mMsgDialog[];
+    private Object mMsgConfirmDialog[];
 
-    private ViewManager(){}
-    public static ViewManager getInstance() {
-        if (mViewManager == null) {
-            mViewManager = new ViewManager();
+    private DialogManager(){}
+    public static DialogManager get() {
+        if (mDialogManager == null) {
+            mDialogManager = new DialogManager();
         }
-        return mViewManager;
+        return mDialogManager;
     }
 
     public TextView[] getPropertyTvArray() {
@@ -107,5 +108,70 @@ public class ViewManager {
         }
         mPerCheckBoxs = new CheckBox[12];
         return mPerCheckBoxs;
+    }
+
+    public AlertDialog createTiPDialog(Activity ay, View.OnClickListener listener) {
+        if (mTipDialog != null) {
+            return mTipDialog;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(ay);
+        LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.tip_dialog, null);
+        view.findViewById(R.id.tip_cancel).setOnClickListener(listener);
+        view.findViewById(R.id.tip_confirm).setOnClickListener(listener);
+        ((TextView)view.findViewById(R.id.tip_content)).setText(ay.getString(R.string.tip_content));
+        builder.setView(view);
+        mTipDialog = builder.create();
+        return mTipDialog;
+    }
+
+    public Object[] createNewFileOrDirDialog(Activity ay, View.OnClickListener listener) {
+        if (mNewFileOrDir != null) {
+            return mNewFileOrDir;
+        }
+        mNewFileOrDir = new Object[3];
+        AlertDialog.Builder builder = new AlertDialog.Builder(ay);
+        LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.new_filedir_dialog, null);
+        view.findViewById(R.id.newfiledir_cancel).setOnClickListener(listener);
+        view.findViewById(R.id.newfiledir_confirm).setOnClickListener(listener);
+        builder.setView(view);
+        mNewFileOrDir[0] = builder.create();
+        mNewFileOrDir[1] = view.getChildAt(0);
+        mNewFileOrDir[2] = view.getChildAt(3);
+        return mNewFileOrDir;
+    }
+
+    public Object[] getMsgDialog(Activity ay, View.OnClickListener listener) {
+        if (mMsgDialog != null) {
+            return mMsgDialog;
+        }
+        mMsgDialog = new Object[2];
+        AlertDialog.Builder builder = new AlertDialog.Builder(ay);
+        LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.msg_dialog, null);
+        view.getChildAt(view.getChildCount() -1).setOnClickListener(listener);
+        builder.setView(view);
+        mMsgDialog[0] = builder.create();
+        mMsgDialog[1] = view.getChildAt(2);
+        return mMsgDialog;
+    }
+
+    public Object[] getMsgConfirmDialog(Activity ay, View.OnClickListener listener) {
+        if (mMsgConfirmDialog != null) {
+            return mMsgConfirmDialog;
+        }
+        mMsgConfirmDialog = new Object[3];
+        AlertDialog.Builder builder = new AlertDialog.Builder(ay);
+        LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.msg_confirm_dialog, null);
+        LinearLayout ll = (LinearLayout) view.getChildAt(view.getChildCount() -1);
+        ll.getChildAt(0).setOnClickListener(listener);
+        ll.getChildAt(2).setOnClickListener(listener);
+        builder.setView(view);
+        mMsgConfirmDialog[0] = builder.create();
+        mMsgConfirmDialog[1] = view.getChildAt(0);
+        mMsgConfirmDialog[2] = view.getChildAt(2);
+        return mMsgConfirmDialog;
+    }
+
+    public static void onDestroy() {
+        mDialogManager = null;
     }
 }

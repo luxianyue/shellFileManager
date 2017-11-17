@@ -18,13 +18,12 @@ import android.os.Message;
 
 import com.alibaba.fastjson.JSON;
 import com.lu.App;
-import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
 
 public class ShellUtil {
 
     private static final String
-            MY_LS = "myls",
+            MY_LS = "tools",
             LS_FILE_ALL = "ls -al",
             LS_FILE_EXCEPT_HIDE = "ls -l",
             LS_FILE_ALL_FOR_LINK = "ls -aF",
@@ -34,8 +33,8 @@ public class ShellUtil {
             PWD = "pwd",
             SHELL = "/system/bin/sh";
 
-    private static final String MOUNT_RW = "mount -o remount,rw ";
-    private static final String MOUNT_RO = "mount -o remount,ro ";
+    public static final String MOUNT_RW = "mount -o remount,rw ";
+    public static final String MOUNT_RO = "mount -o remount,ro ";
 
     public static final int
             FLAG_LS_FILE_ALL = 1,
@@ -55,7 +54,7 @@ public class ShellUtil {
 
     private OnResultListener resultListener;
 
-    private String currentCommand;
+    private String curtCommand;
     private String permissionCommand;
 
     private boolean isGetRoot = true;
@@ -88,11 +87,13 @@ public class ShellUtil {
     private List<FileItem> fileList;
 
     private Queue<String> commandQueue;
+    private Queue<String> errorQueue;
 
 
     private ShellUtil() {
         mHandler = new MyHandler(this);
         commandQueue = new LinkedList<>();
+        errorQueue = new LinkedList<>();
         //把正常的结果输出流和错误流合并在同一个流里面
         //processBuilder.redirectErrorStream(true);
         try {
@@ -131,7 +132,7 @@ public class ShellUtil {
      *
      * @return
      */
-    /*public static final ShellUtil getInstance() {
+    /*public static final ShellUtil get() {
         return new ShellUtil();
     }*/
 
@@ -145,19 +146,7 @@ public class ShellUtil {
             if (mOutStream != null) {
                 commandQueue.offer(command);
                 System.out.println("exeCommand--------------------------->" + command);
-                if (command.startsWith("cd ")){
-                    mOutStream.write((command + "\n").getBytes());
-                    mOutStream.write(("echo $?\n").getBytes());
-                } else if (command.equals(SU)){
-                    mOutStream.write((command + "\n").getBytes());
-                    /*try {
-                        System.out.println("------------------------666666>" + mProcess.waitFor());
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }*/
-                } else {
-                    mOutStream.write((command + "\n").getBytes());
-                }
+                mOutStream.write((command + "\n").getBytes());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -184,37 +173,73 @@ public class ShellUtil {
             String currentPath = null;
             String command = null;
             while ((content = mBr.readLine()) != null) {
-                if (currentCommand == null) {
-                    currentCommand = commandQueue.poll();
-                    System.out.println("currentCommand-------->" + currentCommand + ",  content--->" + content);
+                if (curtCommand == null) {
+                    curtCommand = commandQueue.poll();
+                    System.out.println("curtCommand-------->" + curtCommand + ",  content--->" + content);
                 }
-                if (currentCommand.startsWith(App.myls + " -f")) {
+                //System.out.println("curtCommand-------->" + curtCommand + ",  content--->" + content);
+                if (curtCommand.startsWith(App.tools + " -f")) {
                     if (itemList == null) {
                         itemList = new ArrayList<>();
                     }
                     item = JSON.parseObject(content, FileItem.class);
                     itemList.add(item);
                 }
-                if (currentCommand.startsWith(App.myls + " -s")) {
-
+                /*if (curtCommand.startsWith(App.tools + " -cp")) {
+                    System.out.println("content--->" + content);
                 }
+                if (curtCommand.startsWith(App.tools + " -mv")) {
+                    System.out.println("content--->" + content);
+                }
+                if (curtCommand.startsWith(App.tools + " -del")) {
+                    System.out.println("content--->" + content);
+                }*/
 
                 //System.out.println("=========================================");
                 if (!mBr.ready()) {
-                    if (currentCommand.startsWith(App.myls + " -f")) {
+                    if (curtCommand.startsWith(App.tools + " -f")) {
+                        curtCommand = null;
                         fileList = itemList;
                         itemList = null;
                         mHandler.sendEmptyMessage(1);
+                        continue;
                     }
-                    if (currentCommand.startsWith(App.myls + " -s")) {
+                    if (curtCommand.startsWith(App.tools + " -s")) {
+                        curtCommand = null;
                         mHandler.obtainMessage(2, content).sendToTarget();
+                        continue;
                     }
-                    currentCommand = null;
+                    if (curtCommand.startsWith(App.tools + " -rn")) {
+                        curtCommand = null;
+                        mHandler.obtainMessage(3, content).sendToTarget();
+                        continue;
+                    }
+                    if (curtCommand.startsWith(App.tools + " -nd")) {
+                        curtCommand = null;
+                        mHandler.obtainMessage(4, content).sendToTarget();
+                        continue;
+                    }
+                    if (curtCommand.startsWith(App.tools + " -nf")) {
+                        curtCommand = null;
+                        mHandler.obtainMessage(5, content).sendToTarget();
+                        continue;
+                    }
+                    if (curtCommand.startsWith("su\necho $?")) {
+                        curtCommand = null;
+                        if ("0".equals(content)) {
+                            exeCommand(errorQueue.poll());
+                        } else {
+                            errorQueue.poll();
+                        }
+                        continue;
+                    }
+                    curtCommand = null;
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println(e.toString());
         }
     }
 
@@ -234,10 +259,11 @@ public class ShellUtil {
             }
 
             while ((content = mErrorBr.readLine()) != null) {
-                if (currentCommand == null) {
-                    currentCommand = commandQueue.poll();
+                if (curtCommand == null) {
+                    curtCommand = commandQueue.poll();
+                    errorQueue.offer(curtCommand);
                 }
-                System.out.println("command-error->:" + currentCommand + " -error-conten--->:" +content);
+                System.out.println("command-error->:" + curtCommand + " -error-conten--->:" +content);
                 sb.append(content + "\n");
                 if (!mErrorBr.ready()){
                     result = sb.toString();
@@ -245,14 +271,14 @@ public class ShellUtil {
                     mHandler.sendEmptyMessage(-1);
                     if (result.toLowerCase().contains("permission denied")) {
                         if (isGetRoot) {
-                            permissionCommand = currentCommand;
-                            currentCommand = null;
+                            permissionCommand = curtCommand;
+                            curtCommand = null;
                             exeCommand(SU + "\necho $?");
                         }
                     } else if (result.toLowerCase().contains("read-only file system")) {
 
                     } else {
-                        currentCommand = null;
+                        curtCommand = null;
                     }
 
                 }
@@ -260,6 +286,7 @@ public class ShellUtil {
 
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println(e.toString());
         }
     }
 
@@ -274,23 +301,29 @@ public class ShellUtil {
 
         @Override
         public void handleMessage(Message msg) {
+            if (cmdUtil.resultListener == null) {
+                return;
+            }
             switch (msg.what) {
                 case 1:
                     //System.out.println("result--->" + cmdUtil.result);
-                    if (cmdUtil.resultListener != null) {
-                        cmdUtil.resultListener.onLoadComplete(cmdUtil.fileList);
-                    }
+                    cmdUtil.resultListener.onLoadComplete(cmdUtil.fileList);
                     break;
                 case 2:
-                    if (cmdUtil.resultListener != null) {
-                        cmdUtil.resultListener.onLoadComplete(msg.obj.toString());
-                    }
+                    cmdUtil.resultListener.onLoadComplete(msg.obj.toString());
+                    break;
+                case 3:
+                    cmdUtil.resultListener.onRenameComplete(msg.obj.toString());
+                    break;
+                case 4:
+                    cmdUtil.resultListener.onCreateDirComplete(msg.obj.toString());
+                    break;
+                case 5:
+                    cmdUtil.resultListener.onCreateFileComplete(msg.obj.toString());
                     break;
                 case -1:
                     //System.out.println("error result--->" + cmdUtil.result);
-                    if (cmdUtil.resultListener != null) {
-                        cmdUtil.resultListener.onError(cmdUtil.result);
-                    }
+                    cmdUtil.resultListener.onError(cmdUtil.result);
                     break;
             }
         }
@@ -324,6 +357,9 @@ public class ShellUtil {
     public interface OnResultListener {
         void onLoadComplete(List<FileItem> list);
         void onLoadComplete(String str);
+        void onRenameComplete(String str);
+        void onCreateDirComplete(String str);
+        void onCreateFileComplete(String str);
         void onError(String msg);
     }
 

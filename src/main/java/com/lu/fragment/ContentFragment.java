@@ -2,7 +2,6 @@ package com.lu.fragment;
 
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -23,16 +22,17 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.lu.adapter.FileListAdapter;
 import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
-import com.lu.filemanager2.databinding.PermissionSetMenuBinding;
 import com.lu.model.FileItem;
 import com.lu.model.Path;
 import com.lu.utils.FileUtil;
 import com.lu.utils.SharePreferenceUtils;
 import com.lu.utils.TimeUtils;
-import com.lu.view.ViewManager;
+import com.lu.utils.ToastUitls;
+import com.lu.view.DialogManager;
 
 import java.util.List;
 import java.util.Set;
@@ -82,6 +82,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private String mExternalStoragePath;
 
+    private boolean isBackKey;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,18 +101,19 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
         mExternalStoragePath = Environment.getExternalStorageDirectory().getAbsolutePath();
         isFirstEnter = true;
+        String savePath = mInitDir;
         if (mInitDir == null) {
             String str[] = SharePreferenceUtils.getSavedFragmentState(mIndex);
+            savePath = str[1];
             mInitDir = str[2];
-            mBackStack.push(new Path("/", getString(R.string.root_dir)));
-            String paths[] = str[1].split("/");
-            String path = "";
-            for (int i = 1; i < paths.length; i++) {
-                path += "/" + paths[i];
-                mBackStack.push(new Path(path, getPathName(path)));
-            }
-        } else {
-            mBackStack.push(new Path(mInitDir, getPathName(mInitDir)));
+        }
+        System.out.println(mIndex + "==>" + savePath);
+        mBackStack.push(new Path("/", getString(R.string.root_dir)));
+        String paths[] = savePath.split("/");
+        String path = "";
+        for (int i = 1; i < paths.length; i++) {
+            path += "/" + paths[i];
+            mBackStack.push(new Path(path, getPathName(path)));
         }
         mCurrentPath = mBackStack.peek();
         FileUtil.userSortMode = SharePreferenceUtils.getFileSortMode();
@@ -134,11 +137,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         LinearLayout view = (LinearLayout) inflater.inflate(R.layout.fragment_layout, null);
         mListView = (ListView) view.getChildAt(1);
         mTextViewPath = (TextView) ((FrameLayout) view.getChildAt(0)).getChildAt(0);
-
-        if (isShowToUser) {
-            mFileUtil.setOnLoadFileListener(loadFileListener);
-            mFileUtil.listAllFile(mCurrentPath.getPath());
-        }
+        System.out.println("onCreateView");
+        //mFileUtil.setOnLoadFileListener(loadFileListener);
+        //mFileUtil.listAllFile(mCurrentPath.getPath());
 
         mListView.setAdapter(mFileListAdapter);
         mListView.setOnItemClickListener(this);
@@ -153,10 +154,11 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         super.setUserVisibleHint(isVisibleToUser);
         getView().setVisibility(isVisibleToUser ? View.VISIBLE : View.GONE);
         isShowToUser = isVisibleToUser;
-        if (isVisibleToUser && mFileUtil != null) {
+       if (isVisibleToUser && mFileUtil != null) {
             mFileUtil.setOnLoadFileListener(loadFileListener);
             if (mFileListAdapter.getList() == null) {
                 mFileUtil.listAllFile(mCurrentPath.getPath());
+                //mFileUtil.listAllFile("/sdcard/Android");
             }
         }
     }
@@ -170,8 +172,10 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void onCheckedChanged() {
-        int size = "/".equals(mCurrentPath.getPath()) ? mFileListAdapter.getList().size() : mFileListAdapter.getList().size() -1;
-        if ((mFileListAdapter.itemIsChecked() && mFileListAdapter.getCheckFileItem().size() < size)
+        int checkSize = mFileListAdapter.getCheckFileItem().size();
+        int totalSize = mFileListAdapter.getList().get(0).isUpper ? mFileListAdapter.getList().size() - 1 : mFileListAdapter.getList().size();
+        //System.out.println("checksize "+ checkSize + "  totalsize=" + totalSize);
+        if ((mFileListAdapter.itemIsChecked() && checkSize < totalSize )
         || !mFileListAdapter.itemIsChecked()) {
             mFileListAdapter.checkFileItem(true);
         } else {
@@ -188,14 +192,15 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void saveCurrentState() {
-        int firstPosition = mListView.getFirstVisiblePosition();
-        View view = mListView.getChildAt(0);
-        int top = view == null ? 0 : view.getTop();
-        SharePreferenceUtils.saveListViewFpAndTp(mIndex, firstPosition, top);
-        SharePreferenceUtils.saveFragmentState(mIndex, mInitDir, mCurrentPath.getPath(), isShowToUser);
-        if (mExternalStoragePath.equals(mInitDir)) {
-
+        System.out.println("fragment save state start " + mIndex);
+        if (mListView != null) {
+            int firstPosition = mListView.getFirstVisiblePosition();
+            View view = mListView.getChildAt(0);
+            int top = view == null ? 0 : view.getTop();
+            SharePreferenceUtils.saveListViewFpAndTp(mIndex, firstPosition, top);
+            SharePreferenceUtils.saveFragmentState(mIndex, mInitDir, mCurrentPath.getPath(), isShowToUser);
         }
+
     }
 
     private void setTabTitle(String name) {
@@ -230,12 +235,33 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         }
     }
 
+    public void createDir(String name) {
+        String cpath = mCurrentPath.getPath();
+        cpath = "/".equals(cpath) ? cpath : cpath + "/";
+        mFileUtil.createDir(cpath + name);
+    }
+
+    public void createFile(String name) {
+        String cpath = mCurrentPath.getPath();
+        cpath = "/".equals(cpath) ? cpath : cpath + "/";
+        mFileUtil.createFile(cpath + name);
+    }
+
+    public void rename(String oldN, String newN) {
+        String cpath = mCurrentPath.getPath();
+        cpath = "/".equals(cpath) ? cpath : cpath + "/";
+        if (oldN.equals(cpath + newN)) {
+            return;
+        }
+        mFileUtil.rename(oldN, cpath + newN);
+    }
+
     public void copy(Set<FileItem> items) {
         for (FileItem item : items) {
             mFileUtil.copy(item.getPath(), mCurrentPath.getPath());
         }
         mFileListAdapter.setItemOpera(false);
-        cancelCheckedItem();
+        //cancelCheckedItem();
         mFileUtil.listAllFile(mCurrentPath.getPath());
     }
 
@@ -301,6 +327,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         FileItem item = (FileItem) mFileListAdapter.getItem(position);
         if (item.isUpper) {
+            isBackKey = false;
             goBackUpperDir();
             return;
         }
@@ -356,9 +383,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 System.out.println("----->" + mLongSelFileItem.getPer());
                 mPermiss = FileUtil.getFilePermissionNum(mLongSelFileItem.getPer());
                 if (mPermissionSetDialog == null) {
-                    Object objects[] = ViewManager.getInstance().createPermissionSetDialog(getActivity(), this, this);
+                    Object objects[] = DialogManager.get().createPermissionSetDialog(getActivity(), this, this);
                     mPermissionSetDialog = (AlertDialog) objects[0];
-                    mPerCheckBoxs = ViewManager.getInstance().getCheckBoxArray();
+                    mPerCheckBoxs = DialogManager.get().getCheckBoxArray();
                     int width = Integer.parseInt(objects[1].toString());
                     mPerSetFileName = (TextView) objects[2];
                     mPermissionOctalValueTextView = (TextView) objects[3];
@@ -380,9 +407,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             case R.id.permission_confirm:
                 break;
             case R.id.listview_item_longclick_property:
-                TextView tv[] = ViewManager.getInstance().getPropertyTvArray();
+                TextView tv[] = DialogManager.get().getPropertyTvArray();
                 if (mFilePropertyDialog == null) {
-                    mFilePropertyDialog = ViewManager.getInstance().createPropertyDialog(getActivity(), this);
+                    mFilePropertyDialog = DialogManager.get().createPropertyDialog(getActivity(), this);
                 }
                 tv[0].setText(getString(R.string.name_colon) + mLongSelFileItem.getName());
                 tv[1].setText(getString(R.string.path_colon) + mLongSelFileItem.getPath());
@@ -421,16 +448,16 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             return true;
         }
 
+        isBackKey = true;
         return goBackUpperDir();
     }
 
     private boolean goBackUpperDir() {
         if (mFileListAdapter.itemIsChecked() && !mFileListAdapter.isItemOpera()) {
-
             cancelCheckedItem();
             return true;
         }
-        if (mBackStack.isEmpty() || (mExternalStoragePath.equals(mInitDir) && mCurrentPath.getPath().equals(mInitDir))) {
+        if (isBackKey && (mBackStack.isEmpty() || (mExternalStoragePath.equals(mInitDir) && mCurrentPath.getPath().equals(mInitDir)))) {
             return false;
         }
         mBackStack.pop();
@@ -469,13 +496,56 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         public void onLoadComplete(String str) {
             if (str != null) {
                 long size = JSON.parseObject(str).getLongValue("totalSize");
-                ViewManager.getInstance().getPropertyTvArray()[3].setText(getResources().getText(R.string.size_colon) + FileUtil.getFormatByte(size));
+                DialogManager.get().getPropertyTvArray()[3].setText(getResources().getText(R.string.size_colon) + FileUtil.getFormatByte(size));
+            }
+        }
+
+        @Override
+        public void onRenameComplete(String str) {
+            JSONObject jb = JSON.parseObject(str);
+            if (jb.getBooleanValue("state")) {
+                ToastUitls.showSMsg("重命名成功");
+                mFileUtil.listAllFile(mCurrentPath.getPath());
+            } else {
+                ToastUitls.showSMsg("rename fail:" + jb.getString("reason"));
+            }
+        }
+
+        @Override
+        public void onCreateDirComplete(String str) {
+            JSONObject jb = JSON.parseObject(str);
+            if (jb.getBooleanValue("state")) {
+                ToastUitls.showSMsg("文件夹创建成功");
+                mFileUtil.listAllFile(mCurrentPath.getPath());
+            } else {
+                //ToastUitls.showSMsg("create dir fail:" + jb.getString("reason"));
+                Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
+                if ("File exists".toLowerCase().contains(jb.getString("reason").toLowerCase())) {
+                    ((TextView)obj[1]).setText("该名称已存在，文件夹创建失败");
+                }
+                ((AlertDialog)obj[0]).show();
+            }
+        }
+
+        @Override
+        public void onCreateFileComplete(String str) {
+            JSONObject jb = JSON.parseObject(str);
+            if (jb.getBooleanValue("state")) {
+                ToastUitls.showSMsg("文件创建成功");
+                mFileUtil.listAllFile(mCurrentPath.getPath());
+            } else {
+                //ToastUitls.showSMsg("create file fail:" + jb.getString("reason"));
+                Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
+                if ("File exists".toLowerCase().contains(jb.getString("reason").toLowerCase())) {
+                    ((TextView)obj[1]).setText("该名称已存在，文件创建失败");
+                }
+                ((AlertDialog)obj[0]).show();
             }
         }
 
         @Override
         public void onError(String msg) {
-            System.out.println("error-->" + msg);
+            //System.out.println("onError-->" + msg);
         }
     };
 
