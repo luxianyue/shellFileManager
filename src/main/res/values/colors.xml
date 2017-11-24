@@ -9,5 +9,6 @@
     <color name="tvFileName">#999999</color>
 
     <!--permission set color start-->
-    <color name="per_setfont_color">#dcdada</color>
+    <color name="per_setfont_color_enable">#dcdada</color>
+    <color name="per_setfont_color_notable">#a4a3a3</color>
 </resources>

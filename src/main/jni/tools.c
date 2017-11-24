@@ -34,13 +34,19 @@ static long get_file_count(char* dir);
  * list file
  */
 static void ls_file(char *file_path) {
+    printf("ls_file------>%s\n", file_path);
     char temp[MAX_PATH];
     char path[MAX_PATH];
     //realpath(file_path, temp);
     struct dirent *dp;
     DIR *dir;
     if ((dir = opendir(file_path)) == NULL) {
-        perror("error");
+        //perror("error");
+        char *err = strerror(errno);
+        char serror[strlen(err) + strlen(file_path) + 39];
+        sprintf(serror, "{'flag':'f','path':'%s','error':'%s'}", file_path, err);
+        fprintf(stderr, "%s\n", serror);
+        //write(2, serror, strlen(serror));
         return;
     }
     //if (strcmp(temp, "/") != 0) {
@@ -111,17 +117,17 @@ static void ls_file_info(char *path, char* name) {
             stat(link_to, &link_file);
             per_ty[1] = get_file_type(link_file.st_mode);
             if (per_ty[1] == 'd') {
-                printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s','lt':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, link_to, get_file_count(path));
+                printf("{'flag':'f','tp':'%s','u':'%s','g':'%s','s':'%lld','dt':'%ld','n':'%s','p':'%s','lt':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, link_to, get_file_count(path));
             } else {
-                printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s','lt':'%s'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, link_to);
+                printf("{'flag':'f','tp':'%s','u':'%s','g':'%s','s':'%lld','dt':'%ld','n':'%s','p':'%s','lt':'%s'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, link_to);
             }
             break;
         }
         case S_IFDIR:
-            printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, get_file_count(path));
+            printf("{'flag':'f','tp':'%s','u':'%s','g':'%s','s':'%lld','dt':'%ld','n':'%s','p':'%s','ct':'%ld'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path, get_file_count(path));
             break;
         default:
-            printf("{'tp':'%s','u':'%s','g':'%s','s':%lld,'dt':'%ld','n':'%s','p':'%s'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path);
+            printf("{'flag':'f','tp':'%s','u':'%s','g':'%s','s':'%lld','dt':'%ld','n':'%s','p':'%s'}\n", per_ty, user, group, (long long)st.st_size, st.st_mtime, name, path);
             break;
     }
     //printf("\n");
@@ -303,43 +309,46 @@ static long long get_file_size(char* file) {
         remove_tailq_item(TAILQ_FIRST(&head));
     }
 
-    //printf("{'totalSize':%lld}\n", f_size);
+    //printf("{'totalSize':'%lld'}\n", f_size);
     return f_size;
 }
 
 //file copy, move, delete  start>>===================================================================================================================
-static void delete_file(char *src);
-static void copy_file(char *src_path, char *des_path);
-static void move_file(char *src_path, char *des_path);
+static void delete_file(char *flag, char *src);
+static void copy_file(char *flag, char *src_path, char *des_path);
+static void move_file(char *flag, char *src_path, char *des_path);
 static void get_filesystem_dir(char *path, char r_path[]);
 
-static void do_copy(char *src_path, char *des_path, long long total_len) {
+static void do_copy(char *flag, char *src_path, char *des_path, long long total_len) {
     FILE *src,*des;
     des = fopen(des_path,"wb");
     if (des == NULL) {
         printf("--des null->%s\n", strerror(errno));
-        printf("{\"srcIsR\":true, \"desIsW\":false}\n");
+        printf("{'srcIsR':'true', 'desIsW':'false'}\n");
         return;
     }
     src = fopen(src_path,"rb");
 
-    char buff[1 << 20];
+    char buff[1 << 16];
     size_t _size = sizeof(char);
     size_t size_n = sizeof(buff);
 
-    int len;
+    int len = 0;
     long long count = 0;
     while((len = fread(buff, _size, size_n, src)) != 0) {
-        fwrite(buff, 1, len, des);
+        fwrite(buff, _size, len, des);
         count += len;
-        printf("{\"name\":\"%s\",\"totalSize\":%lld, \"currentSize\":%lld}\n",strrchr(src_path, '/') + 1, total_len, count);
+        printf("{'flag':'%s','name':'%s','totalSize':'%lld', 'currentSize':'%lld'}\n", flag, strrchr(src_path, '/') + 1, total_len, count);
+    }
+    if (count == 0) {
+        printf("{'flag':'%s','name':'%s','totalSize':'%lld', 'currentSize':'%lld'}\n", flag, strrchr(src_path, '/') + 1, total_len, count);
     }
     fflush(des);
     fclose(src);
     fclose(des);
 }
 
-static void copy_file(char *src_path, char *des_path) {
+static void copy_file(char *flag, char *src_path, char *des_path) {
     /*
      * 判断文件是否存在和是否可读可写
     int access(const char *pathname,int mode);
@@ -352,22 +361,22 @@ static void copy_file(char *src_path, char *des_path) {
     当我们测试成功时,函数返回0,否则如果有一个条件不符时,返回-1.
      * */
    /* if (access(src_path, R_OK)) {
-        printf("{\"srcIsR\":false, \"desIsW\":true}\n");
+        printf("{'srcIsR':'false', 'desIsW':'true'}\n");
         return;
     }
     if (access(des_path, W_OK)) {
-        printf("{\"srcIsR\":true, \"desIsW\":false}\n");
+        printf("{'srcIsR':'true', 'desIsW':'false'}\n");
         return;
     }*/
     struct stat st_src, st_des;
     if (stat(src_path, &st_src)) {
         printf("--stat src->%s\n", strerror(errno));
-        printf("{\"srcIsR\":false, \"desIsW\":true}\n");
+        printf("{'srcIsR':'false', 'desIsW':'true'}\n");
         return;
     }
     if (stat(des_path, &st_des)) {
         printf("--stat des->%s\n", strerror(errno));
-        printf("{\"srcIsR\":true, \"desIsW\":false}\n");
+        printf("{'srcIsR':'true', 'desIsW':'false'}\n");
         return;
     }
 
@@ -378,6 +387,7 @@ static void copy_file(char *src_path, char *des_path) {
             printf("--mkdir->%s\n", strerror(errno));
             return;
         }
+        printf("{'flag':'%s','name':'%s','totalSize':'%lld', 'currentSize':'%lld'}\n", flag, strrchr(des_p, '/') + 1, 0LL, 0LL);
         char path[MAX_PATH];
         struct dirent *dt;
         DIR *dir = opendir(src_path);
@@ -389,18 +399,18 @@ static void copy_file(char *src_path, char *des_path) {
                 continue; //skip self and parent
             }
             sprintf(path, "%s/%s", src_path, dt->d_name);
-            copy_file(path, des_p);
+            copy_file(flag, path, des_p);
         }
         closedir(dir);
     } else {
         //printf("=============file1======%s\n", src_path);
         //printf("=============file2======%s\n", des_p);
-        do_copy(src_path, des_p, (long long)st_src.st_size);
+        do_copy(flag, src_path, des_p, (long long)st_src.st_size);
     }
 
 }
 
-static void move_file(char *src_path, char *des_path) {
+static void move_file(char* flag, char *src_path, char *des_path) {
     /*
      * 判断文件是否存在和是否可读可写
     int access(const char *pathname,int mode);
@@ -413,22 +423,22 @@ static void move_file(char *src_path, char *des_path) {
     当我们测试成功时,函数返回0,否则如果有一个条件不符时,返回-1.
      * */
     /*if (access(src_path, R_OK)) {
-        printf("{\"srcIsR\":false, \"desIsW\":true}\n");
+        printf("{'srcIsR':'false', 'desIsW':'true'}\n");
         return;
     }
     if (access(des_path, W_OK)) {
-        printf("{\"srcIsR\":true, \"desIsW\":false}\n");
+        printf("{'srcIsR':'true', 'desIsW':'false'}\n");
         return;
     }*/
     struct stat st_src, st_des;
     if (stat(src_path, &st_src)) {
         printf("--stat src->%s\n", strerror(errno));
-        printf("{\"srcIsR\":false, \"desIsW\":true}\n");
+        printf("{'srcIsR':'false', 'desIsW':'true'}\n");
         return;
     }
     if (stat(des_path, &st_des)) {
         printf("--stat des->%s\n", strerror(errno));
-        printf("{\"srcIsR\":true, \"desIsW\":false}\n");
+        printf("{'srcIsR':'true', 'desIsW':'false'}\n");
         return;
     }
 
@@ -438,6 +448,7 @@ static void move_file(char *src_path, char *des_path) {
         if (mkdir(des_p, 0777)){
             printf("--mkdir->%s\n", strerror(errno));
         }
+        printf("{'flag':'%s','name':'%s','totalSize':'%lld', 'currentSize':'%lld'}\n", flag, strrchr(des_p, '/') + 1, 0LL, 0LL);
         char path[MAX_PATH];
         struct dirent *dt;
         DIR *dir = opendir(src_path);
@@ -449,15 +460,15 @@ static void move_file(char *src_path, char *des_path) {
                 continue; //skip self and parent
             }
             sprintf(path, "%s/%s", src_path, dt->d_name);
-            copy_file(path, des_p);
+            copy_file(flag, path, des_p);
         }
         closedir(dir);
-        delete_file(src_path);
+        delete_file(flag, src_path);
     } else {
         //printf("=============file1======%s\n", src_path);
         //printf("=============file2======%s\n", des_p);
-        do_copy(src_path, des_p, (long long)st_src.st_size);
-        delete_file(src_path);
+        do_copy(flag, src_path, des_p, (long long)st_src.st_size);
+        delete_file(flag, src_path);
     }
 
 }
@@ -466,9 +477,9 @@ static int file_not_rw(char *file) {
     return access(file, R_OK) | access(file, W_OK);
 }
 
-static void delete_file(char *src) {
+static void delete_file(char *flag, char *src) {
     /*if (file_not_rw(src)) {
-        printf("{\"state\":false, \"name\":\"%s\"}\n", strrchr(src, '/') + 1);
+        printf("{'state':'false', 'name':'%s'}\n", strrchr(src, '/') + 1);
         return;
     }*/
     struct stat st;
@@ -489,7 +500,7 @@ static void delete_file(char *src) {
                 continue; //skip self and parent
             }
             sprintf(path, "%s/%s", src, dt->d_name);
-            delete_file(path);
+            delete_file(flag, path);
         }
         closedir(dir);
     }
@@ -497,7 +508,9 @@ static void delete_file(char *src) {
     if (state) {
         printf("del remove--->%s\n", strerror(errno));
     }
-    printf("{\"state\":%s, \"name\":\"%s\"}\n", state == 0 ? "true" : "false", strrchr(src, '/') + 1);
+    if (strcmp(flag, "mv") != 0) {
+        printf("{'flag':'%s','state':'%s', 'name':'%s'}\n", flag, state == 0 ? "true" : "false", strrchr(src, '/') + 1);
+    }
 }
 
 static void get_filesystem_dir(char *path, char r_path[]) {
@@ -525,15 +538,15 @@ static void get_filesystem_dir(char *path, char r_path[]) {
 #define FLAG_FILE 2
 static void create_file_or_dir(char *name, int flag) {
     if (access(name, F_OK) == 0) {
-        printf("{\"state\":false,\"reason\":\"File exists\"}\n");
+        printf("{'flag':'nd','state':'false','reason':'File exists','isOver':'true'}\n");
         return;
     }
     if (flag == FLAG_DIR) {
         if (mkdir(name, 0777)){
             //printf("create fail--->%s\n", strerror(errno));
-            printf("{\"state\":false,\"reason\":\"%s\"}\n", strerror(errno));
+            printf("{'flag':'nd','state':'false','reason':'%s','isOver':'true'}\n", strerror(errno));
         } else {
-            printf("{\"state\":true}\n");
+            printf("{'flag':'nd','state':'true','isOver':'true'}\n");
         }
         return;
     }
@@ -541,71 +554,240 @@ static void create_file_or_dir(char *name, int flag) {
         FILE *file = fopen(name, "w");
         if (file == NULL) {
             //printf("create fail--->%s\n", strerror(errno));
-            printf("{\"state\":false,\"reason\":\"%s\"}\n", strerror(errno));
+            printf("{'flag':'nf','state':'false','reason':'%s','isOver':'true'}\n", strerror(errno));
             return;
         }
-        printf("{\"state\":true}\n");
+        printf("{'flag':'nf','state':'true','isOver':'true'}\n");
         fclose(file);
     }
 }
 //create file or dir end <<===========================================================
 
+// chmod start >>=====================================================================
+static void do_chmod(char *path, int mode) {
+    if (chmod(path, mode)) {
+        char *error_msg = strerror(errno);
+        char err[strlen(path) + strlen(error_msg) + 39];
+        sprintf(err, "{'flag':'chm','error':'%s','path':'%s'}",error_msg, path);
+        fprintf(stderr, "%s\n", err);
+    } else {
+        printf("{'flag':'chm','state':'true','path':'%s', 'name':'%s'}\n",path, strrchr(path, '/') + 1);
+    }
+}
+static void chmod_file(char *src, int mode, char fg) {
+    if (fg == 'o') {
+        do_chmod(src, mode);
+        return;
+    }
+    struct stat st;
+    if (stat(src, &st)){
+        printf("chmod stat--->%s\n", strerror(errno));
+        return;
+    }
+    if (S_ISDIR(st.st_mode)) {
+        do_chmod(src, mode);
+        char path[MAX_PATH];
+        struct dirent *dt;
+        DIR *dir = opendir(src);
+        if (dir == NULL) {
+            printf("chmod dir null--->%s\n", strerror(errno));
+            return;
+        }
+        while((dt = readdir(dir)) != NULL) {
+            if ((strcmp(dt->d_name, ".") == 0) || (strcmp(dt->d_name, "..") == 0)) {
+                continue; //skip self and parent
+            }
+            sprintf(path, "%s/%s", src, dt->d_name);
+            chmod_file(path, mode, fg);
+        }
+        closedir(dir);
+    } else {
+        if (fg == 'r') {
+            do_chmod(src, mode);
+        }
+    }
+}
+// chmod end <<================================================================================
+
+#include <pthread.h>
+
+/*typedef struct {
+    int argc;
+    int index[3];
+    char data[0];
+}params;
+static void* start_thread(void* param) {
+    params *para = (params*)param;
+    printf("argc---->%d\n", para->argc);
+    printf("argv---->%s\n", para->data);
+    char fg[para->index[0]];
+    strncpy(fg, para->data, para->index[0]);
+    fg[para->index[0]] = '\0';
+
+    char* file_name;
+    char name[para->index[1]];
+    if (para->argc > 2) {
+         strncpy(name, para->data + para->index[0], para->index[1]);
+         name[para->index[1]] = '\0';
+         file_name = name;
+     } else {
+         file_name = ".";
+     }
+     if (strcmp(fg, "-s") == 0) {
+         printf("{'flag':'s','totalSize':'%lld'}\n", get_file_size(file_name));
+         //return 0;
+     } else if (strcmp(fg, "-f") == 0) {
+         ls_file(file_name);
+         _exit(0);
+         //return 0;
+     } else if (strcmp(fg, "-cp") == 0) {
+         //copy file
+         char des[para->index[2]];
+         strncpy(des, para->data + para->index[0] + para->index[1], para->index[2]);
+         des[para->index[2]] = '\0';
+         copy_file("cp", file_name, des);
+         //return 0;
+     } else if (strcmp(fg, "-mv") == 0) {
+         //move file
+         char des[para->index[2]];
+         strncpy(des, para->data + para->index[0] + para->index[1], para->index[2]);
+         des[para->index[2]] = '\0';
+         move_file("mv", file_name, des);
+         //return 0;
+     } else if (strcmp(fg, "-del") == 0) {
+         //delete file
+         delete_file("del", file_name);
+         //return 0;
+     } else if (strcmp(fg, "-rn") == 0) {
+         //delete file
+         char des[para->index[2]];
+         strncpy(des, para->data + para->index[0] + para->index[1], para->index[2]);
+         des[para->index[2]] = '\0';
+         if (rename(file_name, des) == 0) {
+             printf("{'flag':'rn','state':'true'}\n");
+         } else {
+             printf("{'flag':'rn','state':'false','reason':'%s'}\n", strerror(errno));
+         }
+         //return 0;
+     } else if (strcmp(fg, "-nd") == 0) {
+         //new dir
+         create_file_or_dir(file_name, FLAG_DIR);
+         //return 0;
+     } else if (strcmp(fg, "-nf") == 0) {
+         //new file
+         create_file_or_dir(file_name, FLAG_FILE);
+         //return 0;
+     }
+     free(para);
+    return (void*)0;
+}*/
+
+
 int main(int argc, char *argv[]) {
 
-    if (fork() == 0) {
-        char* file_name;
-        if (argc > 1) {
-            if (argc > 2) {
-                file_name = argv[2];
+   /* int len = 0;
+    for (int i = 1; i < argc; i++) {
+        len += strlen(argv[i]);
+    }
+    params *para = (params*)malloc(sizeof(params) + len);
+    para->argc = argc;
+    for (int i = 1; i < argc; i++) {
+        para->index[i -1] = strlen(argv[i]);
+        strcat(para->data, argv[i]);
+        //printf("%d===%s\n", para->index[i-1], para->data);
+    }
+    //free(para);
+    if (argc == 1) {
+        return 0;
+    }
+    pthread_t phtid;
+    if (pthread_create(&phtid, NULL, start_thread, (void *)para)){
+        printf("pthread fail %s\n", strerror(errno));
+    } else {
+        printf("pthread succeed \n");
+    }
+    pthread_exit(0);*/
+    char *fg = argv[1];
+    char *name;
+    if (argc > 2) {
+        name = argv[2];
+    } else {
+        name = ".";
+    }
+    if (strcmp(fg, "-f") == 0) {
+        ls_file(name);
+        printf("{'flag':'f','isOver':'true'}\n");
+        return 0;
+    }
+    if (strcmp(fg, "-nd") == 0) {
+        //new dir
+        create_file_or_dir(name, FLAG_DIR);
+        return 0;
+    }
+    if (strcmp(fg, "-nf") == 0) {
+        //new file
+        create_file_or_dir(name, FLAG_FILE);
+        return 0;
+    }
+    if (strcmp(fg, "-rn") == 0) {
+        //delete file
+        if (rename(name, argv[3]) == 0) {
+            printf("{'flag':'rn','isOver':'true','state':'true'}\n");
+        } else {
+            printf("{'flag':'rn','isOver':'true','state':'false','reason':'%s'}\n", strerror(errno));
+        }
+        return 0;
+    }
+    if (strcmp(fg, "-chm") == 0) {
+        int mode = 0;
+        const char* s = argv[3];
+        while (*s) {
+            if (*s >= '0' && *s <= '7') {
+                mode = (mode << 3) | (*s - '0');
             } else {
-                file_name = ".";
+                fprintf(stderr, "Bad mode\n");
+                return 10;
             }
-            if (strcmp(argv[1], "-s") == 0) {
-                printf("{'totalSize':%lld}\n", get_file_size(file_name));
-                _exit(0);
-            } else if (strcmp(argv[1], "-f") == 0) {
-                ls_file(file_name);
-                _exit(0);
-            } else if (strcmp(argv[1], "-cp") == 0) {
-                //copy file
-                copy_file(file_name, argv[3]);
-                _exit(0);
-            } else if (strcmp(argv[1], "-mv") == 0) {
-                //move file
-                move_file(file_name, argv[3]);
-                _exit(0);
-            } else if (strcmp(argv[1], "-del") == 0) {
-                //delete file
-                delete_file(file_name);
-                _exit(0);
-            } else if (strcmp(argv[1], "-rn") == 0) {
-                //delete file
-                if (rename(file_name, argv[3]) == 0) {
-                    printf("{\"state\":true}\n");
-                } else {
-                    printf("{\"state\":false,\"reason\":\"%s\"}\n", strerror(errno));
-                }
-                _exit(0);
-            } else if (strcmp(argv[1], "-nd") == 0) {
-                //new dir
-                create_file_or_dir(file_name, FLAG_DIR);
-                _exit(0);
-            } else if (strcmp(argv[1], "-nf") == 0) {
-                //new file
-                create_file_or_dir(file_name, FLAG_FILE);
-                _exit(0);
-            }
+            s++;
+        }
+        //tools -chm -n 0777 /sdcard
+        //fg= n-->self, d-->only dir, r-->all;
+        char fg[2];
+        sprintf(fg, "%s", argv[2]);
+        chmod_file(argv[4], mode, fg[1]);
+        printf("{'flag':'chm','isOver':'true','path':'%s'}\n", argv[4]);
+        return 0;
+    }
+    if (strcmp(fg, "-uid") == 0) {
+        printf("--pid-->%d  ---uid--->%d  ---gid--->%d\n", getpid(), getuid(), getgid());
+        printf("{'flag':'uid','isOver':'true','uid':'%d'}\n", getuid());
+        return 0;
+    }
+    signal(SIGCHLD, SIG_IGN);
+    if (fork() == 0) {
+        if (strcmp(fg, "-s") == 0) {
+            printf("{'flag':'s','isOver':'true','totalSize':'%lld'}\n", get_file_size(name));
+            return 0;
+        }else if (strcmp(fg, "-cp") == 0) {
+            //copy file
+            copy_file("cp", name, argv[3]);
+            printf("{'flag':'cp','isOver':'true'}\n");
+            return 0;
+        } else if (strcmp(fg, "-mv") == 0) {
+            //move file
+            move_file("mv", name, argv[3]);
+            printf("{'flag':'mv','isOver':'true'}\n");
+            return 0;
+        } else if (strcmp(fg, "-del") == 0) {
+            //delete file
+            delete_file("del", name);
+            printf("{'flag':'del','isOver':'true'}\n");
+            return 0;
         }
 
+    } else {
+        return 0;
     }
-
-    //get_file_size("/home/lu/android_source/android-7.1.2_r1/out");
-    //get_file_size("/home/lu/clion-work/hello/cmake-build-debug/mydir");
-    //ls_file(file_name);
-    //long long s = 35329641863;
-    //printf("%lld   \n",s);
-
-
     return 0;
 }
 

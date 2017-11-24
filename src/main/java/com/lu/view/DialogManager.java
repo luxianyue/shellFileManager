@@ -2,6 +2,8 @@ package com.lu.view;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.view.View;
 import android.widget.CheckBox;
@@ -26,6 +28,7 @@ public class DialogManager {
     private Object mNewFileOrDir[];
     private Object mMsgDialog[];
     private Object mMsgConfirmDialog[];
+    private Object mProgressConfirmDialog[];
 
     private DialogManager(){}
     public static DialogManager get() {
@@ -97,7 +100,7 @@ public class DialogManager {
         viewBind.permissionConfirm.setOnClickListener(clickListener);
         view.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
         builder.setView(view);
-        Object objects[] = {builder.create(), view.getMeasuredWidth(), perSetFileName, permissionOctalValueTextView};
+        Object objects[] = {builder.create(), view.getMeasuredWidth(), perSetFileName, permissionOctalValueTextView, viewBind.permissionCheckApplyChilddirandfile, viewBind.permissionCheckNotapplyChildfile};
         mPermissionSet = objects;
         return mPermissionSet;
     }
@@ -169,6 +172,35 @@ public class DialogManager {
         mMsgConfirmDialog[1] = view.getChildAt(0);
         mMsgConfirmDialog[2] = view.getChildAt(2);
         return mMsgConfirmDialog;
+    }
+
+    public Object[] getProgressConfirmDialog(Activity ay, View.OnClickListener listener) {
+        if (mProgressConfirmDialog != null) {
+            return mProgressConfirmDialog;
+        }
+        mProgressConfirmDialog = new Object[6];
+        AlertDialog.Builder builder = new AlertDialog.Builder(ay);
+        LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.progress_confirm_dialog, null);
+        LinearLayout ll = (LinearLayout) view.getChildAt(view.getChildCount() -1);
+        ll.getChildAt(0).setOnClickListener(listener);
+        ll.getChildAt(2).setOnClickListener(listener);
+        builder.setView(view);
+        mProgressConfirmDialog[0] = builder.create();
+        mProgressConfirmDialog[1] = view.getChildAt(0);
+        mProgressConfirmDialog[2] = view.getChildAt(2);
+        mProgressConfirmDialog[3] = view.getChildAt(3);
+        mProgressConfirmDialog[4] = view.getChildAt(4);
+        mProgressConfirmDialog[5] = view.getChildAt(5);
+        return mProgressConfirmDialog;
+    }
+
+    ProgressDialog defaultProgressDialog;
+    public ProgressDialog getDefaultProgress(Context context, String title, String msg) {
+        if (defaultProgressDialog != null) {
+            return defaultProgressDialog;
+        }
+        defaultProgressDialog = ProgressDialog.show(context, null, msg, true, false);
+        return defaultProgressDialog;
     }
 
     public static void onDestroy() {

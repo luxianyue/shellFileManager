@@ -36,6 +36,7 @@
     <string name="set_sticky">设置粘滞位</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
+    <string name="back_run">后台运行</string>
     <string name="input_octal">输入八进制</string>
     <string name="octal_number">八进制</string>
     <string name="apply_all_childfile_and_childdir">同时应用到所有子文件和子文件夹</string>
@@ -70,6 +71,12 @@
     <string name="phone_dir_tab">本机目录标签</string>
     <string name="phone_storage">本机存储</string>
 
+    <string name="total_size">总大小</string>
+    <string name="copy_ed">已复制</string>
+    <string name="move_ed">已移动</string>
+    <string name="copy_ing">正在复制</string>
+    <string name="move_ing">正在移动</string>
+    <string name="del_ing">正在删除</string>
     <string name="copy_here">复制到此</string>
     <string name="move_here">移动到此</string>
     <string name="search">搜索：</string>
@@ -89,5 +96,8 @@
     <string name="msg_content_dels">确定要删除所选中的项目？</string>
     <string name="msg_title_close">关闭</string>
     <string name="msg_content_close">确定要关闭此标签？</string>
+
+    <string name="property_content">选取内容包含多个项目</string>
+    <string name="working_per">正在操作中...</string>
 
 </resources>

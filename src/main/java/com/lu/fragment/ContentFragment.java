@@ -1,6 +1,7 @@
 package com.lu.fragment;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,22 +19,28 @@ import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.lu.App;
 import com.lu.adapter.FileListAdapter;
 import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
+import com.lu.model.Item;
 import com.lu.model.Path;
 import com.lu.utils.FileUtil;
+import com.lu.utils.PermissionUtils;
 import com.lu.utils.SharePreferenceUtils;
+import com.lu.utils.ShellUtil;
 import com.lu.utils.TimeUtils;
 import com.lu.utils.ToastUitls;
 import com.lu.view.DialogManager;
 
+import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -83,6 +90,10 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     private String mExternalStoragePath;
 
     private boolean isBackKey;
+
+    private Set<FileItem> mOperaItemSet;
+
+    private String mFg = "-o";
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -158,7 +169,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mFileUtil.setOnLoadFileListener(loadFileListener);
             if (mFileListAdapter.getList() == null) {
                 mFileUtil.listAllFile(mCurrentPath.getPath());
-                //mFileUtil.listAllFile("/sdcard/Android");
+                //mFileUtil.listAllFile("/");
+                //mFileUtil.listAllFile("/");
             }
         }
     }
@@ -257,30 +269,30 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void copy(Set<FileItem> items) {
+        mOperaItemSet = items;
         for (FileItem item : items) {
             mFileUtil.copy(item.getPath(), mCurrentPath.getPath());
         }
-        mFileListAdapter.setItemOpera(false);
         //cancelCheckedItem();
-        mFileUtil.listAllFile(mCurrentPath.getPath());
+        //mFileUtil.listAllFile(mCurrentPath.getPath());
     }
 
     public void cut(Set<FileItem> items) {
+        mOperaItemSet = items;
         for (FileItem item : items) {
             mFileUtil.cut(item.getPath(), mCurrentPath.getPath());
         }
-        mFileListAdapter.setItemOpera(false);
         cancelCheckedItem();
-        mFileUtil.listAllFile(mCurrentPath.getPath());
+        //mFileUtil.listAllFile(mCurrentPath.getPath());
     }
 
     public void del(Set<FileItem> items) {
+        mOperaItemSet = items;
         for (FileItem item : items) {
             mFileUtil.del(item.getPath());
         }
-        mFileListAdapter.setItemOpera(false);
         cancelCheckedItem();
-        mFileUtil.listAllFile(mCurrentPath.getPath());
+        //mFileUtil.listAllFile(mCurrentPath.getPath());
     }
 
     public void sort(int whichSort) {
@@ -289,16 +301,14 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void operaItem(boolean opera, int action) {
-        mFileListAdapter.setItemOpera(opera);
+        cancelCheckedItem();
         switch (action) {
             case 1:
                 //copy
-                for (FileItem item : getCheckedItem()) {
+                /*for (FileItem item : getCheckedItem()) {
                     mFileUtil.copy(item.getPath(), mCurrentPath.getPath());
-                }
-                mFileListAdapter.setItemOpera(false);
-                cancelCheckedItem();
-                mFileUtil.listAllFile(mCurrentPath.getPath());
+                }*/
+                //mFileUtil.listAllFile(mCurrentPath.getPath());
                 break;
             case 2:
                 //cut
@@ -315,10 +325,6 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         return mFileListAdapter.getCheckFileItem();
     }
 
-    public boolean isItemOpera() {
-        return mFileListAdapter.isItemOpera();
-    }
-
     public void countDirSize(String path) {
         mFileUtil.countDirSize(path);
     }
@@ -332,7 +338,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             return;
         }
         //如果文件被选中则进入文件选择模式
-        if (mFileListAdapter.itemIsChecked() && !mFileListAdapter.isItemOpera()) {
+        if (mFileListAdapter.itemIsChecked()) {
             CheckBox box = (CheckBox) ((PercentRelativeLayout)view).getChildAt(5);
             if (item.isCheck()) {
                 item.setCheck(false);
@@ -360,8 +366,13 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     }
 
+    private CheckBox mLongClickCheckBox;
+    private View mLongClickSendTo;
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        if (mFileListAdapter.itemIsChecked()) {
+            return false;
+        }
         mLongSelFileItem = (FileItem) mFileListAdapter.getItem(position);
         if (mLongSelFileItem.isUpper) {
             return true;
@@ -369,6 +380,14 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         if (mItemLongClickDialog == null) {
             initItemLongClickDialog();
         }
+        if (mLongSelFileItem.isFolder()) {
+            mLongClickSendTo.setVisibility(View.GONE);
+        } else {
+            mLongClickSendTo.setVisibility(View.VISIBLE);
+        }
+        mLongClickCheckBox = (CheckBox) ((PercentRelativeLayout)view).getChildAt(5);
+        mLongSelFileItem.setCheck(true);
+        mLongClickCheckBox.setChecked(true);
 
         mItemLongClickDialog.show();
         return true;
@@ -378,62 +397,63 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.listview_item_longclick_permissionset:
-                mItemLongClickDialog.dismiss();
-                System.out.println("----->" + mLongSelFileItem.getPath());
-                System.out.println("----->" + mLongSelFileItem.getPer());
-                mPermiss = FileUtil.getFilePermissionNum(mLongSelFileItem.getPer());
-                if (mPermissionSetDialog == null) {
-                    Object objects[] = DialogManager.get().createPermissionSetDialog(getActivity(), this, this);
-                    mPermissionSetDialog = (AlertDialog) objects[0];
-                    mPerCheckBoxs = DialogManager.get().getCheckBoxArray();
-                    int width = Integer.parseInt(objects[1].toString());
-                    mPerSetFileName = (TextView) objects[2];
-                    mPermissionOctalValueTextView = (TextView) objects[3];
-                    preparePerAndCheckBox();
-                    mPerSetFileName.setText(mLongSelFileItem.getName());
-                    mPermissionSetDialog.show();
-                    WindowManager.LayoutParams params = mPermissionSetDialog.getWindow().getAttributes();
-                    params.width = width + 50;
-                    mPermissionSetDialog.getWindow().setAttributes(params);
-                    break;
+                if (ShellUtil.isGetRoot()) {
+                    showPermissionSetDialog();
+                } else {
+                    mFileUtil.exeCommand("su\necho \"{'flag':'su','fg':'per','content':'$?'}\"");
                 }
-                preparePerAndCheckBox();
-                mPerSetFileName.setText(mLongSelFileItem.getName());
-                mPermissionSetDialog.show();
                 break;
             case R.id.permission_cancel:
                 mPermissionSetDialog.dismiss();
                 break;
             case R.id.permission_confirm:
+                String oldMode = "" + mPermiss[0] + mPermiss[1] + mPermiss[2] + mPermiss[3];
+                String mode = "" + perFlagSet + owner + userGroup + other;
+                //System.out.println(oldMode + "--permission_confirm:" + perFlagSet + owner + userGroup + other);
+                mPermissionSetDialog.dismiss();
+                if (!mLongSelFileItem.isFolder()) {
+                    mFg = "-o";
+                }
+                if ("-o".equals(mFg) && mode.equals(oldMode)) {
+                    return;
+                }
+                //System.out.println("permission_confirm:--> " + mFg);
+                DialogManager.get().getDefaultProgress(getActivity(), "", getString(R.string.working_per)).show();
+                mFileUtil.chmod(mLongSelFileItem.getPath(), mode, mFg);
                 break;
             case R.id.listview_item_longclick_property:
-                TextView tv[] = DialogManager.get().getPropertyTvArray();
-                if (mFilePropertyDialog == null) {
-                    mFilePropertyDialog = DialogManager.get().createPropertyDialog(getActivity(), this);
-                }
-                tv[0].setText(getString(R.string.name_colon) + mLongSelFileItem.getName());
-                tv[1].setText(getString(R.string.path_colon) + mLongSelFileItem.getPath());
-                tv[2].setText(getString(R.string.perm_colon) + mLongSelFileItem.getPer());
-                tv[4].setText(getString(R.string.time_colon) + TimeUtils.getFormatDateTime(mLongSelFileItem.lastModified()));
-                tv[5].setText(getString(R.string.owner_colon) + mLongSelFileItem.getUser());
-                tv[6].setText(getString(R.string.usergroup_colon) + mLongSelFileItem.getGroup());
-                if (mLongSelFileItem.isLink()) {
-                    tv[7].setVisibility(View.VISIBLE);
-                    tv[7].setText(getString(R.string.linkto_colon) + mLongSelFileItem.linkTo());
-                } else {
-                    tv[7].setVisibility(View.GONE);
-                }
-                if (mLongSelFileItem.isFolder()) {
-                    tv[3].setText(getString(R.string.size_colon).toString() + getString(R.string.counting));
-                    countDirSize(mLongSelFileItem.getPath());
-                } else {
-                    tv[3].setText(getString(R.string.size_colon) + FileUtil.getFormatByte(mLongSelFileItem.size()));
-                }
                 mItemLongClickDialog.dismiss();
-                mFilePropertyDialog.show();
+                ((MainActivity)getActivity()).showProperty(mLongSelFileItem);
                 break;
             case R.id.property_confirm:
                 mFilePropertyDialog.dismiss();
+                break;
+            case R.id.listview_item_longclick_del:
+                mItemLongClickDialog.dismiss();
+                ((MainActivity)getActivity()).delete(mLongSelFileItem);
+                break;
+            case R.id.listview_item_longclick_copy:
+                mItemLongClickDialog.dismiss();
+                ((MainActivity)getActivity()).copy(mLongSelFileItem);
+                break;
+            case R.id.listview_item_longclick_move:
+                mItemLongClickDialog.dismiss();
+                ((MainActivity)getActivity()).move(mLongSelFileItem);
+                break;
+            case R.id.listview_item_longclick_rename:
+                mItemLongClickDialog.dismiss();
+                ((MainActivity)getActivity()).rename(mLongSelFileItem);
+                break;
+            case R.id.listview_item_longclick_sendto:
+                mItemLongClickDialog.dismiss();
+                Intent share = new Intent(Intent.ACTION_SEND);
+                share.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(mLongSelFileItem.getPath())));
+                share.setType("*/*");//此处可发送多种文件
+                //share.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+               // share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                //sendIntent.setType("text/plain");
+                //sendIntent.putExtra(Intent.EXTRA_TEXT, "这是一段分享的文字");
+                startActivity(Intent.createChooser(share, "分享"));
                 break;
         }
     }
@@ -453,11 +473,14 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     private boolean goBackUpperDir() {
-        if (mFileListAdapter.itemIsChecked() && !mFileListAdapter.isItemOpera()) {
+        if (mFileListAdapter.itemIsChecked()) {
             cancelCheckedItem();
             return true;
         }
         if (isBackKey && (mBackStack.isEmpty() || (mExternalStoragePath.equals(mInitDir) && mCurrentPath.getPath().equals(mInitDir)))) {
+            return false;
+        }
+        if (mBackStack.isEmpty()) {
             return false;
         }
         mBackStack.pop();
@@ -481,6 +504,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     private FileUtil.OnLoadFileListener loadFileListener = new FileUtil.OnLoadFileListener() {
         @Override
         public void onLoadComplete(List<FileItem> items) {
+            if (items == null) {
+                return;
+            }
             System.out.println("complete---file count--->" + items.size());
             if (!"/".equals(mCurrentPath.getPath())) {
                 items.add(0, new FileItem(true));
@@ -494,10 +520,13 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
         @Override
         public void onLoadComplete(String str) {
-            if (str != null) {
-                long size = JSON.parseObject(str).getLongValue("totalSize");
-                DialogManager.get().getPropertyTvArray()[3].setText(getResources().getText(R.string.size_colon) + FileUtil.getFormatByte(size));
-            }
+
+        }
+
+        @Override
+        public void onSizeComplete(String str) {
+            long size = JSON.parseObject(str).getLongValue("totalSize");
+            DialogManager.get().getPropertyTvArray()[3].setText(getResources().getText(R.string.size_colon) + FileUtil.getFormatByte(size));
         }
 
         @Override
@@ -529,6 +558,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
         @Override
         public void onCreateFileComplete(String str) {
+            System.out.println("onCreateFileComplete-->" + str);
             JSONObject jb = JSON.parseObject(str);
             if (jb.getBooleanValue("state")) {
                 ToastUitls.showSMsg("文件创建成功");
@@ -543,22 +573,139 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             }
         }
 
+        Object progressObj[];
+        long totalSize;
+        long curenSize;
+        @Override
+        public void onCpAction(String str) {
+
+            //mFileListAdapter.getList().add(mOperaItemSet.iterator().next());
+            //mOperaItemSet.remove(mOperaItemSet.iterator().next());
+            //mFileUtil.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
+            //mFileListAdapter.notifyDataSetChanged();
+            JSONObject cpJson = JSON.parseObject(str);
+            if (cpJson.getBooleanValue("isOver")) {
+                mFileUtil.listAllFile(mCurrentPath.getPath());
+            } else {
+                if (progressObj == null) {
+                    progressObj = DialogManager.get().getProgressConfirmDialog(getActivity(), (MainActivity)getActivity());
+                }
+                totalSize = cpJson.getLongValue("totalSize");
+                curenSize = cpJson.getLongValue("currentSize");
+                System.out.println("totalSize:" + totalSize + "  curenSize:" + curenSize);
+                if (totalSize > Integer.MAX_VALUE) {
+                    ((ProgressBar)progressObj[5]).setMax(100000000);
+                    ((ProgressBar)progressObj[5]).setProgress((int) (((float)curenSize / totalSize) * 100000000));
+                } else {
+                    ((ProgressBar)progressObj[5]).setMax((int) totalSize);
+                    ((ProgressBar)progressObj[5]).setProgress((int) curenSize);
+                }
+                ((TextView)progressObj[2]).setText(getString(R.string.total_size) + "：" + FileUtil.getFormatByte(totalSize));
+                ((TextView)progressObj[3]).setText(getString(R.string.copy_ed) + "：" + FileUtil.getFormatByte(curenSize));
+                ((TextView)progressObj[4]).setText(getString(R.string.copy_ing) + "：" + cpJson.getString("name"));
+                if (!((AlertDialog)progressObj[0]).isShowing()) {
+                    ((AlertDialog)progressObj[0]).show();
+                }
+            }
+        }
+
+        @Override
+        public void onMvComplete() {
+            //mFileListAdapter.getList().add(mOperaItemSet.iterator().next());
+            //mOperaItemSet.remove(mOperaItemSet.iterator().next());
+            //mFileUtil.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
+            //mFileListAdapter.notifyDataSetChanged();
+            mFileUtil.listAllFile(mCurrentPath.getPath());
+        }
+
+        @Override
+        public void onDelComplete() {
+            for (FileItem item : mOperaItemSet) {
+                mFileListAdapter.getList().remove(item);
+            }
+            //mFileUtil.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
+            mFileListAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        public void onCHMAction(String string) {
+            DialogManager.get().getDefaultProgress(getContext(), "", "").dismiss();
+        }
+
+        @Override
+        public void onReqGetRoot(Item item) {
+            System.out.println(item.fg + "--onReqGetRoot-->" + item.content);
+            switch (item.fg) {
+                case "per":
+                    if ("0".equals(item.content)) {
+                        showPermissionSetDialog();
+                    } else {
+                        Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
+                        ((TextView)obj[1]).setText("此功能仅对已经取得root权限的设备有效，应用获取root权限失败。");
+                        ((AlertDialog)obj[0]).show();
+                    }
+                    break;
+            }
+        }
+
         @Override
         public void onError(String msg) {
             //System.out.println("onError-->" + msg);
         }
     };
 
+    private void showPermissionSetDialog() {
+        mItemLongClickDialog.dismiss();
+        //System.out.println("----->" + mLongSelFileItem.getPath());
+        //System.out.println("----->" + mLongSelFileItem.getPer());
+        mPermiss = FileUtil.getFilePermissionNum(mLongSelFileItem.getPer());
+        Object objects[] = DialogManager.get().createPermissionSetDialog(getActivity(), this, this);
+        CheckBox dirFilecheckBox = (CheckBox) objects[4];
+        CheckBox onlyFilecheckBox = (CheckBox) objects[5];
+        if (mLongSelFileItem.isFolder()) {
+            dirFilecheckBox.setVisibility(View.VISIBLE);
+            onlyFilecheckBox.setVisibility(View.VISIBLE);
+        } else {
+            dirFilecheckBox.setVisibility(View.GONE);
+            onlyFilecheckBox.setVisibility(View.GONE);
+        }
+        if (mPermissionSetDialog == null) {
+            mPermissionSetDialog = (AlertDialog) objects[0];
+            mPerCheckBoxs = DialogManager.get().getCheckBoxArray();
+            int width = Integer.parseInt(objects[1].toString());
+            mPerSetFileName = (TextView) objects[2];
+            mPermissionOctalValueTextView = (TextView) objects[3];
+            preparePerAndCheckBox();
+            mPerSetFileName.setText(mLongSelFileItem.getName());
+            mPermissionSetDialog.show();
+            WindowManager.LayoutParams params = mPermissionSetDialog.getWindow().getAttributes();
+            params.width = width + 50;
+            mPermissionSetDialog.getWindow().setAttributes(params);
+            return;
+        }
+        preparePerAndCheckBox();
+        mPerSetFileName.setText(mLongSelFileItem.getName());
+        mPermissionSetDialog.show();
+    }
+
     private void initItemLongClickDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         ScrollView view = (ScrollView) getActivity().getLayoutInflater().inflate(R.layout.listview_item_longclick_menu, null);
         LinearLayout layout = (LinearLayout) view.getChildAt(0);
+        mLongClickSendTo = layout.getChildAt(14);
         for (int i = 1; i < layout.getChildCount(); i++) {
             if (layout.getChildAt(i) instanceof TextView)
                 layout.getChildAt(i).setOnClickListener(this);
         }
         builder.setView(view);
         mItemLongClickDialog = builder.create();
+        mItemLongClickDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                mLongSelFileItem.setCheck(false);
+                mLongClickCheckBox.setChecked(false);
+            }
+        });
     }
 
     @Override
@@ -618,8 +765,24 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 //one
                 break;
             case R.id.permission_check_apply_childdirandfile:
+                Object objects[] = DialogManager.get().createPermissionSetDialog(getActivity(), this, this);
+                CheckBox checkBox = (CheckBox) objects[5];
+                checkBox.setEnabled(isChecked ? true : false);
+                if (isChecked) {
+                    mFg = "-r";
+                    checkBox.setChecked(false);
+                    checkBox.setTextColor(getResources().getColor(R.color.per_setfont_color_enable));
+                } else {
+                    mFg = "-o";
+                    checkBox.setTextColor(getResources().getColor(R.color.per_setfont_color_notable));
+                }
                 break;
             case R.id.permission_check_notapply_childfile:
+                if (isChecked) {
+                    mFg = "-d";
+                } else {
+                    mFg = "-r";
+                }
                 break;
         }
         mPermissionOctalValueTextView.setText("" + perFlagSet + owner + userGroup + other);

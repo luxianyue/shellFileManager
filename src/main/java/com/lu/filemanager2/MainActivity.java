@@ -15,7 +15,6 @@ import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -32,12 +31,14 @@ import com.lu.model.FileItem;
 import com.lu.utils.FileUtil;
 import com.lu.utils.PermissionUtils;
 import com.lu.utils.SharePreferenceUtils;
+import com.lu.utils.ShellUtil;
 import com.lu.utils.TimeUtils;
 import com.lu.utils.ToastUitls;
 import com.lu.view.MyViewPager;
 import com.lu.view.DialogManager;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -62,10 +63,12 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
     private int isWhat;
     private static final int DELETE = 101;
     private static final int CLOSE_TAG = 102;
+    private static final int PROPERTY = 103;
 
     private boolean isFloorMenu2Mode;
 
     private Set<FileItem> mCheckItems;
+    private Set<FileItem> mCheckItems2;
 
     private List<Fragment> mFragmentList;
     private List<String> mFragmentTitleList;
@@ -74,7 +77,6 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         mViewBind = DataBindingUtil.setContentView(this, R.layout.activity_main);
         initLayout();
@@ -171,12 +173,17 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 if (contentFragment.onKeyBack()) {
                     return true;
                 }
-                if (contentFragment.isItemOpera()) {
+                if (isFloorMenu2Mode) {
+                    isFloorMenu2Mode = false;
+                    setShowWhichFoolMenuBar(0);
+                    return true;
+                }
+                /*if (contentFragment.isItemOpera()) {
                     setShowWhichFoolMenuBar(0);
                     contentFragment.operaItem(false, 0);
                     contentFragment.cancelCheckedItem();
                     return true;
-                }
+                }*/
                 break;
         }
         return super.onKeyDown(keyCode, event);
@@ -270,99 +277,60 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 break;
             case R.id.image_copy:
                 System.out.println("menu1_image_copy");
-                mCheckItems = getCurrentShowFragment().getCheckedItem();
-                isFloorMenu2Mode = true;
-                mViewBind.fileHandleMenu2.tvPaste.setText("复制到此");
-                setShowWhichFoolMenuBar(2);
-                getCurrentShowFragment().operaItem(true, 0);
+                //mCheckItems = getCurrentShowFragment().getCheckedItem();
+                copy(null);
                 break;
             case R.id.image_cut:
                 System.out.println("menu1_image_cut");
-                mCheckItems = getCurrentShowFragment().getCheckedItem();
-                isFloorMenu2Mode = true;
-                mViewBind.fileHandleMenu2.tvPaste.setText("移动到此");
-                setShowWhichFoolMenuBar(2);
-                getCurrentShowFragment().operaItem(true, 0);
+                move(null);
                 //getCurrentShowFragment().cancelAllCheckedItem();
                 break;
             case R.id.image_delete:
                 System.out.println("menu1_image_delete");
                 isWhat = DELETE;
-                mCheckItems = getCurrentShowFragment().getCheckedItem();
-                Object msgConfirmDialog[] = DialogManager.get().getMsgConfirmDialog(this, this);
-                FileItem delItem = mCheckItems.iterator().next();
-                ((TextView)msgConfirmDialog[1]).setText(mCheckItems.iterator().next().getName());
-                if (delItem.isFolder()) {
-                    ((TextView)msgConfirmDialog[2]).setText(getString(R.string.msg_content_deldir));
-                } else {
-                    ((TextView)msgConfirmDialog[2]).setText(getString(R.string.msg_content_delfile));
-                }
-                if (mCheckItems.size() > 1) {
-                    ((TextView)msgConfirmDialog[1]).setText(getString(R.string.msg_content_title_dels));
-                    ((TextView)msgConfirmDialog[2]).setText(getString(R.string.msg_content_dels));
-                }
-                ((AlertDialog)msgConfirmDialog[0]).show();
+                //mCheckItems = getCurrentShowFragment().getCheckedItem();
+                delete(null);
                 break;
             case R.id.image_rename:
                 System.out.println("menu1_image_rename");
-                mCheckItems = getCurrentShowFragment().getCheckedItem();
-                Object dirDialog[] = DialogManager.get().createNewFileOrDirDialog(this, this);
-                ((TextView)dirDialog[1]).setText(getString(R.string.rename));
-                ((EditText)dirDialog[2]).setText(mCheckItems.iterator().next().getName());
-                ((AlertDialog)dirDialog[0]).show();
+                //mCheckItems = getCurrentShowFragment().getCheckedItem();
+                if (getCurrentShowFragment().getCheckedItem().size() > 1) {
+                    isWhat = PROPERTY;
+                    Object closeObjD[] = DialogManager.get().getMsgConfirmDialog(this,this);
+                    ((TextView)closeObjD[1]).setText(getString(R.string.rename));
+                    ((TextView)closeObjD[2]).setText(getString(R.string.property_content));
+                    ((AlertDialog)closeObjD[0]).show();
+                } else {
+                    rename(null);
+                }
                 break;
             case R.id.msg_confirm_cancel:
                 ((AlertDialog)DialogManager.get().getMsgConfirmDialog(this, this)[0]).dismiss();
                 break;
             case R.id.msg_confirm_confirm:
                 ((AlertDialog)DialogManager.get().getMsgConfirmDialog(this, this)[0]).dismiss();
+                System.out.println("iswhat=" + isWhat);
                 if (isWhat == DELETE) {
-                    Object obj2[] = PermissionUtils.isOnlyReadFileSys(mCheckItems.iterator().next().getPath());
-                    if (Boolean.parseBoolean(obj2[0].toString())) {
-                        if (mMounts == null) {
-                            mMounts = new String[2];
-                        }
-                        mMounts[0] = obj2[1].toString();
-                        mMounts[1] = obj2[2].toString();
-                        //System.out.println(obj2[1] + " " + itemSet.iterator().next().getPath() + "------->is only read file sys");
-                        DialogManager.get().createTiPDialog(this, this).show();
-                        break;
-                    }
-                    getCurrentShowFragment().del(mCheckItems);
-                    break;
+                    doDelete();
                 }
                 if (isWhat == CLOSE_TAG) {
                     int index = getCurrentShowFragment().getIndex();
                     System.out.println("index="+ index);
                     removeTab(index);
                 }
+                isWhat = 0;
                 break;
             case R.id.image_property:
                 System.out.println("menu1_image_property");
-                TextView tv[] = DialogManager.get().getPropertyTvArray();
-                if (mPropertyDialog == null) {
-                    mPropertyDialog = DialogManager.get().createPropertyDialog(this, this);
-                }
-                FileItem selItem = getCurrentShowFragment().getCheckedItem().iterator().next();
-                tv[0].setText(getString(R.string.name_colon) + selItem.getName());
-                tv[1].setText(getString(R.string.path_colon) + selItem.getPath());
-                tv[2].setText(getString(R.string.perm_colon) + selItem.getPer());
-                tv[4].setText(getString(R.string.time_colon) + TimeUtils.getFormatDateTime(selItem.lastModified()));
-                tv[5].setText(getString(R.string.owner_colon) + selItem.getUser());
-                tv[6].setText(getString(R.string.usergroup_colon) + selItem.getGroup());
-                if (selItem.isLink()) {
-                    tv[7].setVisibility(View.VISIBLE);
-                    tv[7].setText(getString(R.string.linkto_colon) + selItem.linkTo());
+                if (getCurrentShowFragment().getCheckedItem().size() > 1) {
+                    isWhat = PROPERTY;
+                    Object closeObjD[] = DialogManager.get().getMsgConfirmDialog(this,this);
+                    ((TextView)closeObjD[1]).setText(getString(R.string.property));
+                    ((TextView)closeObjD[2]).setText(getString(R.string.property_content));
+                    ((AlertDialog)closeObjD[0]).show();
                 } else {
-                    tv[7].setVisibility(View.GONE);
+                    showProperty(getCurrentShowFragment().getCheckedItem().iterator().next());
                 }
-                if (selItem.isFolder()) {
-                    tv[3].setText(getString(R.string.size_colon).toString() + getString(R.string.counting));
-                    getCurrentShowFragment().countDirSize(selItem.getPath());
-                } else {
-                    tv[3].setText(getString(R.string.size_colon) + FileUtil.getFormatByte(selItem.size()));
-                }
-                mPropertyDialog.show();
                 break;
             case R.id.property_confirm:
                 mPropertyDialog.dismiss();
@@ -399,6 +367,20 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 break;
             case R.id.tv_create:
                 System.out.println("menu2_tv_create");
+                int location2Create[] = getIntArray();
+                v.getLocationOnScreen(location2Create);
+                if (mPopupWindowFloorBarAdd == null) {
+                    DisplayMetrics metrics = new DisplayMetrics();
+                    getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                    mPopupWindowFloorBarAdd = initPopupWindow(R.layout.floor_menu_add, (int) (metrics.widthPixels / ((float) 2.3)));
+                    LinearLayout layout = (LinearLayout) mPopupWindowFloorBarAdd.getContentView();
+                    for (int i = 1; i < layout.getChildCount(); i++) {
+                        if (layout.getChildAt(i) instanceof TextView) {
+                            layout.getChildAt(i).setOnClickListener(this);
+                        }
+                    }
+                }
+                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location2Create[0] + v.getWidth()/2  - 1, location2Create[1] - mPopupWindowFloorBarAdd.getHeight() - 10);
                 break;
             case R.id.tv_cancle:
                 System.out.println("menu2_tv_cancle");
@@ -409,6 +391,15 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 break;
             case R.id.tv_property2:
                 System.out.println("menu2_tv_property2");
+                if (mCheckItems.size() > 1) {
+                    isWhat = PROPERTY;
+                    Object closeObjD[] = DialogManager.get().getMsgConfirmDialog(this,this);
+                    ((TextView)closeObjD[1]).setText(getString(R.string.property));
+                    ((TextView)closeObjD[2]).setText(getString(R.string.property_content));
+                    ((AlertDialog)closeObjD[0]).show();
+                } else {
+                    showProperty(null);
+                }
                 break;
             case R.id.menu_exit:
                 saveFragmentState();
@@ -473,7 +464,12 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                     dfDialog.dismiss();
                 }
                 if (ntv.equals(getString(R.string.rename))) {
-                    String old = mCheckItems.iterator().next().getPath();
+                    String old = null;
+                    if (isFloorMenu2Mode) {
+                        old = mCheckItems2.iterator().next().getPath();
+                    } else {
+                        old = mCheckItems.iterator().next().getPath();
+                    }
                     getCurrentShowFragment().cancelCheckedItem();
                     getCurrentShowFragment().rename(old, strName);
                     dfDialog.dismiss();
@@ -492,6 +488,149 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
 
     public boolean isLookImage() {
         return mPhotoView.getVisibility() == View.VISIBLE;
+    }
+
+    public void showProperty(FileItem selItem) {
+        TextView tv[] = DialogManager.get().getPropertyTvArray();
+        if (mPropertyDialog == null) {
+            mPropertyDialog = DialogManager.get().createPropertyDialog(this, this);
+        }
+        if (selItem == null) {
+            selItem = mCheckItems.iterator().next();
+        }
+
+        tv[0].setText(getString(R.string.name_colon) + selItem.getName());
+        tv[1].setText(getString(R.string.path_colon) + selItem.getPath());
+        tv[2].setText(getString(R.string.perm_colon) + selItem.getPer());
+        tv[4].setText(getString(R.string.time_colon) + TimeUtils.getFormatDateTime(selItem.lastModified()));
+        tv[5].setText(getString(R.string.owner_colon) + selItem.getUser());
+        tv[6].setText(getString(R.string.usergroup_colon) + selItem.getGroup());
+        if (selItem.isLink()) {
+            tv[7].setVisibility(View.VISIBLE);
+            tv[7].setText(getString(R.string.linkto_colon) + selItem.linkTo());
+        } else {
+            tv[7].setVisibility(View.GONE);
+        }
+        if (selItem.isFolder()) {
+            tv[3].setText(getString(R.string.size_colon).toString() + getString(R.string.counting));
+            getCurrentShowFragment().countDirSize(selItem.getPath());
+        } else {
+            tv[3].setText(getString(R.string.size_colon) + FileUtil.getFormatByte(selItem.size()));
+        }
+        mPropertyDialog.show();
+    }
+
+    public void delete(FileItem item) {
+        int size = 0;
+        if (item == null) {
+            if (isFloorMenu2Mode) {
+                mCheckItems2().addAll(getCurrentShowFragment().getCheckedItem());
+                item = mCheckItems2.iterator().next();
+                size = mCheckItems2.size();
+            } else {
+                mCheckItems().addAll(getCurrentShowFragment().getCheckedItem());
+                item = mCheckItems.iterator().next();
+                size = mCheckItems.size();
+            }
+        } else {
+            isWhat = DELETE;
+            mCheckItems().add(item);
+        }
+        System.out.println("delete---->" + item.getPath());
+        Object msgConfirmDialog[] = DialogManager.get().getMsgConfirmDialog(this, this);
+        ((TextView)msgConfirmDialog[1]).setText(item.getName());
+        if (item.isFolder()) {
+            ((TextView)msgConfirmDialog[2]).setText(getString(R.string.msg_content_deldir));
+        } else {
+            ((TextView)msgConfirmDialog[2]).setText(getString(R.string.msg_content_delfile));
+        }
+        if (size > 1) {
+            ((TextView)msgConfirmDialog[1]).setText(getString(R.string.msg_content_title_dels));
+            ((TextView)msgConfirmDialog[2]).setText(getString(R.string.msg_content_dels));
+        }
+        ((AlertDialog)msgConfirmDialog[0]).show();
+    }
+
+    private void doDelete() {
+        System.out.println("doDelete--");
+        Set<FileItem> checkItems = null;
+        if (isFloorMenu2Mode) {
+            checkItems = mCheckItems2;
+        } else {
+            checkItems = mCheckItems;
+        }
+        Object obj2[] = PermissionUtils.isOnlyReadFileSys(checkItems.iterator().next().getPath());
+        if (Boolean.parseBoolean(obj2[0].toString())) {
+            if (mMounts == null) {
+                mMounts = new String[2];
+            }
+            mMounts[0] = obj2[1].toString();
+            mMounts[1] = obj2[2].toString();
+            //System.out.println(obj2[1] + " " + itemSet.iterator().next().getPath() + "------->is only read file sys");
+            DialogManager.get().createTiPDialog(this, this).show();
+            return;
+        }
+        getCurrentShowFragment().del(checkItems);
+    }
+
+    public void rename(FileItem item) {
+        if (item == null) {
+            if (isFloorMenu2Mode) {
+                mCheckItems2().addAll(getCurrentShowFragment().getCheckedItem());
+                item = mCheckItems2.iterator().next();
+            } else {
+                mCheckItems().addAll(getCurrentShowFragment().getCheckedItem());
+                item = mCheckItems.iterator().next();
+            }
+        } else {
+            mCheckItems().add(item);
+        }
+        Object dirDialog[] = DialogManager.get().createNewFileOrDirDialog(this, this);
+        ((TextView)dirDialog[1]).setText(getString(R.string.rename));
+        ((EditText)dirDialog[2]).setText(item.getName());
+        ((AlertDialog)dirDialog[0]).show();
+    }
+
+    public void copy(FileItem item) {
+        if (item == null) {
+            mCheckItems().addAll(getCurrentShowFragment().getCheckedItem());
+        } else {
+            mCheckItems().add(item);
+        }
+        isFloorMenu2Mode = true;
+        mViewBind.fileHandleMenu2.tvPaste.setText("复制到此");
+        setShowWhichFoolMenuBar(2);
+        getCurrentShowFragment().operaItem(true, 0);
+    }
+
+    public void move(FileItem item) {
+        if (item == null) {
+            mCheckItems().addAll(getCurrentShowFragment().getCheckedItem());
+        } else {
+            mCheckItems().add(item);
+        }
+        isFloorMenu2Mode = true;
+        mViewBind.fileHandleMenu2.tvPaste.setText("移动到此");
+        setShowWhichFoolMenuBar(2);
+        getCurrentShowFragment().operaItem(true, 0);
+    }
+
+    private Set<FileItem> mCheckItems() {
+        if (mCheckItems != null) {
+            mCheckItems.clear();
+            return mCheckItems;
+        }
+        mCheckItems = new HashSet<>();
+        return mCheckItems;
+    }
+
+    private Set<FileItem> mCheckItems2() {
+        if (mCheckItems2 != null) {
+            mCheckItems2.clear();
+            return mCheckItems2;
+        }
+        mCheckItems2 = new HashSet<>();
+        return mCheckItems2;
     }
 
     public void prepareLookImage(String imgPath) {
@@ -527,11 +666,13 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
 
     public void onCheckBoxClick(boolean isChecked, int count) {
         //System.out.println(count + "----->onCheckBoxClick " + isChecked);
-        mViewBind.fileHandleMenu1.imageProperty.setEnabled(count > 1 ? false : true);
-        mViewBind.fileHandleMenu1.imageRename.setEnabled(count > 1 ? false : true);
-        if (!isFloorMenu2Mode) {
-            if (isChecked) {
-                setShowWhichFoolMenuBar(1);
+        //mViewBind.fileHandleMenu1.imageProperty.setEnabled(count > 1 ? false : true);
+        //mViewBind.fileHandleMenu1.imageRename.setEnabled(count > 1 ? false : true);
+        if (isChecked) {
+            setShowWhichFoolMenuBar(1);
+        } else {
+            if (isFloorMenu2Mode) {
+                setShowWhichFoolMenuBar(2);
             } else {
                 setShowWhichFoolMenuBar(0);
             }
@@ -560,6 +701,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
         System.out.println("activity onDestroy");
         saveFragmentState();
         DialogManager.onDestroy();
+        //ShellUtil.get().release();
         super.onDestroy();
     }
 

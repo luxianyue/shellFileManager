@@ -7,6 +7,7 @@ import android.os.storage.StorageManager;
 import com.lu.App;
 import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
+import com.lu.model.Item;
 
 import java.io.File;
 import java.lang.reflect.Array;
@@ -70,7 +71,7 @@ public class FileUtil implements ShellUtil.OnResultListener {
     private static FileComparator mFileComparator;
 
     private FileUtil (){
-        mShellUtil = ShellUtil.getInstance();
+        mShellUtil = ShellUtil.get();
         mShellUtil.setResultListener(this);
         mFileComparator = new FileComparator();
     }
@@ -97,13 +98,17 @@ public class FileUtil implements ShellUtil.OnResultListener {
         return instance;
     }
 
+    public void exeCommand(String command) {
+        mShellUtil.exeCommand(command);
+    }
+
     /**
      * 列出路径path文件目录里的所有文件
      * @param path
      */
     public void listAllFile(String path) {
         mShellUtil.exeCommand(App.tools + " -f " + getS(path));
-        //mShellUtil.exeCommand("tools " + path);
+        //mShellUtil.exeCommand(App.tools + " -uid");
     }
 
     public void countDirSize(String path) {
@@ -123,6 +128,11 @@ public class FileUtil implements ShellUtil.OnResultListener {
 
     public void del(String src) {
         mShellUtil.exeCommand(App.tools + " -del " + getS(src));
+    }
+
+    public void chmod(String path, String mode, String fg) {
+        //fg only is -n, -d, -r
+        mShellUtil.exeCommand(App.tools + " -chm " + fg + " " + mode + " " + getS(path));
     }
 
     public void mountRW(String dev, String name) {
@@ -165,6 +175,13 @@ public class FileUtil implements ShellUtil.OnResultListener {
     }
 
     @Override
+    public void onSizeComplete(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onSizeComplete(str);
+        }
+    }
+
+    @Override
     public void onRenameComplete(String str) {
         if (mLoadFileListener != null) {
             mLoadFileListener.onRenameComplete(str);
@@ -185,11 +202,46 @@ public class FileUtil implements ShellUtil.OnResultListener {
         }
     }
 
+    @Override
+    public void onCpAction(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onCpAction(str);
+        }
+    }
+
+    @Override
+    public void onMvComplete() {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onMvComplete();
+        }
+    }
+
+    @Override
+    public void onDelComplete() {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onDelComplete();
+        }
+    }
+
+    @Override
+    public void onCHMAction(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onCHMAction(str);
+        }
+    }
+
     public void sortFileItem(List<FileItem> list, int which) {
         FileComparator.which = which;
         userSortMode = which;
         if (list != null) {
             Collections.sort(list, mFileComparator);
+        }
+    }
+
+    @Override
+    public void onReqGetRoot(Item item) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onReqGetRoot(item);
         }
     }
 
@@ -465,6 +517,19 @@ public class FileUtil implements ShellUtil.OnResultListener {
         return str;
     }
 
+    public static int getDotForSpill(float number, int digit) {
+        String str = number + "";
+        if (str.substring(str.indexOf(".") + 1).length() < digit) {
+            if (Integer.parseInt(str.substring(str.indexOf(".") + 1)) < 1) {
+                str = str.substring(0, str.indexOf("."));
+            }
+        } else {
+            str = str.substring(0, str.indexOf(".") + (digit + 1));
+        }
+
+        return Integer.parseInt(str);
+    }
+
     static class FileComparator implements Comparator<FileItem> {
         public static int which = SORT_BY_FILE_TYPE;
 
@@ -548,6 +613,8 @@ public class FileUtil implements ShellUtil.OnResultListener {
         StorageManager mStorageManager = (StorageManager) context.getApplicationContext().getSystemService(Context.STORAGE_SERVICE);
         Class<?> storageVolumeClazz = null;
         List<String> pathList = new ArrayList<>();
+        pathList.add(0, null);
+        pathList.add(1, null);
         try {
             storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
             Method getVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
@@ -556,6 +623,7 @@ public class FileUtil implements ShellUtil.OnResultListener {
             Object result = getVolumeList.invoke(mStorageManager);
             final int length = Array.getLength(result);
             String phonePath = Environment.getExternalStorageDirectory().toString();
+
             for (int i = 0; i < length; i++) {
                 Object storageVolumeElement = Array.get(result, i);
                 String path = (String) getPath.invoke(storageVolumeElement);
@@ -563,26 +631,20 @@ public class FileUtil implements ShellUtil.OnResultListener {
                     continue;
                 }
                 if (phonePath.equals(path)) {
-                    pathList.add(0, path);
+                    pathList.set(0, path);
+                    continue;
                 }
-                if (path.toLowerCase().contains("sdcard")) {
-                    pathList.add(1, path);
-                } else {
-                    pathList.add(path);
+                int index = path.lastIndexOf("/");
+                if (path.substring(index + 1).toLowerCase().contains("sdcard")) {
+                    if (pathList.get(1) == null) {
+                        pathList.set(1, path);
+                        continue;
+                    }
                 }
+                pathList.add(path);
                 //boolean removable = (Boolean) isRemovable.invoke(storageVolumeElement);
 
             }
-            /*for (String path : pathList) {
-                if (path.toLowerCase().contains("sdcard")) {
-                    hasSDCard = true;
-                    SDCardPath = path;
-                    break;
-                } else {
-                    hasSDCard = false;
-                }
-            }*/
-            return pathList;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -595,9 +657,15 @@ public class FileUtil implements ShellUtil.OnResultListener {
     public interface OnLoadFileListener {
         void onLoadComplete(List<FileItem> items);
         void onLoadComplete(String str);
+        void onSizeComplete(String str);
         void onRenameComplete(String str);
         void onCreateDirComplete(String str);
         void onCreateFileComplete(String str);
+        void onCpAction(String str);
+        void onMvComplete();
+        void onDelComplete();
+        void onCHMAction(String str);
+        void onReqGetRoot(Item item);
         void onError(String msg);
     }
 

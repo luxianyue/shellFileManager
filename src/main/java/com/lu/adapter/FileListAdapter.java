@@ -49,7 +49,7 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
     private List<CheckBox> mCheckBoxList;
     //private Set<String> mCheckItemPath;
 
-    private boolean isItemOpera;
+    //private boolean isItemOpera;
     private boolean canRemoveCb = true;
 
     public FileListAdapter(Context context) {
@@ -90,11 +90,11 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         }
 
         //System.out.println(TAG + ": "+item.getAbsolutePath());
-        if (isItemOpera) {
+        /*if (isItemOpera) {
             holder.fileCheckBox.setVisibility(View.INVISIBLE);
         } else {
             holder.fileCheckBox.setVisibility(View.VISIBLE);
-        }
+        }*/
         //mCheckBoxList.add(holder.fileCheckBox);
         if (item.isUpper) {
             holder.fileCheckBox.setVisibility(View.GONE);
@@ -170,6 +170,7 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
             }
         }
         System.out.println("checkBox size-->" + mCheckedBox.size());
+        System.out.println("mCheckFileItem size-->" + mCheckFileItem.size());
         ((MainActivity)context).onCheckBoxClick(itemIsChecked(), mCheckFileItem.size());
     }
 
@@ -217,6 +218,10 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         return mCheckFileItem;
     }
 
+    public void addCheckFileItem(FileItem checkFileItem) {
+        mCheckFileItem.add(checkFileItem);
+    }
+
     class LoadAPKIconRunnable implements Runnable{
         ImageView imageView;
         String imgPath;
@@ -261,15 +266,6 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
     }
     public void release() {
         mExecutorService.shutdown();
-    }
-
-    public void setItemOpera(boolean itemOpera) {
-        isItemOpera = itemOpera;
-        notifyDataSetChanged();
-    }
-
-    public boolean isItemOpera() {
-        return isItemOpera;
     }
 
     public void clearCheckedBox() {

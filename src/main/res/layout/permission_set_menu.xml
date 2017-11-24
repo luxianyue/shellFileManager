@@ -38,7 +38,7 @@
             android:layout_marginTop="15dp"
             android:layout_below="@id/permission_set_write"
             android:text="@string/owner"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <TextView
             android:id="@+id/permission_set_read"
@@ -49,7 +49,7 @@
             android:layout_marginLeft="15dp"
             android:layout_marginTop="3dp"
             android:text="@string/read"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <TextView
             android:id="@+id/permission_set_write"
@@ -60,7 +60,7 @@
             android:layout_toRightOf="@id/permission_set_read"
             android:layout_alignTop="@id/permission_set_read"
             android:text="@string/write"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
         <TextView
             android:id="@+id/permission_set_execute"
             android:layout_width="wrap_content"
@@ -70,7 +70,7 @@
             android:layout_toRightOf="@id/permission_set_write"
             android:layout_alignTop="@id/permission_set_write"
             android:text="@string/execute"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <TextView
             android:id="@+id/permission_set_usergroup"
@@ -80,7 +80,7 @@
             android:layout_marginTop="20dp"
             android:layout_below="@id/permission_set_owner"
             android:text="@string/user_group"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <TextView
             android:id="@+id/permission_set_other"
@@ -90,7 +90,7 @@
             android:layout_marginTop="20dp"
             android:layout_below="@id/permission_set_usergroup"
             android:text="@string/other"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <!-- permission for owner  start-->
         <CheckBox
@@ -224,7 +224,7 @@
             android:layout_marginLeft="5dp"
             android:layout_below="@id/view2"
             android:text="@string/set_uid"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <CheckBox
             android:id="@+id/permission_set_check_setuid"
@@ -246,7 +246,7 @@
             android:layout_alignTop="@id/permission_set_setuid"
             android:layout_toRightOf="@id/permission_set_check_setuid"
             android:text="@string/set_gid"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <CheckBox
             android:id="@+id/permission_set_check_setgid"
@@ -268,7 +268,7 @@
             android:layout_alignTop="@id/permission_set_setgid"
             android:layout_toRightOf="@id/permission_set_check_setgid"
             android:text="@string/set_sticky"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <CheckBox
             android:id="@+id/permission_set_check_setsticky"
@@ -296,7 +296,7 @@
             android:layout_marginTop="5dp"
             android:layout_below="@id/view3"
             android:text="@string/octal_number"
-            android:textColor="@color/per_setfont_color"/>
+            android:textColor="@color/per_setfont_color_enable"/>
 
         <TextView
             android:id="@+id/permission_octal_value"
@@ -316,7 +316,7 @@
             android:layout_below="@id/permission_octal_number"
             android:layout_alignLeft="@id/permission_octal_number"
             android:text="@string/apply_all_childfile_and_childdir"
-            android:textColor="@color/per_setfont_color"
+            android:textColor="@color/per_setfont_color_enable"
             android:button="@null"
             android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
@@ -327,9 +327,10 @@
             android:layout_below="@id/permission_check_apply_childdirandfile"
             android:layout_alignLeft="@id/permission_octal_number"
             android:text="@string/not_apply_childfile"
-            android:textColor="@color/per_setfont_color"
+            android:textColor="@color/per_setfont_color_notable"
             android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            android:drawableLeft="@drawable/btn_persetcheck_holo_light"
+            android:enabled="false"/>
 
         <View
             android:id="@+id/view4"

@@ -28,6 +28,10 @@ public class FileItem {
     //numbers of file in folder
     public long ct;
 
+    public String flag;
+    public String content;
+    public boolean isOver;
+
     //文件类型
     private int type;
 
