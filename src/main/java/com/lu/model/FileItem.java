@@ -1,8 +1,10 @@
 package com.lu.model;
 
-import android.widget.CheckBox;
+import android.widget.TextView;
 
+import com.lu.App;
 import com.lu.filemanager2.R;
+import com.lu.utils.FileUtils;
 
 /**
  * Created by lu on 2016/10/29.
@@ -113,6 +115,10 @@ public class FileItem {
         return isFolder() ? 0 : s;
     }
 
+    public String formatSize() {
+        return isUpper ? App.context().getString(R.string.upper_dir) : (isFolder() ? count() + App.context().getString(R.string.term) : FileUtils.getFormatByte(s));
+    }
+
     /**
      * 文件最后修改的时间 dt 为秒级别
      */
@@ -182,4 +188,6 @@ public class FileItem {
     public int getType() {
         return type;
     }
+
+    public TextView tvPermission;
 }

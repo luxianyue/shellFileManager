@@ -71,30 +71,30 @@ public class FileUtil2 {
             } else {
                 if (isImage(file.getName())) {
                     if (!file.getName().toLowerCase().endsWith(".gif")) {
-                        //item.setType(FileUtil.FILE_IMAGE);
+                        //item.setType(FileUtils.FILE_IMAGE);
                     } else {
-                        //item.setType(FileUtil.FILE_GIF);
+                        //item.setType(FileUtils.FILE_GIF);
                     }
                 }
 
                 if (isAudio(file.getName())) {
-                    //item.setType(FileUtil.FILE_AUDIO);
+                    //item.setType(FileUtils.FILE_AUDIO);
                 }
 
                 if (isVideo(file.getName())) {
-                    //item.setType(FileUtil.FILE_VIDEO);
+                    //item.setType(FileUtils.FILE_VIDEO);
                 }
 
                 if (isCompress(file.getName())) {
-                    //item.setType(FileUtil.FILE_COMPRESS);
+                    //item.setType(FileUtils.FILE_COMPRESS);
                 }
 
                 if (isText(file.getName())) {
-                    //item.setType(FileUtil.FILE_TEXT);
+                    //item.setType(FileUtils.FILE_TEXT);
                 }
 
                 if (file.getName().toLowerCase().endsWith(".apk")) {
-                    //item.setType(FileUtil.FILE_APK);
+                    //item.setType(FileUtils.FILE_APK);
                 }
                 //item.setIcon(R.drawable.unknown);
                 //item.setSize(getFormatByte(file.length()));

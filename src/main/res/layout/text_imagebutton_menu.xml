@@ -1,0 +1,69 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/dark_grey"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/text_imagebutton_saveedit"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/save_edit"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/text_imagebutton_lookmode"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/look_mode"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:enabled="false"
+        android:textColor="@color/per_setfont_color_notable" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/text_imagebutton_editmode"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/edit_mode"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/text_imagebutton_exit"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/exit"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+</LinearLayout>

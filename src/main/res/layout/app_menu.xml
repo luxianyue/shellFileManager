@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#262b32"
+    android:background="@color/dark_grey"
     android:orientation="vertical">
 
     <TextView
@@ -19,7 +19,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#67717e" />
+        android:background="@color/grey" />
 
     <TextView
         android:id="@+id/menu_about"
@@ -36,7 +36,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#67717e" />
+        android:background="@color/grey" />
 
     <TextView
         android:id="@+id/menu_exit"
@@ -52,7 +52,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#67717e" />
+        android:background="@color/grey" />
 
     <TextView
         android:id="@+id/menu_font_color"
@@ -68,7 +68,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#67717e" />
+        android:background="@color/grey" />
 
     <TextView
         android:id="@+id/menu_backgroud_color"

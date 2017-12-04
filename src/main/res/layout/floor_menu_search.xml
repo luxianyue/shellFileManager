@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#262b32"
+    android:background="@color/dark_grey"
     android:orientation="vertical">
 
     <TextView
@@ -10,7 +10,7 @@
         android:gravity="bottom"
         android:paddingLeft="15dp"
         android:text="@string/search"
-        android:textColor="#ffffff"
+        android:textColor="@color/wallet_holo_blue_light"
         android:textSize="20sp" />
 
     <EditText

@@ -18,6 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="com.lu.activity.TextActivity" android:launchMode="singleTask"></activity>
         <meta-data
             android:name="com.lu.filemanager2.MyGlideModule"
             android:value="GlideModel" />

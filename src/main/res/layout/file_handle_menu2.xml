@@ -4,7 +4,7 @@
         android:id="@+id/linearlayout_filehandle2"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="#262b32"
+        android:background="@color/dark_grey"
         android:orientation="horizontal"
         android:visibility="gone">
 
@@ -13,7 +13,7 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:clickable="true"
             android:gravity="center"
             android:text="@string/copy_here"
@@ -23,14 +23,14 @@
             android:layout_width="1dp"
             android:layout_height="15dp"
             android:layout_gravity="center_vertical"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/tv_create"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:clickable="true"
             android:gravity="center"
             android:text="@string/new_create"
@@ -40,14 +40,14 @@
             android:layout_width="1dp"
             android:layout_height="15dp"
             android:layout_gravity="center_vertical"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/tv_cancle"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:clickable="true"
             android:gravity="center"
             android:text="@string/cancel"
@@ -57,14 +57,14 @@
             android:layout_width="1dp"
             android:layout_height="15dp"
             android:layout_gravity="center_vertical"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/tv_property2"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:clickable="true"
             android:gravity="center"
             android:text="@string/property"

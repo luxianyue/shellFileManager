@@ -2,7 +2,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#262b32">
+    android:background="@color/dark_grey">
 
         <TextView
             android:layout_width="match_parent"
@@ -15,8 +15,8 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="#67717e" />
+            android:layout_height="2dp"
+            android:background="@color/wallet_holo_blue_light" />
         <TextView
             android:layout_width="match_parent"
             android:layout_height="50dp"

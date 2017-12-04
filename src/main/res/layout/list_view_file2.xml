@@ -10,7 +10,6 @@
             android:id="@+id/iv_directory"
             android:layout_width="55dp"
             android:layout_height="55dp"
-            android:layout_marginLeft="5dp"
             android:scaleType="centerInside"/>
 
 
@@ -18,10 +17,10 @@
             android:id="@+id/tv_file_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="3dp"
+            android:layout_marginLeft="1dp"
             android:layout_marginTop="8dp"
             android:layout_toRightOf="@id/iv_directory"
-            android:textColor="#FF000000"
+            android:textColor="#efeeee"
             android:textSize="16sp" />
 
         <TextView

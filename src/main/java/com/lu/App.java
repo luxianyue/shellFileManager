@@ -24,6 +24,7 @@ public class App extends android.app.Application {
     protected static List<Activity> mActivities;
     private static String exePath;
     public static String tools;
+    public static String tempFilePath;
 
     private static Context mContext;
 
@@ -32,12 +33,32 @@ public class App extends android.app.Application {
         super.onCreate();
         mContext = this;
         mActivities = new ArrayList<>();
+        initTempFile();
         exePath = getFilesDir().getParentFile().getAbsolutePath();
         SharePreferenceUtils.init(this);
     }
 
     public static Context context() {
         return mContext;
+    }
+
+    public static void initTempFile() {
+        tempFilePath = mContext.getFilesDir().getAbsolutePath() + "/temp";
+        File temp = new File(tempFilePath);
+        if (!temp.exists()) {
+            try {
+                if (temp.createNewFile()) {
+                    temp.setReadable(true, false);
+                    temp.setWritable(true, false);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            temp.setReadable(true, false);
+            temp.setWritable(true, false);
+        }
+
     }
 
     public static boolean initTools() {
@@ -90,12 +111,12 @@ public class App extends android.app.Application {
     }
 
     public static void finishAllActivity() {
-        for (Activity activity : mActivities) {
+       /* for (Activity activity : mActivities) {
             mActivities.remove(activity);
             activity.finish();
         }
         if (mActivities.size() > 0) {
             mActivities.clear();
-        }
+        }*/
     }
 }

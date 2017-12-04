@@ -1,7 +1,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#262b32">
+    android:background="@color/dark_grey">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -13,13 +13,30 @@
             android:gravity="center_vertical"
             android:paddingLeft="15dp"
             android:text="@string/option"
-            android:textColor="#ffffff"
+            android:textColor="@color/wallet_holo_blue_light"
             android:textSize="20sp" />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="#67717e" />
+            android:layout_height="2dp"
+            android:background="@color/wallet_holo_blue_light" />
+
+        <TextView
+            android:id="@+id/listview_item_longclick_openway"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/app_menu_backgroud"
+            android:clickable="true"
+            android:gravity="center_vertical"
+            android:paddingLeft="15dp"
+            android:text="@string/file_open_way"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_del"
@@ -36,7 +53,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_copy"
@@ -52,7 +69,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_move"
@@ -69,7 +86,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_rename"
@@ -86,7 +103,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_permissionset"
@@ -103,7 +120,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_property"
@@ -120,7 +137,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_sendto"
@@ -137,7 +154,24 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
+
+        <TextView
+            android:id="@+id/listview_item_longclick_lookoredit"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/app_menu_backgroud"
+            android:clickable="true"
+            android:gravity="center_vertical"
+            android:paddingLeft="15dp"
+            android:text="@string/lookoredit_text"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/floor_menu_front_size" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_compress"
@@ -154,7 +188,7 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#67717e" />
+            android:background="@color/grey" />
 
         <TextView
             android:id="@+id/listview_item_longclick_createlink"

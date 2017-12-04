@@ -23,6 +23,7 @@
     <string name="send_to">发送到</string>
     <string name="look_as_text">以文本方式查看</string>
     <string name="edit_as_text">以文本方式编辑</string>
+    <string name="lookoredit_text">以文本方式查看或编辑</string>
     <string name="file_open_way">打开方式</string>
 
     <string name="read">读</string>
@@ -99,5 +100,13 @@
 
     <string name="property_content">选取内容包含多个项目</string>
     <string name="working_per">正在操作中...</string>
+    <string name="save_edit">保存修改</string>
+    <string name="look_mode">查看模式</string>
+    <string name="edit_mode">编辑模式</string>
+    <string name="look_edit">查看或编辑</string>
+    <string name="tip_text">文本文件</string>
+    <string name="tip_script">脚本文件</string>
+    <string name="tip_text_content">这是一个文本文件，你想如何处理？</string>
+    <string name="tip_script_content">这是一个脚本文件，你想如何处理？</string>
 
 </resources>

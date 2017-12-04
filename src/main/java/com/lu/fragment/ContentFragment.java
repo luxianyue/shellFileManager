@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.percent.PercentRelativeLayout;
 import android.support.v4.app.Fragment;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,29 +20,29 @@ import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.lu.App;
+import com.lu.activity.TextActivity;
 import com.lu.adapter.FileListAdapter;
 import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
 import com.lu.model.Item;
 import com.lu.model.Path;
-import com.lu.utils.FileUtil;
-import com.lu.utils.PermissionUtils;
+import com.lu.utils.FileUtils;
 import com.lu.utils.SharePreferenceUtils;
 import com.lu.utils.ShellUtil;
-import com.lu.utils.TimeUtils;
 import com.lu.utils.ToastUitls;
 import com.lu.view.DialogManager;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -59,7 +60,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private TextView mTextViewPath;
 
-    private FileUtil mFileUtil;
+    private FileUtils mFileUtils;
 
     private boolean isShowToUser;
 
@@ -95,6 +96,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private String mFg = "-o";
 
+    private Map<String, int[]> mPositionMap;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,13 +105,15 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mBackStack = new Stack<>();
         }
 
-        if (mFileUtil == null) {
-            mFileUtil = FileUtil.getInstance();
+        if (mFileUtils == null) {
+            mFileUtils = FileUtils.get();
         }
 
         if (mFileListAdapter == null) {
             mFileListAdapter = new FileListAdapter(getActivity());
         }
+
+        mPositionMap = new HashMap<>();
 
         mExternalStoragePath = Environment.getExternalStorageDirectory().getAbsolutePath();
         isFirstEnter = true;
@@ -127,7 +132,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mBackStack.push(new Path(path, getPathName(path)));
         }
         mCurrentPath = mBackStack.peek();
-        FileUtil.userSortMode = SharePreferenceUtils.getFileSortMode();
+        int array[] = {SharePreferenceUtils.getListViewFirstPos(mIndex), SharePreferenceUtils.getListViewTop(mIndex)};
+        mPositionMap.put(mCurrentPath.getPath(), array);
+        FileUtils.userSortMode = SharePreferenceUtils.getFileSortMode();
 
     }
 
@@ -149,8 +156,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         mListView = (ListView) view.getChildAt(1);
         mTextViewPath = (TextView) ((FrameLayout) view.getChildAt(0)).getChildAt(0);
         System.out.println("onCreateView");
-        //mFileUtil.setOnLoadFileListener(loadFileListener);
-        //mFileUtil.listAllFile(mCurrentPath.getPath());
+        //mFileUtils.setOnLoadFileListener(loadFileListener);
+        //mFileUtils.listAllFile(mCurrentPath.getPath());
 
         mListView.setAdapter(mFileListAdapter);
         mListView.setOnItemClickListener(this);
@@ -165,12 +172,15 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         super.setUserVisibleHint(isVisibleToUser);
         getView().setVisibility(isVisibleToUser ? View.VISIBLE : View.GONE);
         isShowToUser = isVisibleToUser;
-       if (isVisibleToUser && mFileUtil != null) {
-            mFileUtil.setOnLoadFileListener(loadFileListener);
+       if (isVisibleToUser && mFileUtils != null) {
+            mFileUtils.setOnLoadFileListener(loadFileListener);
             if (mFileListAdapter.getList() == null) {
-                mFileUtil.listAllFile(mCurrentPath.getPath());
-                //mFileUtil.listAllFile("/");
-                //mFileUtil.listAllFile("/");
+                mFileUtils.listAllFile(mCurrentPath.getPath());
+                //mFileUtils.listAllFile("/");
+                //mFileUtils.listAllFile("/");
+                //String str = "";
+                //FileUtils.checkString(str);
+                //mFileUtils.exeCommand(App.tools + " " + str);
             }
         }
     }
@@ -223,26 +233,42 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     private void handleFile(FileItem item) {
-        switch (FileUtil.getFileType(item.getName())) {
-            case FileUtil.FILE_IMAGE:
+        switch (FileUtils.getFileType(item.getName())) {
+            case FileUtils.FILE_IMAGE:
                 ((MainActivity)getActivity()).prepareLookImage(item.getPath());
                 break;
-            case FileUtil.FILE_AUDIO:
+            case FileUtils.FILE_AUDIO:
                 break;
-            case FileUtil.FILE_VIDEO:
+            case FileUtils.FILE_VIDEO:
                 break;
-            case FileUtil.FILE_COMPRESS:
+            case FileUtils.FILE_COMPRESS:
                 break;
-            case FileUtil.FILE_TEXT:
+            case FileUtils.FILE_TEXT:
+                //mFileUtils.do_text(item.getPath(), App.tempFilePath, 'l');
+                Object msgObj[] = DialogManager.get().getMsgConfirmDialog(getActivity(), (MainActivity)getActivity(), 3);
+                ((TextView)msgObj[1]).setText(getString(R.string.tip_text));
+                ((TextView)msgObj[2]).setText(getString(R.string.tip_text_content));
+                MainActivity.isWhat = MainActivity.LOOK_EDIT;
+                MainActivity.mLookEditPath = item.getPath();
+                ((AlertDialog)msgObj[0]).show();
                 break;
-            case FileUtil.FILE_APK:
+            case FileUtils.FILE_SCRIPT:
+                //mFileUtils.do_text(item.getPath(), App.tempFilePath, 'l');
+                Object smsgObj[] = DialogManager.get().getMsgConfirmDialog(getActivity(), (MainActivity)getActivity(), 1);
+                ((TextView)smsgObj[1]).setText(getString(R.string.tip_script));
+                ((TextView)smsgObj[2]).setText(getString(R.string.tip_script_content));
+                MainActivity.isWhat = MainActivity.LOOK_EDIT;
+                MainActivity.mLookEditPath = item.getPath();
+                ((AlertDialog)smsgObj[0]).show();
+                break;
+            case FileUtils.FILE_APK:
                 //apk install
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.setDataAndType(Uri.parse("file://" + item.getPath()),"application/vnd.android.package-archive");
                 getActivity().startActivity(intent);
                 break;
-            case FileUtil.FILE_GIF:
+            case FileUtils.FILE_GIF:
                 break;
         }
     }
@@ -250,13 +276,13 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     public void createDir(String name) {
         String cpath = mCurrentPath.getPath();
         cpath = "/".equals(cpath) ? cpath : cpath + "/";
-        mFileUtil.createDir(cpath + name);
+        mFileUtils.createDir(cpath + name);
     }
 
     public void createFile(String name) {
         String cpath = mCurrentPath.getPath();
         cpath = "/".equals(cpath) ? cpath : cpath + "/";
-        mFileUtil.createFile(cpath + name);
+        mFileUtils.createFile(cpath + name);
     }
 
     public void rename(String oldN, String newN) {
@@ -265,60 +291,59 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         if (oldN.equals(cpath + newN)) {
             return;
         }
-        mFileUtil.rename(oldN, cpath + newN);
+        System.out.println("oldName-->" + oldN + "  -->" + newN);
+        mFileUtils.rename(oldN,cpath + newN);
     }
 
     public void copy(Set<FileItem> items) {
         mOperaItemSet = items;
+        String srcPath = "";
         for (FileItem item : items) {
-            mFileUtil.copy(item.getPath(), mCurrentPath.getPath());
+            srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
         }
-        //cancelCheckedItem();
-        //mFileUtil.listAllFile(mCurrentPath.getPath());
+        mFileUtils.copy(mCurrentPath.path(), srcPath);
     }
 
     public void cut(Set<FileItem> items) {
         mOperaItemSet = items;
+        String srcPath = "";
         for (FileItem item : items) {
-            mFileUtil.cut(item.getPath(), mCurrentPath.getPath());
+            srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
         }
-        cancelCheckedItem();
-        //mFileUtil.listAllFile(mCurrentPath.getPath());
+        mFileUtils.cut(mCurrentPath.path(), srcPath);
+        //cancelCheckedItem();
+        //mFileUtils.listAllFile(mCurrentPath.getPath());
     }
 
     public void del(Set<FileItem> items) {
         mOperaItemSet = items;
+        String srcPath = "";
         for (FileItem item : items) {
-            mFileUtil.del(item.getPath());
+            srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
         }
-        cancelCheckedItem();
-        //mFileUtil.listAllFile(mCurrentPath.getPath());
+        mFileUtils.del(srcPath);
+        //cancelCheckedItem();
+        //mFileUtils.listAllFile(mCurrentPath.getPath());
+    }
+
+    public void chmod(Set<FileItem> set, String mode, String mfg) {
+        String srcPath = "";
+        for (FileItem item : set) {
+            srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
+        }
+        mFileUtils.chmod(srcPath, mode, mfg);
     }
 
     public void sort(int whichSort) {
-        mFileUtil.sortFileItem(mFileListAdapter.getList(), whichSort);
-        mFileListAdapter.notifyDataSetChanged();
-    }
-
-    public void operaItem(boolean opera, int action) {
-        cancelCheckedItem();
-        switch (action) {
-            case 1:
-                //copy
-                /*for (FileItem item : getCheckedItem()) {
-                    mFileUtil.copy(item.getPath(), mCurrentPath.getPath());
-                }*/
-                //mFileUtil.listAllFile(mCurrentPath.getPath());
-                break;
-            case 2:
-                //cut
-                break;
-            case 3:
-                //delete
-                break;
-            default:
-                break;
+        if (mFileListAdapter.getList() == null || mFileListAdapter.getList().size() <= 0) {
+            return;
         }
+        /*FileItem item = mFileListAdapter.getList().get(0);
+        if (item.isUpper) {
+            mFileListAdapter.getList().remove(0);
+        }*/
+        mFileUtils.sortFileItem(mFileListAdapter.getList(), whichSort);
+        mFileListAdapter.notifyDataSetChanged();
     }
 
     public Set<FileItem> getCheckedItem() {
@@ -326,7 +351,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void countDirSize(String path) {
-        mFileUtil.countDirSize(path);
+        mFileUtils.countDirSize(path);
     }
 
     @Override
@@ -356,7 +381,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             //文件夹
             showCurrentPathOnTextView(path);
             mFileListAdapter.setList(null);
-            mFileUtil.listAllFile(path);
+            int array[] = {mListView.getFirstVisiblePosition(), mListView.getChildAt(0).getTop()};
+            mPositionMap.put(mCurrentPath.getPath(), array);
+            mFileUtils.listAllFile(path);
             mCurrentPath = mBackStack.push(new Path(path, item.getName()));
             setTabTitle(item.getName());
         } else {
@@ -368,6 +395,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private CheckBox mLongClickCheckBox;
     private View mLongClickSendTo;
+    private View mLongClickOpenWay;
+    private View mLongClickLookOrEdit;
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         if (mFileListAdapter.itemIsChecked()) {
@@ -382,8 +411,18 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         }
         if (mLongSelFileItem.isFolder()) {
             mLongClickSendTo.setVisibility(View.GONE);
+            mLongClickOpenWay.setVisibility(View.GONE);
+            mLongClickLookOrEdit.setVisibility(View.GONE);
+            ((View)mLongClickSendTo.getTag()).setVisibility(View.GONE);
+            ((View)mLongClickOpenWay.getTag()).setVisibility(View.GONE);
+            ((View)mLongClickLookOrEdit.getTag()).setVisibility(View.GONE);
         } else {
             mLongClickSendTo.setVisibility(View.VISIBLE);
+            mLongClickOpenWay.setVisibility(View.VISIBLE);
+            mLongClickLookOrEdit.setVisibility(View.VISIBLE);
+            ((View)mLongClickSendTo.getTag()).setVisibility(View.VISIBLE);
+            ((View)mLongClickOpenWay.getTag()).setVisibility(View.VISIBLE);
+            ((View)mLongClickLookOrEdit.getTag()).setVisibility(View.VISIBLE);
         }
         mLongClickCheckBox = (CheckBox) ((PercentRelativeLayout)view).getChildAt(5);
         mLongSelFileItem.setCheck(true);
@@ -397,10 +436,10 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.listview_item_longclick_permissionset:
+                showPermissionSetDialog();
                 if (ShellUtil.isGetRoot()) {
-                    showPermissionSetDialog();
                 } else {
-                    mFileUtil.exeCommand("su\necho \"{'flag':'su','fg':'per','content':'$?'}\"");
+                    //mFileUtils.exeCommand("su\necho \"{\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\"per\\\",\\\"content\\\":\\\"$?\\\"}\"");
                 }
                 break;
             case R.id.permission_cancel:
@@ -418,8 +457,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                     return;
                 }
                 //System.out.println("permission_confirm:--> " + mFg);
-                DialogManager.get().getDefaultProgress(getActivity(), "", getString(R.string.working_per)).show();
-                mFileUtil.chmod(mLongSelFileItem.getPath(), mode, mFg);
+                //DialogManager.get().getDefaultProgress(getActivity(), "", getString(R.string.working_per)).show();
+                mFileUtils.chmod(" " + FileUtils.getS(FileUtils.checkString(mLongSelFileItem.getPath())), mode, mFg);
                 break;
             case R.id.listview_item_longclick_property:
                 mItemLongClickDialog.dismiss();
@@ -455,6 +494,12 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 //sendIntent.putExtra(Intent.EXTRA_TEXT, "这是一段分享的文字");
                 startActivity(Intent.createChooser(share, "分享"));
                 break;
+            case R.id.listview_item_longclick_lookoredit:
+                mItemLongClickDialog.dismiss();
+                FileUtils.get().do_text(mLongSelFileItem.getPath(), App.tempFilePath, 'l');
+                break;
+            case R.id.listview_item_longclick_openway:
+                break;
         }
     }
 
@@ -484,11 +529,12 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             return false;
         }
         mBackStack.pop();
+        mPositionMap.remove(mCurrentPath.getPath());
         if (mBackStack.size() > 0) {
             mCurrentPath = mBackStack.peek();
             showCurrentPathOnTextView(mCurrentPath.getPath());
             setTabTitle(mCurrentPath.getName());
-            mFileUtil.listAllFile(mCurrentPath.getPath());
+            mFileUtils.listAllFile(mCurrentPath.getPath());
             return true;
         }
         return false;
@@ -501,7 +547,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         }
         mTextViewPath.setText(currentPath + "/");
     }
-    private FileUtil.OnLoadFileListener loadFileListener = new FileUtil.OnLoadFileListener() {
+    private FileUtils.OnLoadFileListener loadFileListener = new FileUtils.OnLoadFileListener() {
         @Override
         public void onLoadComplete(List<FileItem> items) {
             if (items == null) {
@@ -512,21 +558,19 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 items.add(0, new FileItem(true));
             }
             mFileListAdapter.setList(items);
-            if (isFirstEnter) {
-                isFirstEnter = false;
-                mListView.setSelectionFromTop(SharePreferenceUtils.getListViewFirstPos(mIndex), SharePreferenceUtils.getListViewTop(mIndex));
-            }
+            int array[] = mPositionMap.get(mCurrentPath.getPath());
+            if (array != null)
+                mListView.setSelectionFromTop(array[0], array[1]);
         }
 
         @Override
         public void onLoadComplete(String str) {
-
         }
 
         @Override
         public void onSizeComplete(String str) {
             long size = JSON.parseObject(str).getLongValue("totalSize");
-            DialogManager.get().getPropertyTvArray()[3].setText(getResources().getText(R.string.size_colon) + FileUtil.getFormatByte(size));
+            DialogManager.get().getPropertyTvArray()[3].setText(getResources().getText(R.string.size_colon) + FileUtils.getFormatByte(size));
         }
 
         @Override
@@ -534,7 +578,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             JSONObject jb = JSON.parseObject(str);
             if (jb.getBooleanValue("state")) {
                 ToastUitls.showSMsg("重命名成功");
-                mFileUtil.listAllFile(mCurrentPath.getPath());
+                mFileUtils.listAllFile(mCurrentPath.getPath());
             } else {
                 ToastUitls.showSMsg("rename fail:" + jb.getString("reason"));
             }
@@ -545,7 +589,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             JSONObject jb = JSON.parseObject(str);
             if (jb.getBooleanValue("state")) {
                 ToastUitls.showSMsg("文件夹创建成功");
-                mFileUtil.listAllFile(mCurrentPath.getPath());
+                mFileUtils.listAllFile(mCurrentPath.getPath());
             } else {
                 //ToastUitls.showSMsg("create dir fail:" + jb.getString("reason"));
                 Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
@@ -562,7 +606,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             JSONObject jb = JSON.parseObject(str);
             if (jb.getBooleanValue("state")) {
                 ToastUitls.showSMsg("文件创建成功");
-                mFileUtil.listAllFile(mCurrentPath.getPath());
+                mFileUtils.listAllFile(mCurrentPath.getPath());
             } else {
                 //ToastUitls.showSMsg("create file fail:" + jb.getString("reason"));
                 Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
@@ -581,13 +625,13 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
             //mFileListAdapter.getList().add(mOperaItemSet.iterator().next());
             //mOperaItemSet.remove(mOperaItemSet.iterator().next());
-            //mFileUtil.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
+            //mFileUtils.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
             //mFileListAdapter.notifyDataSetChanged();
             JSONObject cpJson = JSON.parseObject(str);
             if (cpJson.getBooleanValue("isOver")) {
-                mFileUtil.listAllFile(mCurrentPath.getPath());
+                mFileUtils.listAllFile(mCurrentPath.getPath());
             } else {
-                if (progressObj == null) {
+                /*if (progressObj == null) {
                     progressObj = DialogManager.get().getProgressConfirmDialog(getActivity(), (MainActivity)getActivity());
                 }
                 totalSize = cpJson.getLongValue("totalSize");
@@ -600,36 +644,52 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                     ((ProgressBar)progressObj[5]).setMax((int) totalSize);
                     ((ProgressBar)progressObj[5]).setProgress((int) curenSize);
                 }
-                ((TextView)progressObj[2]).setText(getString(R.string.total_size) + "：" + FileUtil.getFormatByte(totalSize));
-                ((TextView)progressObj[3]).setText(getString(R.string.copy_ed) + "：" + FileUtil.getFormatByte(curenSize));
+                ((TextView)progressObj[2]).setText(getString(R.string.total_size) + "：" + FileUtils.getFormatByte(totalSize));
+                ((TextView)progressObj[3]).setText(getString(R.string.copy_ed) + "：" + FileUtils.getFormatByte(curenSize));
                 ((TextView)progressObj[4]).setText(getString(R.string.copy_ing) + "：" + cpJson.getString("name"));
                 if (!((AlertDialog)progressObj[0]).isShowing()) {
                     ((AlertDialog)progressObj[0]).show();
+                }*/
+            }
+        }
+
+        @Override
+        public void onMvAction(String str) {
+            Item item = JSON.parseObject(str, Item.class);
+            if (item.isOver) {
+                mFileUtils.listAllFile(mCurrentPath.getPath());
+            }
+        }
+
+        @Override
+        public void onDelAction(String str) {
+            Item item = JSON.parseObject(str, Item.class);
+            if (item.isOver) {
+                for (FileItem fItem : mOperaItemSet) {
+                    mFileListAdapter.getList().remove(fItem);
                 }
+                mFileListAdapter.notifyDataSetChanged();
             }
         }
 
         @Override
-        public void onMvComplete() {
-            //mFileListAdapter.getList().add(mOperaItemSet.iterator().next());
-            //mOperaItemSet.remove(mOperaItemSet.iterator().next());
-            //mFileUtil.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
-            //mFileListAdapter.notifyDataSetChanged();
-            mFileUtil.listAllFile(mCurrentPath.getPath());
-        }
-
-        @Override
-        public void onDelComplete() {
-            for (FileItem item : mOperaItemSet) {
-                mFileListAdapter.getList().remove(item);
-            }
-            //mFileUtil.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
-            mFileListAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onCHMAction(String string) {
+        public void onCHMAction(String str) {
             DialogManager.get().getDefaultProgress(getContext(), "", "").dismiss();
+            Item item = JSON.parseObject(str, Item.class);
+            String per = FileUtils.getPermissionByMode(item.mode);
+            if (item.state) {
+                mLongSelFileItem.tp = mLongSelFileItem.tp.substring(0, 2) + per;
+                mLongSelFileItem.tvPermission.setText(mLongSelFileItem.getPer());
+                System.out.println(mLongSelFileItem.tp.substring(0, 2));
+            }
+            System.out.println("fragment-onCHMAction------>"+str);
+        }
+
+        @Override
+        public void onTextAction(String str) {
+            Intent activityIntent = new Intent(getContext(), TextActivity.class);
+            activityIntent.putExtra("path", JSON.parseObject(str).getString("path"));
+            startActivity(activityIntent);
         }
 
         @Override
@@ -658,10 +718,11 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         mItemLongClickDialog.dismiss();
         //System.out.println("----->" + mLongSelFileItem.getPath());
         //System.out.println("----->" + mLongSelFileItem.getPer());
-        mPermiss = FileUtil.getFilePermissionNum(mLongSelFileItem.getPer());
+        mPermiss = FileUtils.getFilePermissionNum(mLongSelFileItem.getPer());
         Object objects[] = DialogManager.get().createPermissionSetDialog(getActivity(), this, this);
         CheckBox dirFilecheckBox = (CheckBox) objects[4];
         CheckBox onlyFilecheckBox = (CheckBox) objects[5];
+        dirFilecheckBox.setChecked(false);
         if (mLongSelFileItem.isFolder()) {
             dirFilecheckBox.setVisibility(View.VISIBLE);
             onlyFilecheckBox.setVisibility(View.VISIBLE);
@@ -679,7 +740,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mPerSetFileName.setText(mLongSelFileItem.getName());
             mPermissionSetDialog.show();
             WindowManager.LayoutParams params = mPermissionSetDialog.getWindow().getAttributes();
-            params.width = width + 50;
+            params.width = width + (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50f, getResources().getDisplayMetrics());
             mPermissionSetDialog.getWindow().setAttributes(params);
             return;
         }
@@ -692,10 +753,16 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         ScrollView view = (ScrollView) getActivity().getLayoutInflater().inflate(R.layout.listview_item_longclick_menu, null);
         LinearLayout layout = (LinearLayout) view.getChildAt(0);
-        mLongClickSendTo = layout.getChildAt(14);
+        mLongClickSendTo = layout.getChildAt(16);
+        mLongClickSendTo.setTag(layout.getChildAt(15));
+        mLongClickOpenWay = layout.getChildAt(2);
+        mLongClickOpenWay.setTag(layout.getChildAt(3));
+        mLongClickLookOrEdit = layout.getChildAt(18);
+        mLongClickLookOrEdit.setTag(layout.getChildAt(17));
         for (int i = 1; i < layout.getChildCount(); i++) {
-            if (layout.getChildAt(i) instanceof TextView)
+            if (layout.getChildAt(i) instanceof TextView) {
                 layout.getChildAt(i).setOnClickListener(this);
+            }
         }
         builder.setView(view);
         mItemLongClickDialog = builder.create();

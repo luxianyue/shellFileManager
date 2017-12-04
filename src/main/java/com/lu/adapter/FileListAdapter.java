@@ -23,7 +23,7 @@ import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
 import com.lu.filemanager2.databinding.ListViewFile2Binding;
 import com.lu.model.FileItem;
-import com.lu.utils.FileUtil;
+import com.lu.utils.FileUtils;
 import com.lu.utils.TimeUtils;
 
 import java.io.File;
@@ -96,55 +96,69 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
             holder.fileCheckBox.setVisibility(View.VISIBLE);
         }*/
         //mCheckBoxList.add(holder.fileCheckBox);
-        if (item.isUpper) {
-            holder.fileCheckBox.setVisibility(View.GONE);
-            holder.fileTime.setVisibility(View.GONE);
-            holder.filePermiss.setVisibility(View.GONE);
-        }
-        holder.fileCheckBox.setTag(position);
-        holder.fileCheckBox.setChecked(item.isCheck());
         holder.fileName.setText(item.getName());
-        holder.fileSize.setText(FileUtil.getFileCountOrSize(item.isUpper, item.isFolder(), item.size(), item.count()));
-        holder.fileTime.setText(TimeUtils.getFormatDateTime(item.lastModified()));
-        holder.filePermiss.setText(item.getPer());
+        holder.fileSize.setText(item.formatSize());
+        if (item.isUpper) {
+            holder.fileIcon.setImageResource(item.getIcon());
+            if (holder.fileCheckBox.getVisibility() == View.VISIBLE) {
+                holder.fileCheckBox.setVisibility(View.GONE);
+                holder.filePermiss.setVisibility(View.GONE);
+                holder.fileTime.setVisibility(View.GONE);
+            }
+        } else {
+            item.tvPermission = holder.filePermiss;
+            if (holder.fileCheckBox.getVisibility() == View.GONE) {
+                holder.fileCheckBox.setVisibility(View.VISIBLE);
+                holder.filePermiss.setVisibility(View.VISIBLE);
+                holder.fileTime.setVisibility(View.VISIBLE);
+            }
+            holder.fileCheckBox.setTag(position);
+            holder.fileCheckBox.setChecked(item.isCheck());
+            holder.fileTime.setText(TimeUtils.getFormatDateTime(item.lastModified()));
+            holder.filePermiss.setText(item.getPer());
 
-        Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
+            //Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
 
-        switch (FileUtil.getFileType(item.getName())) {
-            case FileUtil.FILE_IMAGE:
-                Glide.with(context).load(item.getPath())
-                        .placeholder(R.drawable.ic_progress) //加载时的占位图
-                        .error(R.drawable.image)
-                        .into(holder.fileIcon);
-                break;
-            case FileUtil.FILE_AUDIO:
-                Glide.with(context).load(R.drawable.music)
-                        .into(holder.fileIcon);
-                break;
-            case FileUtil.FILE_VIDEO:
-                Glide.with(context).load(Uri.fromFile(new File(item.getPath())))
-                        .placeholder(R.drawable.video) //加载时的占位图
-                        .error(R.drawable.video)
-                        .into(holder.fileIcon);
-                break;
-            case FileUtil.FILE_COMPRESS:
-
-                break;
-            case FileUtil.FILE_TEXT:
-                Glide.with(context).load(R.drawable.text)
-                        .into(holder.fileIcon);
-                break;
-            case FileUtil.FILE_APK:
-                //
-               mExecutorService.execute(new LoadAPKIconRunnable(holder.fileIcon, item.getPath()));
-                break;
-            case FileUtil.FILE_GIF:
-                Glide.with(context).load(item.getPath())
-                        .asGif()
-                        .placeholder(R.drawable.ic_progress) //加载时的占位图
-                        .error(R.drawable.image)
-                        .into(holder.fileIcon);
-                break;
+            switch (FileUtils.getFileType(item.getName())) {
+                case FileUtils.FILE_IMAGE:
+                    Glide.with(context).load(item.getPath())
+                            .placeholder(R.drawable.ic_progress) //加载时的占位图
+                            .error(R.drawable.image)
+                            .into(holder.fileIcon);
+                    break;
+                case FileUtils.FILE_AUDIO:
+                    holder.fileIcon.setImageResource(R.drawable.music);
+                    break;
+                case FileUtils.FILE_VIDEO:
+                    Glide.with(context).load(Uri.fromFile(new File(item.getPath())))
+                            .placeholder(R.drawable.video) //加载时的占位图
+                            .error(R.drawable.video)
+                            .into(holder.fileIcon);
+                    break;
+                case FileUtils.FILE_COMPRESS:
+                    holder.fileIcon.setImageResource(R.drawable.compress);
+                    break;
+                case FileUtils.FILE_TEXT:
+                case FileUtils.FILE_SCRIPT:
+                    holder.fileIcon.setImageResource(R.drawable.text);
+                    break;
+                case FileUtils.FILE_APK:
+                    //
+                    holder.fileIcon.setImageResource(R.drawable.apk);
+                    mExecutorService.execute(new LoadAPKIconRunnable(holder.fileIcon, item.getPath()));
+                    break;
+                case FileUtils.FILE_GIF:
+                    Glide.with(context).load(item.getPath())
+                            .asGif()
+                            .placeholder(R.drawable.ic_progress) //加载时的占位图
+                            .error(R.drawable.image)
+                            .into(holder.fileIcon);
+                    break;
+                case FileUtils.FILE_OTHER:
+                default:
+                    holder.fileIcon.setImageResource(item.getIcon());
+                    break;
+            }
         }
 
         return convertView;
@@ -184,13 +198,8 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
 
     public void checkFileItem(boolean isCheck) {
         if (isCheck){
-            if (mList.get(0).isUpper) {
-                for (int i = 1; i < mList.size(); i++) {
-                    mList.get(i).setCheck(isCheck);
-                    mCheckFileItem.add(mList.get(i));
-                }
-            } else {
-                for (FileItem item : mList) {
+            for (FileItem item : mList) {
+                if (!item.isUpper) {
                     item.setCheck(isCheck);
                     mCheckFileItem.add(item);
                 }

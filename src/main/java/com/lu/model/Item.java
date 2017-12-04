@@ -9,6 +9,9 @@ public class Item {
     public String fg;
     public String content;
     public String path;
+    public String mode;
+    public String name;
     public String error;
     public boolean isOver;
+    public boolean state;
 }

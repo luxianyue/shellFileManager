@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:descendantFocusability="beforeDescendants"
+    android:background="#232323"
     android:orientation="vertical">
 
     <HorizontalScrollView
@@ -17,7 +18,7 @@
             android:layout_gravity="center_vertical"
             android:paddingLeft="3dp"
             android:textSize="16sp"
-            android:textColor="#121111"/>
+            android:textColor="#f5f4f4"/>
     </HorizontalScrollView>
     <!--<View
         android:layout_width="match_parent"
@@ -26,5 +27,7 @@
 
     <ListView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:divider="#3b3a3a"
+        android:dividerHeight="1dp"/>
 </LinearLayout>

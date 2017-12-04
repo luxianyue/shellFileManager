@@ -1,5 +1,7 @@
 package com.lu.model;
 
+import com.lu.utils.FileUtils;
+
 /**
  * Created by bulefin on 2017/11/8.
  */
@@ -30,6 +32,10 @@ public class Path {
 
     public String getPath() {
         return path;
+    }
+
+    public String path() {
+       return FileUtils.checkString(path);
     }
 
     public void setName(String name) {

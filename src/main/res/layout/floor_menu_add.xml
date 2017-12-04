@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#262b32"
+    android:background="@color/dark_grey"
     android:orientation="vertical">
 
     <TextView
@@ -10,13 +10,13 @@
         android:gravity="center_vertical"
         android:paddingLeft="15dp"
         android:text="@string/new_create"
-        android:textColor="#ffffff"
+        android:textColor="@color/wallet_holo_blue_light"
         android:textSize="20sp" />
 
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#67717e" />
+        android:layout_height="2dp"
+        android:background="@color/wallet_holo_blue_light" />
 
     <TextView
         android:id="@+id/floor_menu_add_file"
@@ -33,7 +33,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#67717e" />
+        android:background="@color/grey" />
 
     <TextView
         android:id="@+id/floor_menu_add_folder"
@@ -50,7 +50,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#67717e" />
+        android:background="@color/grey" />
 
     <TextView
         android:id="@+id/floor_menu_add_roottab"
@@ -67,7 +67,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#67717e" />
+        android:background="@color/grey" />
 
     <TextView
         android:id="@+id/floor_menu_add_phonetab"

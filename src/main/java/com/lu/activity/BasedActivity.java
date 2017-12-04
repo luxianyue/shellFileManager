@@ -16,7 +16,6 @@ public class BasedActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         App.getActivities().add(this);
-        System.out.println(666);
     }
 
     @Override
@@ -26,7 +25,7 @@ public class BasedActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         App.getActivities().remove(this);
+        super.onDestroy();
     }
 }

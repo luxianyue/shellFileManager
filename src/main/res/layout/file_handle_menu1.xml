@@ -4,16 +4,15 @@
         android:id="@+id/linearlayout_filehandle1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#262b32"
+        android:background="@color/dark_grey"
         android:visibility="gone">
 
         <ImageButton
             android:id="@+id/image_copy"
             android:layout_width="0dp"
             android:layout_height="@dimen/floor_menu_height"
-            android:layout_marginLeft="8dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:scaleType="centerInside"
             android:src="@drawable/ic_menu_copy" />
 
@@ -21,9 +20,8 @@
             android:id="@+id/image_cut"
             android:layout_width="0dp"
             android:layout_height="@dimen/floor_menu_height"
-            android:layout_marginLeft="10dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:scaleType="centerInside"
             android:src="@drawable/ic_menu_cut" />
 
@@ -31,9 +29,8 @@
             android:id="@+id/image_delete"
             android:layout_width="0dp"
             android:layout_height="@dimen/floor_menu_height"
-            android:layout_marginLeft="10dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:scaleType="centerInside"
             android:src="@drawable/ic_menu_delete" />
 
@@ -41,9 +38,8 @@
             android:id="@+id/image_rename"
             android:layout_width="0dp"
             android:layout_height="@dimen/floor_menu_height"
-            android:layout_marginLeft="10dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:scaleType="centerInside"
             android:src="@drawable/ic_menu_edit" />
 
@@ -58,9 +54,8 @@
             android:id="@+id/image_checkbox"
             android:layout_width="1dp"
             android:layout_height="@dimen/floor_menu_height"
-            android:layout_marginLeft="10dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:scaleType="centerInside"
             android:src="@drawable/btn_check_on_holo_light2" />
 
@@ -69,9 +64,8 @@
             android:id="@+id/image_property"
             android:layout_width="0dp"
             android:layout_height="@dimen/floor_menu_height"
-            android:layout_marginLeft="10dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:scaleType="centerInside"
             android:src="@drawable/ic_menu_about" />
 
@@ -79,9 +73,8 @@
             android:id="@+id/image_menu"
             android:layout_width="0dp"
             android:layout_height="@dimen/floor_menu_height"
-            android:layout_marginLeft="10dp"
             android:layout_weight="1"
-            android:background="@drawable/menupressed_backgroud"
+            android:background="@drawable/floor_menu_pressed"
             android:scaleType="centerInside"
             android:src="@drawable/ic_menu_menu" />
     </LinearLayout>

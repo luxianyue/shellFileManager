@@ -2,14 +2,21 @@ package com.lu.utils;
 
 import android.content.Context;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.storage.StorageManager;
 
 import com.lu.App;
-import com.lu.filemanager2.R;
 import com.lu.model.FileItem;
 import com.lu.model.Item;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -21,7 +28,7 @@ import java.util.List;
  * Created by bulefin on 2017/4/27.
  */
 
-public class FileUtil implements ShellUtil.OnResultListener {
+public class FileUtils implements ShellUtil.OnResultListener {
 
     private static final long KB = 1L << 10;
     private static final long MB = 1L << 20;
@@ -41,6 +48,7 @@ public class FileUtil implements ShellUtil.OnResultListener {
     public static final int FILE_JAR = 19;
     public static final int FILE_APK = 20;
     public static final int FILE_TEXT = 21;
+    public static final int FILE_SCRIPT = 22;
     public static final int FILE_WORD = 25;
     public static final int FILE_PPT = 26;
     public static final int FILE_XLS = 27;
@@ -64,34 +72,31 @@ public class FileUtil implements ShellUtil.OnResultListener {
 
     private OnLoadFileListener mLoadFileListener;
 
-    private static ShellUtil mShellUtil;
-
-    private static FileUtil instance;
+    private static FileUtils instance;
 
     private static FileComparator mFileComparator;
 
-    private FileUtil (){
-        mShellUtil = ShellUtil.get();
-        mShellUtil.setResultListener(this);
+    private FileUtils(){
+        getShellUtil().setResultListener(this);
         mFileComparator = new FileComparator();
     }
 
-    public ShellUtil getmShellUtil() {
-        return mShellUtil;
+    private static ShellUtil getShellUtil() {
+        return ShellUtil.get();
     }
-    /*public static FileUtil get() {
-        return new FileUtil();
+    /*public static FileUtils get() {
+        return new FileUtils();
     }*/
 
     /**
      * 单例模式
      * @return
      */
-    public static final FileUtil getInstance() {
+    public static final FileUtils get() {
         if (instance == null) {
-            synchronized (FileUtil.class) {
+            synchronized (FileUtils.class) {
                 if (instance == null) {
-                    instance = new FileUtil();
+                    instance = new FileUtils();
                 }
             }
         }
@@ -99,7 +104,7 @@ public class FileUtil implements ShellUtil.OnResultListener {
     }
 
     public void exeCommand(String command) {
-        mShellUtil.exeCommand(command);
+        getShellUtil().exeCommand(command);
     }
 
     /**
@@ -107,55 +112,65 @@ public class FileUtil implements ShellUtil.OnResultListener {
      * @param path
      */
     public void listAllFile(String path) {
-        mShellUtil.exeCommand(App.tools + " -f " + getS(path));
-        //mShellUtil.exeCommand(App.tools + " -uid");
+        System.out.println("list file--->" + path + "    ===shell-->>" + getShellUtil());
+        getShellUtil().exeCommand(App.tools + " -f " + getS(checkString(path)));
+        //getShellUtil().exeCommand(App.tools + " -uid");
     }
 
     public void countDirSize(String path) {
-        mShellUtil.exeCommand(App.tools + " -s " + getS(path));
+        getShellUtil().exeCommand(App.tools + " -s " + getS(checkString(path)));
     }
 
     /**
      * 复制文件
      */
-    public void copy(String src, String dest) {
-        mShellUtil.exeCommand(App.tools + " -cp " + getS(src) + " " + getS(dest));
+    public void copy(String dest, String src) {
+        getShellUtil().exeCommand(App.tools + " -cp " + getS(checkString(dest)) + src);
     }
 
-    public void cut(String src, String dest) {
-        mShellUtil.exeCommand(App.tools + " -mv " + getS(src) + " " + getS(dest));
+    public void cut(String dest, String src) {
+        getShellUtil().exeCommand(App.tools + " -mv " + getS(checkString(dest)) + src);
     }
 
     public void del(String src) {
-        mShellUtil.exeCommand(App.tools + " -del " + getS(src));
+        getShellUtil().exeCommand(App.tools + " -del" + src);
     }
 
     public void chmod(String path, String mode, String fg) {
         //fg only is -n, -d, -r
-        mShellUtil.exeCommand(App.tools + " -chm " + fg + " " + mode + " " + getS(path));
+        getShellUtil().exeCommand(App.tools + " -chm " + fg + " " + mode + path);
+    }
+
+    public void do_text(String path, String desPath, char fg) {
+        if (fg == 'l') {
+            getShellUtil().exeCommand(App.tools + " -ltext " + getS(checkString(path)) + " " + getS(checkString(desPath)));
+        }
+        if (fg == 'e') {
+            getShellUtil().exeCommand(App.tools + " -etext " + getS(checkString(path)) + " " + getS(checkString(desPath)));
+        }
     }
 
     public void mountRW(String dev, String name) {
-        mShellUtil.exeCommand(ShellUtil.MOUNT_RW + getS(dev) + " " + getS(name));
+        getShellUtil().exeCommand(ShellUtil.MOUNT_RW + getS(dev) + " " + getS(name));
     }
 
     public void mountRO(String dev, String name) {
-        mShellUtil.exeCommand(ShellUtil.MOUNT_RO + getS(dev) + " " + getS(name));
+        getShellUtil().exeCommand(ShellUtil.MOUNT_RO + getS(dev) + " " + getS(name));
     }
 
     public void createDir(String path) {
-        mShellUtil.exeCommand(App.tools + " -nd " + getS(path));
+        getShellUtil().exeCommand(App.tools + " -nd " + getS(checkString(path)));
     }
 
     public void createFile(String path) {
-        mShellUtil.exeCommand(App.tools + " -nf " + getS(path));
+        getShellUtil().exeCommand(App.tools + " -nf " + getS(checkString(path)));
     }
 
     public void rename(String oldN, String newN) {
-        mShellUtil.exeCommand(App.tools + " -rn " + getS(oldN) + " " + getS(newN));
+        getShellUtil().exeCommand(App.tools + " -rn " + getS(checkString(oldN)) + " " + getS(checkString(newN)));
     }
 
-    private static synchronized String getS(String str) {
+    public static synchronized String getS(String str) {
         return "\"" + str + "\"";
     }
 
@@ -210,16 +225,16 @@ public class FileUtil implements ShellUtil.OnResultListener {
     }
 
     @Override
-    public void onMvComplete() {
+    public void onMvAction(String str) {
         if (mLoadFileListener != null) {
-            mLoadFileListener.onMvComplete();
+            mLoadFileListener.onMvAction(str);
         }
     }
 
     @Override
-    public void onDelComplete() {
+    public void onDelAction(String str) {
         if (mLoadFileListener != null) {
-            mLoadFileListener.onDelComplete();
+            mLoadFileListener.onDelAction(str);
         }
     }
 
@@ -227,6 +242,13 @@ public class FileUtil implements ShellUtil.OnResultListener {
     public void onCHMAction(String str) {
         if (mLoadFileListener != null) {
             mLoadFileListener.onCHMAction(str);
+        }
+    }
+
+    @Override
+    public void onTextAction(String str) {
+        if (mLoadFileListener != null) {
+            mLoadFileListener.onTextAction(str);
         }
     }
 
@@ -307,6 +329,110 @@ public class FileUtil implements ShellUtil.OnResultListener {
 
     }
 
+    public static String getPermissionByMode(String mode) {
+        //777
+        StringBuffer sb = new StringBuffer();
+        sb.append("---------");
+        if (mode.length() <= 3) {
+            for (int i = 0; i < mode.length(); i++) {
+                getCharByNumber(sb, mode.charAt(i), i);
+            }
+        }
+        if (mode.length() == 4) {
+            for (int i = 1; i < mode.length(); i++) {
+                getCharByNumber(sb, mode.charAt(i), i -1);
+            }
+            if (mode.charAt(0) != '0') {
+                getCharByNumber(sb, mode.charAt(0), -1);
+            }
+        }
+        return sb.toString();
+    }
+
+    private static void getCharByNumber(StringBuffer sb, char num, int index) {
+        switch (num) {
+            case '0':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, '-');
+                    sb.setCharAt(index * 3 + 1, '-');
+                    sb.setCharAt(index * 3 + 2, '-');
+                }
+                break;
+            case '1':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, '-');
+                    sb.setCharAt(index * 3 + 1, '-');
+                    sb.setCharAt(index * 3 + 2, 'x');
+                } else {
+                    sb.setCharAt(8, sb.charAt(8) == '-' ? 'T' : 't');
+                }
+                break;
+            case '2':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, '-');
+                    sb.setCharAt(index * 3 + 1, 'w');
+                    sb.setCharAt(index * 3 + 2, '-');
+                } else {
+                    sb.setCharAt(5, sb.charAt(5) == '-' ? 'S' : 's');
+                }
+                break;
+            case '3':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, '-');
+                    sb.setCharAt(index * 3 + 1, 'w');
+                    sb.setCharAt(index * 3 + 2, 'x');
+                } else {
+                    sb.setCharAt(5, sb.charAt(5) == '-' ? 'S' : 's');
+                    sb.setCharAt(8, sb.charAt(8) == '-' ? 'T' : 't');
+                }
+                break;
+            case '4':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, 'r');
+                    sb.setCharAt(index * 3 + 1, '-');
+                    sb.setCharAt(index * 3 + 2, '-');
+                } else {
+                    sb.setCharAt(2, sb.charAt(2) == '-' ? 'S' : 's');
+                }
+                break;
+            case '5':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, 'r');
+                    sb.setCharAt(index * 3 + 1, '-');
+                    sb.setCharAt(index * 3 + 2, 'x');
+                } else {
+                    sb.setCharAt(2, sb.charAt(2) == '-' ? 'S' : 's');
+                    sb.setCharAt(8, sb.charAt(8) == '-' ? 'T' : 't');
+                }
+                break;
+            case '6':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, 'r');
+                    sb.setCharAt(index * 3 + 1, 'w');
+                    sb.setCharAt(index * 3 + 2, '-');
+                } else {
+                    sb.setCharAt(2, sb.charAt(2) == '-' ? 'S' : 's');
+                    sb.setCharAt(5, sb.charAt(5) == '-' ? 'S' : 's');
+                }
+                break;
+            case '7':
+                if (index != -1) {
+                    sb.setCharAt(index * 3, 'r');
+                    sb.setCharAt(index * 3 + 1, 'w');
+                    sb.setCharAt(index * 3 + 2, 'x');
+                } else {
+                    sb.setCharAt(2, sb.charAt(2) == '-' ? 'S' : 's');
+                    sb.setCharAt(5, sb.charAt(5) == '-' ? 'S' : 's');
+                    sb.setCharAt(8, sb.charAt(8) == '-' ? 'T' : 't');
+                }
+                break;
+        }
+    }
+
+    public static String checkString(String name) {
+        return name.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
     private static int getPerNum(char per) {
         switch (per) {
             case 'r':
@@ -334,6 +460,7 @@ public class FileUtil implements ShellUtil.OnResultListener {
         if (isAudioFile(name))    return FILE_AUDIO;
         if (isVideoFile(name))    return FILE_VIDEO;
         if (isTextFile(name))     return FILE_TEXT;
+        if (isScript(name))       return FILE_SCRIPT;
         if (isApkFile(name))      return FILE_APK;
         if (isCompressFile(name)) return FILE_COMPRESS;
         return FILE_OTHER;
@@ -449,7 +576,8 @@ public class FileUtil implements ShellUtil.OnResultListener {
      */
     public static boolean isTextFile(String name) {
         name = name.toLowerCase();
-        if (name.endsWith(".txt") || name.endsWith(".sh")
+        if (name.endsWith(".txt")
+                || name.endsWith(".conf") || name.endsWith(".inf")
                 || name.endsWith(".log") || name.endsWith(".xml")
                 || name.endsWith(".java") || name.endsWith(".c")
                 || name.endsWith(".cpp") || name.endsWith(".mk")
@@ -459,14 +587,12 @@ public class FileUtil implements ShellUtil.OnResultListener {
         return false;
     }
 
-    public static String getFileCountOrSize(boolean isUpper, boolean isFolder, long size, long count) {
-        if (isUpper) {
-            return App.context().getString(R.string.upper_dir);
+    public static boolean isScript(String name) {
+        name = name.toLowerCase();
+        if (name.endsWith(".sh") || name.endsWith(".rc")) {
+            return true;
         }
-        if (isFolder) {
-            return count + App.context().getString(R.string.term);
-        }
-        return getFormatByte(size);
+        return false;
     }
 
     /**
@@ -535,6 +661,12 @@ public class FileUtil implements ShellUtil.OnResultListener {
 
         @Override
         public int compare(FileItem first, FileItem second) {
+            if (first.isUpper) {
+                return -1;
+            }
+            if (second.isUpper) {
+                return 1;
+            }
             switch (which) {
                 case SORT_BY_FILE_TYPE:
                     //类型
@@ -605,6 +737,70 @@ public class FileUtil implements ShellUtil.OnResultListener {
         }
     }
 
+    public static boolean isStop;
+    public static void lookTextContent(Handler handler, String path) {
+        isStop = false;
+        InputStream is = null;
+        BufferedInputStream bis = null;
+        try {
+            is = new FileInputStream(new File(path));
+            bis = new BufferedInputStream(is);
+            int len = 0;
+            byte buf[] = new byte[4 * 1024];
+            while ((len = bis.read(buf)) != -1 && !isStop) {
+                if (handler != null) {
+                    handler.obtainMessage(1, new String(buf, 0, len)).sendToTarget();
+                    Thread.sleep(100);
+                }
+            }
+            handler.sendEmptyMessage(-1);
+            isStop = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bis != null) {
+                    bis.close();
+                }
+                if (is != null) {
+                    is.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            bis = null;
+            is = null;
+        }
+    }
+
+    public static void saveTextContent(Handler handler, byte[] content) {
+        OutputStream os = null;
+        BufferedOutputStream bos = null;
+        try {
+            os = new FileOutputStream(new File(App.tempFilePath));
+            bos = new BufferedOutputStream(os);
+            bos.write(content, 0, content.length);
+            handler.sendEmptyMessage(2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bos != null) {
+                    bos.close();
+                }
+                if (os != null) {
+                    os.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            bos = null;
+            os = null;
+        }
+    }
+
     /**
      * 通过反射调用获取内置存储和外置sd卡根路径(通用)
      * @return
@@ -662,9 +858,10 @@ public class FileUtil implements ShellUtil.OnResultListener {
         void onCreateDirComplete(String str);
         void onCreateFileComplete(String str);
         void onCpAction(String str);
-        void onMvComplete();
-        void onDelComplete();
+        void onMvAction(String str);
+        void onDelAction(String str);
         void onCHMAction(String str);
+        void onTextAction(String str);
         void onReqGetRoot(Item item);
         void onError(String msg);
     }

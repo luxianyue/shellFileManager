@@ -157,20 +157,52 @@ public class DialogManager {
         return mMsgDialog;
     }
 
-    public Object[] getMsgConfirmDialog(Activity ay, View.OnClickListener listener) {
+    public Object[] getMsgConfirmDialog(Activity ay, View.OnClickListener listener, int flag) {
         if (mMsgConfirmDialog != null) {
+            if (flag == 1) {
+                ((View)mMsgConfirmDialog[3]).setVisibility(View.VISIBLE);
+                ((View)mMsgConfirmDialog[4]).setVisibility(View.VISIBLE);
+                ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+            }
+            if (flag == 2 || flag == 3){
+                ((View)mMsgConfirmDialog[3]).setVisibility(View.GONE);
+                ((View)mMsgConfirmDialog[4]).setVisibility(View.GONE);
+                if (flag == 3) {
+                    ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+                } else {
+                    ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.confirm));
+                }
+            }
             return mMsgConfirmDialog;
         }
-        mMsgConfirmDialog = new Object[3];
+        mMsgConfirmDialog = new Object[6];
         AlertDialog.Builder builder = new AlertDialog.Builder(ay);
         LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.msg_confirm_dialog, null);
         LinearLayout ll = (LinearLayout) view.getChildAt(view.getChildCount() -1);
         ll.getChildAt(0).setOnClickListener(listener);
         ll.getChildAt(2).setOnClickListener(listener);
+        ll.getChildAt(4).setOnClickListener(listener);
         builder.setView(view);
         mMsgConfirmDialog[0] = builder.create();
         mMsgConfirmDialog[1] = view.getChildAt(0);
         mMsgConfirmDialog[2] = view.getChildAt(2);
+        mMsgConfirmDialog[3] = ll.getChildAt(1);
+        mMsgConfirmDialog[4] = ll.getChildAt(2);
+        mMsgConfirmDialog[5] = ll.getChildAt(4);
+        if (flag == 1) {
+            ll.getChildAt(1).setVisibility(View.VISIBLE);
+            ll.getChildAt(2).setVisibility(View.VISIBLE);
+            ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+        }
+        if (flag == 2 || flag == 3){
+            ll.getChildAt(1).setVisibility(View.GONE);
+            ll.getChildAt(2).setVisibility(View.GONE);
+            if (flag == 3) {
+                ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+            } else {
+                ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.confirm));
+            }
+        }
         return mMsgConfirmDialog;
     }
 

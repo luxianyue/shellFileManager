@@ -1,382 +1,387 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
-    <android.support.percent.PercentRelativeLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:orientation="vertical"
-        android:background="#393939">
+        android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/permission_set_icon"
-            android:layout_width="55dp"
-            android:layout_height="55dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_menu_about"/>
-
-        <TextView
-            android:id="@+id/permission_set_name"
+        <android.support.percent.PercentRelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_alignTop="@id/permission_set_icon"
-            android:layout_toRightOf="@id/permission_set_icon"
-            android:gravity="center_vertical"
-            android:textColor="#0795bc"
-            android:textSize="20sp" />
-
-        <View
-            android:id="@+id/view1"
-            android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:layout_below="@id/permission_set_icon"
-            android:background="#67717e" />
-
-        <TextView
-            android:id="@+id/permission_set_owner"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="15dp"
-            android:layout_below="@id/permission_set_write"
-            android:text="@string/owner"
-            android:textColor="@color/per_setfont_color_enable"/>
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:orientation="vertical"
+            android:background="@color/dark_grey">
 
-        <TextView
-            android:id="@+id/permission_set_read"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/view1"
-            android:layout_toRightOf="@id/permission_set_owner"
-            android:layout_marginLeft="15dp"
-            android:layout_marginTop="3dp"
-            android:text="@string/read"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <ImageView
+                android:id="@+id/permission_set_icon"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_menu_about"/>
 
-        <TextView
-            android:id="@+id/permission_set_write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="50dp"
-            android:layout_below="@id/view1"
-            android:layout_toRightOf="@id/permission_set_read"
-            android:layout_alignTop="@id/permission_set_read"
-            android:text="@string/write"
-            android:textColor="@color/per_setfont_color_enable"/>
-        <TextView
-            android:id="@+id/permission_set_execute"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="50dp"
-            android:layout_below="@id/view1"
-            android:layout_toRightOf="@id/permission_set_write"
-            android:layout_alignTop="@id/permission_set_write"
-            android:text="@string/execute"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <TextView
+                android:id="@+id/permission_set_name"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_alignTop="@id/permission_set_icon"
+                android:layout_toRightOf="@id/permission_set_icon"
+                android:gravity="center_vertical"
+                android:textColor="@color/wallet_holo_blue_light"
+                android:textSize="20sp" />
 
-        <TextView
-            android:id="@+id/permission_set_usergroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="20dp"
-            android:layout_below="@id/permission_set_owner"
-            android:text="@string/user_group"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <View
+                android:id="@+id/view1"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_below="@id/permission_set_icon"
+                android:background="@color/wallet_holo_blue_light" />
 
-        <TextView
-            android:id="@+id/permission_set_other"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="20dp"
-            android:layout_below="@id/permission_set_usergroup"
-            android:text="@string/other"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <TextView
+                android:id="@+id/permission_set_owner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@id/permission_set_write"
+                android:text="@string/owner"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <!-- permission for owner  start-->
-        <CheckBox
-            android:id="@+id/permission_set_checkowner_read"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-8dp"
-            android:layout_marginLeft="-8dp"
-            android:layout_toRightOf="@id/permission_set_owner"
-            android:layout_alignLeft="@id/permission_set_read"
-            android:layout_alignBottom="@id/permission_set_owner"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <TextView
+                android:id="@+id/permission_set_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/view1"
+                android:layout_toRightOf="@id/permission_set_owner"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="3dp"
+                android:text="@string/read"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <CheckBox
-            android:id="@+id/permission_set_checkowner_write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-8dp"
-            android:layout_marginLeft="-9dp"
-            android:layout_toRightOf="@id/permission_set_owner"
-            android:layout_alignLeft="@id/permission_set_write"
-            android:layout_alignBottom="@id/permission_set_owner"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <TextView
+                android:id="@+id/permission_set_write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
+                android:layout_below="@id/view1"
+                android:layout_toRightOf="@id/permission_set_read"
+                android:layout_alignTop="@id/permission_set_read"
+                android:text="@string/write"
+                android:textColor="@color/per_setfont_color_enable"/>
+            <TextView
+                android:id="@+id/permission_set_execute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="50dp"
+                android:layout_below="@id/view1"
+                android:layout_toRightOf="@id/permission_set_write"
+                android:layout_alignTop="@id/permission_set_write"
+                android:text="@string/execute"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <CheckBox
-            android:id="@+id/permission_set_checkowner_execute"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-8dp"
-            android:layout_marginLeft="-5dp"
-            android:layout_toRightOf="@id/permission_set_owner"
-            android:layout_alignLeft="@id/permission_set_execute"
-            android:layout_alignBottom="@id/permission_set_owner"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <TextView
+                android:id="@+id/permission_set_usergroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="15dp"
+                android:layout_below="@id/permission_set_owner"
+                android:text="@string/user_group"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <!-- permission for owner  end-->
+            <TextView
+                android:id="@+id/permission_set_other"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="15dp"
+                android:layout_below="@id/permission_set_usergroup"
+                android:text="@string/other"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <!-- permission for user group  start-->
-        <CheckBox
-            android:id="@+id/permission_set_checkusergroup_read"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-8dp"
-            android:layout_marginLeft="-8dp"
-            android:layout_toRightOf="@id/permission_set_usergroup"
-            android:layout_alignLeft="@id/permission_set_read"
-            android:layout_alignBottom="@id/permission_set_usergroup"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- permission for owner  start-->
+            <CheckBox
+                android:id="@+id/permission_set_checkowner_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-8dp"
+                android:layout_marginLeft="-8dp"
+                android:layout_toRightOf="@id/permission_set_owner"
+                android:layout_alignLeft="@id/permission_set_read"
+                android:layout_alignBottom="@id/permission_set_owner"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <CheckBox
-            android:id="@+id/permission_set_checkusergroup_write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-7dp"
-            android:layout_marginLeft="-9dp"
-            android:layout_toRightOf="@id/permission_set_usergroup"
-            android:layout_alignLeft="@id/permission_set_write"
-            android:layout_alignBottom="@id/permission_set_usergroup"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <CheckBox
+                android:id="@+id/permission_set_checkowner_write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-8dp"
+                android:layout_marginLeft="-9dp"
+                android:layout_toRightOf="@id/permission_set_owner"
+                android:layout_alignLeft="@id/permission_set_write"
+                android:layout_alignBottom="@id/permission_set_owner"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <CheckBox
-            android:id="@+id/permission_set_checkusergroup_execute"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-7dp"
-            android:layout_marginLeft="-5dp"
-            android:layout_toRightOf="@id/permission_set_usergroup"
-            android:layout_alignLeft="@id/permission_set_execute"
-            android:layout_alignBottom="@id/permission_set_usergroup"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
-        <!-- permission for user group  end-->
+            <CheckBox
+                android:id="@+id/permission_set_checkowner_execute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-8dp"
+                android:layout_marginLeft="-5dp"
+                android:layout_toRightOf="@id/permission_set_owner"
+                android:layout_alignLeft="@id/permission_set_execute"
+                android:layout_alignBottom="@id/permission_set_owner"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <!-- permission for other  start-->
-        <CheckBox
-            android:id="@+id/permission_set_checkother_read"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-7dp"
-            android:layout_marginLeft="-8dp"
-            android:layout_toRightOf="@id/permission_set_usergroup"
-            android:layout_alignLeft="@id/permission_set_read"
-            android:layout_alignBottom="@id/permission_set_other"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- permission for owner  end-->
 
-        <CheckBox
-            android:id="@+id/permission_set_checkother_write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-7dp"
-            android:layout_marginLeft="-9dp"
-            android:layout_toRightOf="@id/permission_set_usergroup"
-            android:layout_alignLeft="@id/permission_set_write"
-            android:layout_alignBottom="@id/permission_set_other"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- permission for user group  start-->
+            <CheckBox
+                android:id="@+id/permission_set_checkusergroup_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-8dp"
+                android:layout_marginLeft="-8dp"
+                android:layout_toRightOf="@id/permission_set_usergroup"
+                android:layout_alignLeft="@id/permission_set_read"
+                android:layout_alignBottom="@id/permission_set_usergroup"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <CheckBox
-            android:id="@+id/permission_set_checkother_execute"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="-7dp"
-            android:layout_marginLeft="-5dp"
-            android:layout_toRightOf="@id/permission_set_usergroup"
-            android:layout_alignLeft="@id/permission_set_execute"
-            android:layout_alignBottom="@id/permission_set_other"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
-        <!-- permission for other  end-->
+            <CheckBox
+                android:id="@+id/permission_set_checkusergroup_write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-7dp"
+                android:layout_marginLeft="-9dp"
+                android:layout_toRightOf="@id/permission_set_usergroup"
+                android:layout_alignLeft="@id/permission_set_write"
+                android:layout_alignBottom="@id/permission_set_usergroup"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <View
-            android:id="@+id/view2"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_below="@id/permission_set_other"
-            android:background="#67717e" />
+            <CheckBox
+                android:id="@+id/permission_set_checkusergroup_execute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-7dp"
+                android:layout_marginLeft="-5dp"
+                android:layout_toRightOf="@id/permission_set_usergroup"
+                android:layout_alignLeft="@id/permission_set_execute"
+                android:layout_alignBottom="@id/permission_set_usergroup"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- permission for user group  end-->
 
-        <!-- setuid check start-->
-        <TextView
-            android:id="@+id/permission_set_setuid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginLeft="5dp"
-            android:layout_below="@id/view2"
-            android:text="@string/set_uid"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <!-- permission for other  start-->
+            <CheckBox
+                android:id="@+id/permission_set_checkother_read"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-7dp"
+                android:layout_marginLeft="-8dp"
+                android:layout_toRightOf="@id/permission_set_usergroup"
+                android:layout_alignLeft="@id/permission_set_read"
+                android:layout_alignBottom="@id/permission_set_other"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <CheckBox
-            android:id="@+id/permission_set_check_setuid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/permission_set_setuid"
-            android:layout_alignBottom="@id/permission_set_setuid"
-            android:layout_marginBottom="-8dp"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
-        <!-- setuid check end-->
+            <CheckBox
+                android:id="@+id/permission_set_checkother_write"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-7dp"
+                android:layout_marginLeft="-9dp"
+                android:layout_toRightOf="@id/permission_set_usergroup"
+                android:layout_alignLeft="@id/permission_set_write"
+                android:layout_alignBottom="@id/permission_set_other"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <!-- setgid check start-->
-        <TextView
-            android:id="@+id/permission_set_setgid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_alignTop="@id/permission_set_setuid"
-            android:layout_toRightOf="@id/permission_set_check_setuid"
-            android:text="@string/set_gid"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <CheckBox
+                android:id="@+id/permission_set_checkother_execute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="-7dp"
+                android:layout_marginLeft="-5dp"
+                android:layout_toRightOf="@id/permission_set_usergroup"
+                android:layout_alignLeft="@id/permission_set_execute"
+                android:layout_alignBottom="@id/permission_set_other"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- permission for other  end-->
 
-        <CheckBox
-            android:id="@+id/permission_set_check_setgid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/permission_set_setgid"
-            android:layout_alignBottom="@id/permission_set_setuid"
-            android:layout_marginBottom="-8dp"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
-        <!-- setgid check end-->
+            <View
+                android:id="@+id/view2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@id/permission_set_other"
+                android:background="#67717e" />
 
-        <!-- set sticky check start-->
-        <TextView
-            android:id="@+id/permission_set_setsticky"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_alignTop="@id/permission_set_setgid"
-            android:layout_toRightOf="@id/permission_set_check_setgid"
-            android:text="@string/set_sticky"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <!-- setuid check start-->
+            <TextView
+                android:id="@+id/permission_set_setuid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="5dp"
+                android:layout_below="@id/view2"
+                android:text="@string/set_uid"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <CheckBox
-            android:id="@+id/permission_set_check_setsticky"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/permission_set_setsticky"
-            android:layout_alignBottom="@id/permission_set_setgid"
-            android:layout_marginBottom="-8dp"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
-        <!-- set sticky check end-->
-        <View
-            android:id="@+id/view3"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_below="@id/permission_set_setuid"
-            android:background="#67717e" />
+            <CheckBox
+                android:id="@+id/permission_set_check_setuid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/permission_set_setuid"
+                android:layout_alignBottom="@id/permission_set_setuid"
+                android:layout_marginBottom="-8dp"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- setuid check end-->
 
-        <TextView
-            android:id="@+id/permission_octal_number"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginTop="5dp"
-            android:layout_below="@id/view3"
-            android:text="@string/octal_number"
-            android:textColor="@color/per_setfont_color_enable"/>
+            <!-- setgid check start-->
+            <TextView
+                android:id="@+id/permission_set_setgid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_alignTop="@id/permission_set_setuid"
+                android:layout_toRightOf="@id/permission_set_check_setuid"
+                android:text="@string/set_gid"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <TextView
-            android:id="@+id/permission_octal_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@id/permission_octal_number"
-            android:layout_marginLeft="10dp"
-            android:layout_toRightOf="@id/permission_octal_number"
-            android:text="0000"
-            android:textColor="#e5e7e5" />
+            <CheckBox
+                android:id="@+id/permission_set_check_setgid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/permission_set_setgid"
+                android:layout_alignBottom="@id/permission_set_setuid"
+                android:layout_marginBottom="-8dp"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- setgid check end-->
 
-        <CheckBox
-            android:id="@+id/permission_check_apply_childdirandfile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_below="@id/permission_octal_number"
-            android:layout_alignLeft="@id/permission_octal_number"
-            android:text="@string/apply_all_childfile_and_childdir"
-            android:textColor="@color/per_setfont_color_enable"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- set sticky check start-->
+            <TextView
+                android:id="@+id/permission_set_setsticky"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:layout_alignTop="@id/permission_set_setgid"
+                android:layout_toRightOf="@id/permission_set_check_setgid"
+                android:text="@string/set_sticky"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <CheckBox
-            android:id="@+id/permission_check_notapply_childfile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/permission_check_apply_childdirandfile"
-            android:layout_alignLeft="@id/permission_octal_number"
-            android:text="@string/not_apply_childfile"
-            android:textColor="@color/per_setfont_color_notable"
-            android:button="@null"
-            android:drawableLeft="@drawable/btn_persetcheck_holo_light"
-            android:enabled="false"/>
+            <CheckBox
+                android:id="@+id/permission_set_check_setsticky"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@id/permission_set_setsticky"
+                android:layout_alignBottom="@id/permission_set_setgid"
+                android:layout_marginBottom="-8dp"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
+            <!-- set sticky check end-->
+            <View
+                android:id="@+id/view3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@id/permission_set_setuid"
+                android:background="#67717e" />
 
-        <View
-            android:id="@+id/view4"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="5dp"
-            android:layout_below="@id/permission_check_notapply_childfile"
-            android:background="#67717e" />
+            <TextView
+                android:id="@+id/permission_octal_number"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_below="@id/view3"
+                android:text="@string/octal_number"
+                android:textColor="@color/per_setfont_color_enable"/>
 
-        <TextView
-            android:id="@+id/permission_cancel"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignTop="@+id/view4"
-            android:background="@drawable/app_menu_backgroud"
-            android:clickable="true"
-            android:gravity="center"
-            android:text="@string/cancel"
-            android:textColor="#f4f3f3"
-            android:textSize="@dimen/floor_menu_front_size"
-            app:layout_widthPercent="50%" />
+            <TextView
+                android:id="@+id/permission_octal_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@id/permission_octal_number"
+                android:layout_marginLeft="10dp"
+                android:layout_toRightOf="@id/permission_octal_number"
+                android:text="0000"
+                android:textColor="#e5e7e5" />
 
-        <View
-            android:id="@+id/view5"
-            android:layout_width="1dp"
-            android:layout_height="50dp"
-            android:layout_below="@id/view4"
-            android:layout_toRightOf="@id/permission_cancel"
-            android:background="#67717e" />
+            <CheckBox
+                android:id="@+id/permission_check_apply_childdirandfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_below="@id/permission_octal_number"
+                android:layout_alignLeft="@id/permission_octal_number"
+                android:text="@string/apply_all_childfile_and_childdir"
+                android:textColor="@color/per_setfont_color_enable"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"/>
 
-        <TextView
-            android:id="@+id/permission_confirm"
-            android:layout_width="wrap_content"
-            app:layout_widthPercent="50%"
-            android:layout_height="50dp"
-            android:layout_below="@id/view4"
-            android:layout_toRightOf="@id/view5"
-            android:background="@drawable/app_menu_backgroud"
-            android:clickable="true"
-            android:gravity="center"
-            android:text="@string/confirm"
-            android:textColor="#f4f3f3"
-            android:textSize="@dimen/floor_menu_front_size" />
+            <CheckBox
+                android:id="@+id/permission_check_notapply_childfile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/permission_check_apply_childdirandfile"
+                android:layout_alignLeft="@id/permission_octal_number"
+                android:text="@string/not_apply_childfile"
+                android:textColor="@color/per_setfont_color_notable"
+                android:button="@null"
+                android:drawableLeft="@drawable/btn_persetcheck_holo_light"
+                android:enabled="false"/>
 
-    </android.support.percent.PercentRelativeLayout>
+            <View
+                android:id="@+id/view4"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="5dp"
+                android:layout_below="@id/permission_check_notapply_childfile"
+                android:background="#67717e" />
+
+            <TextView
+                android:id="@+id/permission_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignTop="@+id/view4"
+                android:background="@drawable/app_menu_backgroud"
+                android:clickable="true"
+                android:gravity="center"
+                android:text="@string/cancel"
+                android:textColor="#f4f3f3"
+                android:textSize="@dimen/floor_menu_front_size"
+                app:layout_widthPercent="50%" />
+
+            <View
+                android:id="@+id/view5"
+                android:layout_width="1dp"
+                android:layout_height="50dp"
+                android:layout_below="@id/view4"
+                android:layout_toRightOf="@id/permission_cancel"
+                android:background="#67717e" />
+
+            <TextView
+                android:id="@+id/permission_confirm"
+                android:layout_width="wrap_content"
+                app:layout_widthPercent="50%"
+                android:layout_height="50dp"
+                android:layout_below="@id/view4"
+                android:layout_toRightOf="@id/view5"
+                android:background="@drawable/app_menu_backgroud"
+                android:clickable="true"
+                android:gravity="center"
+                android:text="@string/confirm"
+                android:textColor="#f4f3f3"
+                android:textSize="@dimen/floor_menu_front_size" />
+
+        </android.support.percent.PercentRelativeLayout>
+    </ScrollView>
 
 </layout>

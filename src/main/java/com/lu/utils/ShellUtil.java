@@ -33,8 +33,10 @@ public class ShellUtil {
             FLAG_ND = 107,
             FLAG_NF = 108,
             FLAG_CHM = 109,
-            FLAG_REQGETROOT = 110,
-            FLAG_DEFAULT = 111;
+            FLAG_L_TEXT = 110,
+            FLAG_E_TEXT = 111,
+            FLAG_REQGETROOT = 112,
+            FLAG_DEFAULT = 113;
 
     private static final String
             MY_LS = "tools",
@@ -67,6 +69,7 @@ public class ShellUtil {
     private MyHandler mHandler;
 
     private OnResultListener resultListener;
+    private onTextActivityListener onTextActivityListener;
 
     private String suCommand;
     private String curtCommand;
@@ -87,7 +90,7 @@ public class ShellUtil {
     //链接
     static Pattern patternLink = Pattern.compile("\\s->\\s");
 
-    static Pattern patternJson = Pattern.compile("\\{'[^']+':'[^']+'[ ]*(,[ ]*'[^']+':'[^']+'[ ]*)*\\}");
+    static Pattern patternJson = Pattern.compile("\\{\".+\"\\}");
 
     Matcher matcher;
 
@@ -121,12 +124,20 @@ public class ShellUtil {
             mOutStream = mProcess.getOutputStream();
             exeCommand(App.tools + " -uid");
             //开启线程用来处理命令执行后的相关信息，正常结果和错误结果
-            new Thread(new ResultThread(this, 1)).start();
-            new Thread(new ResultThread(this, 2)).start();
+            startNormalStreamThread();
+            startErrorStreamThread();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
+
+    private void startNormalStreamThread() {
+        new Thread(new ResultThread(this, 1)).start();
+    }
+
+    private void startErrorStreamThread() {
+        new Thread(new ResultThread(this, 2)).start();
     }
 
     /**
@@ -164,9 +175,9 @@ public class ShellUtil {
                 //commandQueue.offer(command);
                 System.out.println("exeCommand--------用户输入的命令------------------->" + command);
                 mOutStream.write((command + "\n").getBytes());
-                if (command.startsWith("su")) {
+                /*if (command.startsWith("su")) {
                     exeCommand("echo $?");
-                }
+                }*/
             }
         } catch (IOException e) {
             System.out.println("error execommand " + e);
@@ -189,13 +200,10 @@ public class ShellUtil {
                 mBr = new BufferedReader(mReader);
             }
             Matcher jsonMatcher = null;
-
             List<FileItem> itemList = null;
             FileItem item;
-            String currentPath = null;
-            String command = null;
             while ((content = mBr.readLine()) != null) {
-                //System.out.println("curtCommand-------->" + curtCommand + ",  content--->" + content);
+                //System.out.println("curtCommand-------- "+  "content--->" + content);
                 jsonMatcher = patternJson.matcher(content);
                 if (jsonMatcher.matches()) {
                     item = JSON.parseObject(content, FileItem.class);
@@ -223,7 +231,7 @@ public class ShellUtil {
                                 mHandler.obtainMessage(FLAG_CP, content).sendToTarget();
                             }
                             //mHandler.obtainMessage(FLAG_CP, content).sendToTarget();
-                            //System.out.println("cp-->" + content);
+                            System.out.println("shelluitl---cp-->" + content);
                             break;
                         case "mv":
                             /*if (item.isOver) {
@@ -263,15 +271,24 @@ public class ShellUtil {
                             System.out.println("su content-->" + content);
                             Item itm = JSON.parseObject(content, Item.class);
                             if ("0".equals(itm.content)) {
+                                isGetRoot = true;
                                 paseItem(itm);
                             } else {
-                                ToastUitls.showLMsgAtCenter("not permission");
+                                //ToastUitls.showLMsgAtCenter("not permission");
                             }
+                            break;
+                        case "mount":
                             break;
                         case "chm":
                             System.out.println("chm content-->" + content);
                             if (item.isOver) {
                                 mHandler.obtainMessage(FLAG_CHM, content).sendToTarget();
+                            }
+                            break;
+                        case "ltext":
+                        case "etext":
+                            if (item.isOver) {
+                                mHandler.obtainMessage("ltext".equals(item.flag) ? FLAG_L_TEXT : FLAG_E_TEXT, content).sendToTarget();
                             }
                             break;
                         case "uid":
@@ -299,7 +316,8 @@ public class ShellUtil {
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println(e.getCause());
+            System.out.println("readStream exception------>"+ e.toString());
+            startNormalStreamThread();
         }
     }
 
@@ -327,8 +345,9 @@ public class ShellUtil {
                     item = JSON.parseObject(content, Item.class);
                     switch (item.flag){
                         case "f":
+                            System.out.println("error fg=f ====>" + item.error);
                             if (item.error.toLowerCase().contains("permission denied")) {
-                                exeCommand(SU + "\necho \"{'flag':'su','fg':'f','path':'" + item.path + "','content':'$?'}\"");
+                                exeCommand(SU + "\necho \"{\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\"f\\\",\\\"path\\\":\\\"" + item.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
                             }
                             break;
                         case "s":
@@ -345,6 +364,20 @@ public class ShellUtil {
                             break;
                         case "rn":
                             break;
+                        case "chm":
+                            //{"flag":"chm","error":"Read-only file system","mode":"0757","path":"/system"}
+                            if ("Read-only file system".equalsIgnoreCase(item.error)) {
+                                Object chmObj[] = PermissionUtils.isOnlyReadFileSys(item.path);
+                                System.out.println("mount remount-->" + chmObj[1] + "  " + chmObj[2]);
+                                exeCommand(MOUNT_RW + chmObj[1] + " " + chmObj[2] + "\necho \"{\\\"flag\\\":\\\"mount\\\",\\\"fg\\\":\\\"chm\\\",\\\"path\\\":\\\"" + item.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
+                            }
+                            break;
+                        case "ltext":
+                        case "etext":
+                            if (item.error.toLowerCase().contains("permission denied")) {
+                                exeCommand(SU + "\necho \"{\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\""+ item.fg +"\\\",\\\"path\\\":\\\"" + item.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
+                            }
+                            break;
                         case "su":
                             break;
                         default:
@@ -352,28 +385,18 @@ public class ShellUtil {
                             break;
                     }
                 } else {
-                    System.out.println("jsonMatcher not matches()-------->"  + ",  content--->" + content);
+                    System.out.println("error jsonMatcher not matches()-------->"  + ",  content--->" + content);
                 }
                 if (!mErrorBr.ready()){
                     mHandler.sendEmptyMessage(-1);
-                    /*if (content.toLowerCase().contains("permission denied")) {
-                        if (isGetRoot) {
-                            permissionCommand = curtCommand;
-                            curtCommand = null;
-                            exeCommand(SU + "\necho \"{'flag':'su','content':'$?'}\"");
-                        }
-                    } else if (content.toLowerCase().contains("read-only file system")) {
-
-                    } else {
-                        curtCommand = null;
-                    }*/
 
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println(e.getCause());
+            startErrorStreamThread();
+            System.out.println("error  catch (Exception e)-->" + e.toString());
         }
     }
 
@@ -418,15 +441,23 @@ public class ShellUtil {
                     System.out.println("---onCpAction");
                     break;
                 case FLAG_MV:
-                    System.out.println("---onMvComplete");
-                    cmdUtil.resultListener.onMvComplete();
+                    System.out.println("---onMvAction");
+                    cmdUtil.resultListener.onMvAction(msg.obj.toString());
                     break;
                 case FLAG_DEL:
-                    System.out.println("---onDelComplete");
-                    cmdUtil.resultListener.onDelComplete();
+                    System.out.println("---onDelAction");
+                    cmdUtil.resultListener.onDelAction(msg.obj.toString());
                     break;
                 case FLAG_CHM:
                     cmdUtil.resultListener.onCHMAction(msg.obj.toString());
+                    break;
+                case FLAG_E_TEXT:
+                    if (cmdUtil.onTextActivityListener != null) {
+                        cmdUtil.onTextActivityListener.onTextSaveAction(msg.obj.toString());
+                    }
+                    break;
+                case FLAG_L_TEXT:
+                    cmdUtil.resultListener.onTextAction(msg.obj.toString());
                     break;
                 case FLAG_REQGETROOT:
                     cmdUtil.resultListener.onReqGetRoot((Item) msg.obj);
@@ -442,10 +473,10 @@ public class ShellUtil {
     }
 
     private void paseItem(Item item) {
-        FileUtil fileUtil = FileUtil.getInstance();
+        FileUtils fileUtils = FileUtils.get();
         switch (item.fg) {
             case "f":
-                fileUtil.listAllFile(item.path);
+                fileUtils.listAllFile(item.path);
                 break;
             case "s":
                 break;
@@ -463,6 +494,12 @@ public class ShellUtil {
                 break;
             case "per":
                 mHandler.obtainMessage(FLAG_REQGETROOT, item).sendToTarget();
+                break;
+            case "ltext":
+                fileUtils.do_text(item.path, App.tempFilePath, 'l');
+                break;
+            case "etext":
+                fileUtils.do_text(item.path, App.tempFilePath, 'e');
                 break;
             default:
                 System.out.println("default content--->" + item.content);
@@ -495,6 +532,10 @@ public class ShellUtil {
         this.resultListener = resultListener;
     }
 
+    public void setTextActivityListener(ShellUtil.onTextActivityListener onTextActivityListener) {
+        this.onTextActivityListener = onTextActivityListener;
+    }
+
     public interface OnResultListener {
         void onLoadComplete(List<FileItem> list);
         void onLoadComplete(String str);
@@ -503,11 +544,16 @@ public class ShellUtil {
         void onCreateDirComplete(String str);
         void onCreateFileComplete(String str);
         void onCpAction(String str);
-        void onMvComplete();
-        void onDelComplete();
+        void onMvAction(String str);
+        void onDelAction(String str);
         void onCHMAction(String str);
+        void onTextAction(String str);
         void onReqGetRoot(Item item);
         void onError(String msg);
+    }
+
+    public interface onTextActivityListener{
+        void onTextSaveAction(String str);
     }
 
     public static boolean isGetRoot() {
@@ -543,5 +589,6 @@ public class ShellUtil {
             mOutStream = null;
             instance = null;
         }
+        System.out.println("shell release-->" + instance);
     }
 }

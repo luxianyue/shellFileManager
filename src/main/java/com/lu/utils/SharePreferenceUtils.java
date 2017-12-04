@@ -77,6 +77,10 @@ public class SharePreferenceUtils {
         editor.commit();
     }
 
+    public static void saveFragmentVisibleIndex(int index) {
+        mSp.edit().putInt("visible_index", index).commit();
+    }
+
     public static String[] getSavedFragmentState(int index) {
         int ind = mSp.getInt("tab_" + index, -1);
         String path = getCurrentPath(index);
