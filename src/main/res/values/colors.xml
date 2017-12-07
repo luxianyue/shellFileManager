@@ -14,6 +14,12 @@
     <color name="per_setfont_color_notable">#a4a3a3</color>
     <color name="white">#FFFFFF</color>
 
+    <color name="uvv_gray">#969696</color>
+    <color name="uvv_black">#ff000000</color>
+    <color name="uvv_light_gray">#ffF0F0F0</color>
+    <color name="uvv_titlebar_bg">#7f000000</color>
+    <color name="bg_dialog">#747272</color>
+
     <!--================================================================-->
     <color name="common_signin_btn_dark_text_default">@android:color/white</color>
     <color name="common_signin_btn_dark_text_pressed">@android:color/white</color>

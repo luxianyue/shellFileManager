@@ -852,7 +852,8 @@ int main(int argc, char *argv[]) {
         char des[strlen(argv[3]) + 60];
         strcpy(des, argv[3]);
         if (rename(name, des) == 0) {
-            printf("{\"flag\":\"rn\",\"isOver\":\"true\",\"state\":\"true\"}\n");
+            check_char(des);
+            printf("{\"flag\":\"rn\",\"isOver\":\"true\",\"state\":\"true\",\"path\":\"%s\"}\n", des);
         } else {
             printf("{\"flag\":\"rn\",\"isOver\":\"true\",\"state\":\"false\",\"reason\":\"%s\"}\n", strerror(errno));
         }

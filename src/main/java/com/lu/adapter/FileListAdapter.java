@@ -67,6 +67,21 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         //mCheckBoxList.clear();
     }
 
+    /**
+     * 局部刷新
+     * @param view
+     * @param itemIndex
+     */
+    public void updateView(View view, int itemIndex) {
+        if(view == null) {
+            return;
+        }
+        //从view中取得holder
+        ViewHolder holder = (ViewHolder) view.getTag();
+        doViewHolderData(holder, null, itemIndex);
+    }
+
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         FileItem item = mList.get(position);
@@ -96,9 +111,10 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
             holder.fileCheckBox.setVisibility(View.VISIBLE);
         }*/
         //mCheckBoxList.add(holder.fileCheckBox);
-        holder.fileName.setText(item.getName());
-        holder.fileSize.setText(item.formatSize());
+        item.setPosition(position);
         if (item.isUpper) {
+            holder.fileName.setText(item.getName());
+            holder.fileSize.setText(item.formatSize());
             holder.fileIcon.setImageResource(item.getIcon());
             if (holder.fileCheckBox.getVisibility() == View.VISIBLE) {
                 holder.fileCheckBox.setVisibility(View.GONE);
@@ -106,66 +122,71 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
                 holder.fileTime.setVisibility(View.GONE);
             }
         } else {
-            item.tvPermission = holder.filePermiss;
-            if (holder.fileCheckBox.getVisibility() == View.GONE) {
-                holder.fileCheckBox.setVisibility(View.VISIBLE);
-                holder.filePermiss.setVisibility(View.VISIBLE);
-                holder.fileTime.setVisibility(View.VISIBLE);
-            }
-            holder.fileCheckBox.setTag(position);
-            holder.fileCheckBox.setChecked(item.isCheck());
-            holder.fileTime.setText(TimeUtils.getFormatDateTime(item.lastModified()));
-            holder.filePermiss.setText(item.getPer());
-
-            //Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
-
-            switch (FileUtils.getFileType(item.getName())) {
-                case FileUtils.FILE_IMAGE:
-                    Glide.with(context).load(item.getPath())
-                            .placeholder(R.drawable.ic_progress) //加载时的占位图
-                            .error(R.drawable.image)
-                            .into(holder.fileIcon);
-                    break;
-                case FileUtils.FILE_AUDIO:
-                    holder.fileIcon.setImageResource(R.drawable.music);
-                    break;
-                case FileUtils.FILE_VIDEO:
-                    Glide.with(context).load(Uri.fromFile(new File(item.getPath())))
-                            .placeholder(R.drawable.video) //加载时的占位图
-                            .error(R.drawable.video)
-                            .into(holder.fileIcon);
-                    break;
-                case FileUtils.FILE_COMPRESS:
-                    holder.fileIcon.setImageResource(R.drawable.compress);
-                    break;
-                case FileUtils.FILE_TEXT:
-                case FileUtils.FILE_SCRIPT:
-                    holder.fileIcon.setImageResource(R.drawable.text);
-                    break;
-                case FileUtils.FILE_APK:
-                    //
-                    holder.fileIcon.setImageResource(R.drawable.apk);
-                    mExecutorService.execute(new LoadAPKIconRunnable(holder.fileIcon, item.getPath()));
-                    break;
-                case FileUtils.FILE_GIF:
-                    Glide.with(context).load(item.getPath())
-                            .asGif()
-                            .placeholder(R.drawable.ic_progress) //加载时的占位图
-                            .error(R.drawable.image)
-                            .into(holder.fileIcon);
-                    break;
-                case FileUtils.FILE_OTHER:
-                default:
-                    holder.fileIcon.setImageResource(item.getIcon());
-                    break;
-            }
+            doViewHolderData(holder, item, position);
         }
 
         return convertView;
     }
 
-    private void setFileTypeImage(int type) {
+    private void doViewHolderData(ViewHolder holder, FileItem item, int position) {
+        if (item == null) {
+            item = mList.get(position);
+        }
+        holder.fileName.setText(item.getName());
+        holder.fileSize.setText(item.formatSize());
+        item.tvPermission = holder.filePermiss;
+        if (holder.fileCheckBox.getVisibility() == View.GONE) {
+            holder.fileCheckBox.setVisibility(View.VISIBLE);
+            holder.filePermiss.setVisibility(View.VISIBLE);
+            holder.fileTime.setVisibility(View.VISIBLE);
+        }
+        holder.fileCheckBox.setTag(position);
+        holder.fileCheckBox.setChecked(item.isCheck());
+        holder.fileTime.setText(TimeUtils.getFormatDateTime(item.lastModified()));
+        holder.filePermiss.setText(item.getPer());
 
+        //Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
+
+        switch (FileUtils.getFileType(item.getName())) {
+            case FileUtils.FILE_IMAGE:
+                Glide.with(context).load(item.getPath())
+                        .placeholder(R.drawable.ic_progress) //加载时的占位图
+                        .error(R.drawable.image)
+                        .into(holder.fileIcon);
+                break;
+            case FileUtils.FILE_AUDIO:
+                holder.fileIcon.setImageResource(R.drawable.music);
+                break;
+            case FileUtils.FILE_VIDEO:
+                Glide.with(context).load(Uri.fromFile(new File(item.getPath())))
+                        .placeholder(R.drawable.video) //加载时的占位图
+                        .error(R.drawable.video)
+                        .into(holder.fileIcon);
+                break;
+            case FileUtils.FILE_COMPRESS:
+                holder.fileIcon.setImageResource(R.drawable.compress);
+                break;
+            case FileUtils.FILE_TEXT:
+            case FileUtils.FILE_SCRIPT:
+                holder.fileIcon.setImageResource(R.drawable.text);
+                break;
+            case FileUtils.FILE_APK:
+                //
+                holder.fileIcon.setImageResource(R.drawable.apk);
+                mExecutorService.execute(new LoadAPKIconRunnable(holder.fileIcon, item.getPath()));
+                break;
+            case FileUtils.FILE_GIF:
+                Glide.with(context).load(item.getPath())
+                        .asGif()
+                        .placeholder(R.drawable.ic_progress) //加载时的占位图
+                        .error(R.drawable.image)
+                        .into(holder.fileIcon);
+                break;
+            case FileUtils.FILE_OTHER:
+            default:
+                holder.fileIcon.setImageResource(item.getIcon());
+                break;
+        }
     }
 
     @Override

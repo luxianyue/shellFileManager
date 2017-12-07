@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.databinding.DataBindingUtil;
 import android.view.View;
 import android.widget.CheckBox;
@@ -11,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
 import com.lu.filemanager2.databinding.PermissionSetMenuBinding;
 
@@ -144,17 +146,31 @@ public class DialogManager {
     }
 
     public Object[] getMsgDialog(Activity ay, View.OnClickListener listener) {
-        if (mMsgDialog != null) {
+        if (ay instanceof MainActivity) {
+            if (mMsgDialog == null) {
+                mMsgDialog = createMsgDialog(ay, listener);
+            }
             return mMsgDialog;
+        } else {
+            return createMsgDialog(ay, listener);
         }
-        mMsgDialog = new Object[2];
+    }
+
+    private Object[] createMsgDialog(Activity ay, View.OnClickListener listener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ay);
         LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.msg_dialog, null);
         view.getChildAt(view.getChildCount() -1).setOnClickListener(listener);
         builder.setView(view);
-        mMsgDialog[0] = builder.create();
-        mMsgDialog[1] = view.getChildAt(2);
-        return mMsgDialog;
+        Object obj[] = {null, view.getChildAt(2)};
+        if (ay instanceof MainActivity) {
+            obj[0] = builder.create();
+            mMsgDialog = obj;
+            return mMsgDialog;
+        } else {
+            builder.setCancelable(false);
+            obj[0] = builder.create();
+            return obj;
+        }
     }
 
     public Object[] getMsgConfirmDialog(Activity ay, View.OnClickListener listener, int flag) {
@@ -162,20 +178,27 @@ public class DialogManager {
             if (flag == 1) {
                 ((View)mMsgConfirmDialog[3]).setVisibility(View.VISIBLE);
                 ((View)mMsgConfirmDialog[4]).setVisibility(View.VISIBLE);
-                ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+                ((TextView)mMsgConfirmDialog[4]).setText(R.string.execute);
+                ((TextView)mMsgConfirmDialog[5]).setText(R.string.look_edit);
             }
             if (flag == 2 || flag == 3){
                 ((View)mMsgConfirmDialog[3]).setVisibility(View.GONE);
                 ((View)mMsgConfirmDialog[4]).setVisibility(View.GONE);
                 if (flag == 3) {
-                    ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+                    ((TextView)mMsgConfirmDialog[5]).setText(R.string.look_edit);
                 } else {
-                    ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.confirm));
+                    ((TextView)mMsgConfirmDialog[5]).setText(R.string.confirm);
                 }
+            }
+            if (flag == 4) {
+                ((View)mMsgConfirmDialog[3]).setVisibility(View.VISIBLE);
+                ((View)mMsgConfirmDialog[4]).setVisibility(View.VISIBLE);
+                ((TextView)mMsgConfirmDialog[4]).setText(R.string.play);
+                ((TextView)mMsgConfirmDialog[5]).setText(R.string.file_open_way);
             }
             return mMsgConfirmDialog;
         }
-        mMsgConfirmDialog = new Object[6];
+        mMsgConfirmDialog = new Object[7];
         AlertDialog.Builder builder = new AlertDialog.Builder(ay);
         LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.msg_confirm_dialog, null);
         LinearLayout ll = (LinearLayout) view.getChildAt(view.getChildCount() -1);
@@ -189,20 +212,32 @@ public class DialogManager {
         mMsgConfirmDialog[3] = ll.getChildAt(1);
         mMsgConfirmDialog[4] = ll.getChildAt(2);
         mMsgConfirmDialog[5] = ll.getChildAt(4);
-        if (flag == 1) {
+        if (flag == 1 || flag == 4) {
             ll.getChildAt(1).setVisibility(View.VISIBLE);
             ll.getChildAt(2).setVisibility(View.VISIBLE);
-            ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+            if (flag == 4) {
+                ((TextView)mMsgConfirmDialog[4]).setText(R.string.play);
+                ((TextView)mMsgConfirmDialog[5]).setText(R.string.file_open_way);
+            } else {
+                ((TextView)mMsgConfirmDialog[4]).setText(R.string.execute);
+                ((TextView)mMsgConfirmDialog[5]).setText(R.string.look_edit);
+            }
         }
         if (flag == 2 || flag == 3){
             ll.getChildAt(1).setVisibility(View.GONE);
             ll.getChildAt(2).setVisibility(View.GONE);
             if (flag == 3) {
-                ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.look_edit));
+                ((TextView)mMsgConfirmDialog[5]).setText(R.string.look_edit);
             } else {
-                ((TextView)mMsgConfirmDialog[5]).setText(ay.getString(R.string.confirm));
+                ((TextView)mMsgConfirmDialog[5]).setText(R.string.confirm);
             }
         }
+        ((AlertDialog)mMsgConfirmDialog[0]).setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                MainActivity.isWhat = 0;
+            }
+        });
         return mMsgConfirmDialog;
     }
 

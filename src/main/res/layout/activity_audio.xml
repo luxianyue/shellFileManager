@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:gravity="center"
+    android:background="@color/wallet_dim_foreground_inverse_holo_dark">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="5dp"
+        android:text="00:00"
+        android:textColor="@color/uvv_light_gray"/>
+    <SeekBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:maxHeight="2dp"
+        android:progressDrawable="@drawable/uvv_star_play_progress_seek" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00"
+        android:textColor="@color/uvv_light_gray"/>
+    <ImageButton
+        android:id="@+id/audio_play"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:src="@drawable/ic_button_play"
+        android:background="@drawable/menupressed_backgroud"/>
+</LinearLayout>

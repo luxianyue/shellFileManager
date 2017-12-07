@@ -190,4 +190,14 @@ public class FileItem {
     }
 
     public TextView tvPermission;
+
+    private int position;
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
+    public int position() {
+        return position;
+    }
 }

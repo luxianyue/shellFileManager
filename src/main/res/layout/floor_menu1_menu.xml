@@ -1,0 +1,101 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/dark_grey"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/menu1_open_way"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/file_open_way"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/menu1_permissionset"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/permission_set"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/menu1_sendto"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/send_to"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/menu1_text_editorlook"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/lookoredit_text"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+    <View
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/menu1_compress"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/compress_sel_file"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/grey" />
+
+    <TextView
+        android:id="@+id/menu1_create_link"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@drawable/app_menu_backgroud"
+        android:clickable="true"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dp"
+        android:text="@string/create_link"
+        android:textSize="@dimen/floor_menu_front_size"
+        android:textColor="#ffffff" />
+</LinearLayout>

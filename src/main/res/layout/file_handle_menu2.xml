@@ -4,7 +4,7 @@
         android:id="@+id/linearlayout_filehandle2"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="@color/dark_grey"
+        android:background="@color/wallet_dim_foreground_inverse_holo_dark"
         android:orientation="horizontal"
         android:visibility="gone">
 

@@ -106,7 +106,11 @@
     <string name="look_edit">查看或编辑</string>
     <string name="tip_text">文本文件</string>
     <string name="tip_script">脚本文件</string>
+    <string name="tip_media">媒体文件</string>
     <string name="tip_text_content">这是一个文本文件，你想如何处理？</string>
     <string name="tip_script_content">这是一个脚本文件，你想如何处理？</string>
+    <string name="tip_media_content">这是一个媒体文件，你想如何处理？</string>
+    <string name="play">播放</string>
+    <string name="audio_play_error">文件损坏或无法播放该文件</string>
 
 </resources>

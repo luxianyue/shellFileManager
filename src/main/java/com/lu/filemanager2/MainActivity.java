@@ -2,8 +2,7 @@ package com.lu.filemanager2;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
+import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -29,6 +28,8 @@ import android.widget.TextView;
 
 import com.github.chrisbanes.photoview.PhotoView;
 import com.lu.App;
+import com.lu.activity.AudioActivity;
+import com.lu.activity.VideoActivity;
 import com.lu.adapter.FragmentAdapter;
 import com.lu.activity.BasedActivity;
 import com.lu.filemanager2.databinding.ActivityMainBinding;
@@ -39,10 +40,10 @@ import com.lu.utils.PermissionUtils;
 import com.lu.utils.SharePreferenceUtils;
 import com.lu.utils.TimeUtils;
 import com.lu.utils.ToastUitls;
-import com.lu.view.MyProgressDialog;
 import com.lu.view.MyViewPager;
 import com.lu.view.DialogManager;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -59,6 +60,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
     private PopupWindow mPopupWindowFloorBarMenu;
     private PopupWindow mPopupWindowFloorBarAdd;
     private PopupWindow mPopupWindowFloorBarSort;
+    private PopupWindow mPopupWindowFloorBar1Menu;
     private AlertDialog mPopupWindowFloorBarSearch;
 
     private AlertDialog mPropertyDialog;
@@ -71,8 +73,8 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
     private static final int CLOSE_TAG = 102;
     private static final int PROPERTY = 103;
     public static final int LOOK_EDIT = 104;
-
-    public static String mLookEditPath;
+    public static final int MEDIA_VIDEO = 105;
+    public static final int MEDIA_AUDIO = 106;
 
     private boolean isFloorMenu2Mode;
 
@@ -117,8 +119,8 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onPause() {
+        super.onPause();
         SharePreferenceUtils.saveFragmentVisibleIndex(getCurrentShowFragment().getIndex());
     }
 
@@ -239,7 +241,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                         }
                     }
                 }
-                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location[0] + v.getWidth()/2  - 10, location[1] - mPopupWindowFloorBarAdd.getHeight() - 2);
+                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location[0] + 10, location[1] - mPopupWindowFloorBarAdd.getHeight() - 10);
                 break;
             case R.id.floor_menu_search:
                 if (mPopupWindowFloorBarSearch == null) {
@@ -296,7 +298,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                         }
                     }
                 }
-                mPopupWindowFloorBarMenu.showAtLocation(v, Gravity.NO_GRAVITY, location2[0] + v.getWidth() - mPopupWindowFloorBarMenu.getWidth() - 1, location2[1] - mPopupWindowFloorBarMenu.getHeight() - 2);
+                mPopupWindowFloorBarMenu.showAtLocation(v, Gravity.NO_GRAVITY, location2[0] + v.getWidth() - mPopupWindowFloorBarMenu.getWidth() - 10, location2[1] - mPopupWindowFloorBarMenu.getHeight() - 10);
                 break;
             case R.id.image_copy:
                 System.out.println("menu1_image_copy");
@@ -328,8 +330,19 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 }
                 break;
             case R.id.msg_confirm_execute:
-                //执行脚本文件
+                //执行脚本文件 或者 播放媒体
                 ((AlertDialog)DialogManager.get().getMsgConfirmDialog(this, this, 0)[0]).dismiss();
+                if (isWhat == MEDIA_VIDEO) {
+                    Intent activityIntent = new Intent(this, VideoActivity.class);
+                    activityIntent.putExtra("path", v.getTag().toString());
+                    startActivity(activityIntent);
+                }
+                if (isWhat == MEDIA_AUDIO) {
+                    Intent activityIntent = new Intent(this, AudioActivity.class);
+                    activityIntent.putExtra("path", v.getTag().toString());
+                    startActivity(activityIntent);
+                }
+
                 break;
             case R.id.msg_confirm_cancel:
                 ((AlertDialog)DialogManager.get().getMsgConfirmDialog(this, this, 0)[0]).dismiss();
@@ -346,10 +359,19 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                     removeTab(index);
                 }
                 if (isWhat == LOOK_EDIT) {
-                    FileUtils.get().do_text(mLookEditPath, App.tempFilePath, 'l');
-                    mLookEditPath = null;
+                    FileUtils.get().do_text(v.getTag().toString(), App.tempFilePath, 'l');
                 }
-                isWhat = 0;
+                if (isWhat == MEDIA_VIDEO) {
+                    //media open way
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse("file://" + v.getTag().toString()), "video/*");
+                    startActivity(intent);
+                }
+                if (isWhat == MEDIA_AUDIO) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(Uri.parse("file://" + v.getTag().toString()), "audio/*");
+                    startActivity(intent);
+                }
                 break;
             case R.id.image_property:
                 System.out.println("menu1_image_property");
@@ -371,7 +393,32 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 getCurrentShowFragment().onCheckedChanged();
                 break;
             case R.id.image_menu:
-                System.out.println("image_menu");
+                System.out.println("handle1_image_menu");
+                if (mPopupWindowFloorBar1Menu == null) {
+                    int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 180f, getResources().getDisplayMetrics());
+                    mPopupWindowFloorBar1Menu = initPopupWindow(R.layout.floor_menu1_menu, width, 0);
+                    LinearLayout layout = (LinearLayout) mPopupWindowFloorBar1Menu.getContentView();
+                    for (int i = 1; i < layout.getChildCount(); i++) {
+                        if (layout.getChildAt(i) instanceof TextView) {
+                            layout.getChildAt(i).setOnClickListener(this);
+                        }
+                    }
+                }
+                int menu1Location[] = getIntArray();
+                v.getLocationOnScreen(menu1Location);
+                mPopupWindowFloorBar1Menu.showAtLocation(v, Gravity.NO_GRAVITY, menu1Location[0] + v.getWidth() - mPopupWindowFloorBar1Menu.getWidth() - 10, menu1Location[1] - mPopupWindowFloorBar1Menu.getHeight() - 10);
+                break;
+            case R.id.menu1_open_way:
+                break;
+            case R.id.menu1_permissionset:
+                break;
+            case R.id.menu1_sendto:
+                break;
+            case R.id.menu1_text_editorlook:
+                break;
+            case R.id.menu1_compress:
+                break;
+            case R.id.menu1_create_link:
                 break;
             case R.id.tv_paste:
                 System.out.println("menu2_tv_paste");
@@ -495,13 +542,16 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 }
                 if (ntv.equals(getString(R.string.rename))) {
                     String old = null;
+                    int position = 0;
                     if (isFloorMenu2Mode) {
                         old = mCheckItems2.iterator().next().getPath();
+                        position = mCheckItems2.iterator().next().position();
                     } else {
                         old = mCheckItems.iterator().next().getPath();
+                        position = mCheckItems.iterator().next().position();
                     }
                     getCurrentShowFragment().cancelCheckedItem();
-                    getCurrentShowFragment().rename(old, strName);
+                    getCurrentShowFragment().rename(old, strName, position);
                     dfDialog.dismiss();
                 }
                 break;

@@ -4,7 +4,7 @@
         android:id="@+id/linearlayout_floor_menu_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/dark_grey"
+        android:background="@color/wallet_dim_foreground_inverse_holo_dark"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 

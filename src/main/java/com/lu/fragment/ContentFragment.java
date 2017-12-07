@@ -52,7 +52,7 @@ import java.util.Stack;
 
 public class ContentFragment extends Fragment implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private ListView mListView;
-    private FileListAdapter mFileListAdapter;
+    private FileListAdapter mAdapter;
 
     private Stack<Path> mBackStack;
 
@@ -98,6 +98,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private Map<String, int[]> mPositionMap;
 
+    private int mUpdateIndex;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,8 +111,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mFileUtils = FileUtils.get();
         }
 
-        if (mFileListAdapter == null) {
-            mFileListAdapter = new FileListAdapter(getActivity());
+        if (mAdapter == null) {
+            mAdapter = new FileListAdapter(getActivity());
         }
 
         mPositionMap = new HashMap<>();
@@ -159,7 +161,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         //mFileUtils.setOnLoadFileListener(loadFileListener);
         //mFileUtils.listAllFile(mCurrentPath.getPath());
 
-        mListView.setAdapter(mFileListAdapter);
+        mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(this);
         mListView.setOnItemLongClickListener(this);
 
@@ -174,7 +176,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         isShowToUser = isVisibleToUser;
        if (isVisibleToUser && mFileUtils != null) {
             mFileUtils.setOnLoadFileListener(loadFileListener);
-            if (mFileListAdapter.getList() == null) {
+            if (mAdapter.getList() == null) {
                 mFileUtils.listAllFile(mCurrentPath.getPath());
                 //mFileUtils.listAllFile("/");
                 //mFileUtils.listAllFile("/");
@@ -194,23 +196,23 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void onCheckedChanged() {
-        int checkSize = mFileListAdapter.getCheckFileItem().size();
-        int totalSize = mFileListAdapter.getList().get(0).isUpper ? mFileListAdapter.getList().size() - 1 : mFileListAdapter.getList().size();
+        int checkSize = mAdapter.getCheckFileItem().size();
+        int totalSize = mAdapter.getList().get(0).isUpper ? mAdapter.getList().size() - 1 : mAdapter.getList().size();
         //System.out.println("checksize "+ checkSize + "  totalsize=" + totalSize);
-        if ((mFileListAdapter.itemIsChecked() && checkSize < totalSize )
-        || !mFileListAdapter.itemIsChecked()) {
-            mFileListAdapter.checkFileItem(true);
+        if ((mAdapter.itemIsChecked() && checkSize < totalSize )
+        || !mAdapter.itemIsChecked()) {
+            mAdapter.checkFileItem(true);
         } else {
-            mFileListAdapter.checkFileItem(false);
+            mAdapter.checkFileItem(false);
         }
     }
 
     public void cancelCheckedItem() {
-        mFileListAdapter.checkFileItem(false);
+        mAdapter.checkFileItem(false);
     }
 
     public void refresh() {
-        mFileListAdapter.notifyDataSetChanged();
+        mAdapter.notifyDataSetChanged();
     }
 
     public void saveCurrentState() {
@@ -238,8 +240,17 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 ((MainActivity)getActivity()).prepareLookImage(item.getPath());
                 break;
             case FileUtils.FILE_AUDIO:
-                break;
+                MainActivity.isWhat = MainActivity.MEDIA_AUDIO;
             case FileUtils.FILE_VIDEO:
+                Object mediaObj[] = DialogManager.get().getMsgConfirmDialog(getActivity(), (MainActivity)getActivity(), 4);
+                ((TextView)mediaObj[1]).setText(getString(R.string.tip_media));
+                ((TextView)mediaObj[2]).setText(getString(R.string.tip_media_content));
+                if (MainActivity.isWhat == 0) {
+                    MainActivity.isWhat = MainActivity.MEDIA_VIDEO;
+                }
+                ((TextView)mediaObj[4]).setTag(item.getPath());
+                ((TextView)mediaObj[5]).setTag(item.getPath());
+                ((AlertDialog)mediaObj[0]).show();
                 break;
             case FileUtils.FILE_COMPRESS:
                 break;
@@ -249,7 +260,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 ((TextView)msgObj[1]).setText(getString(R.string.tip_text));
                 ((TextView)msgObj[2]).setText(getString(R.string.tip_text_content));
                 MainActivity.isWhat = MainActivity.LOOK_EDIT;
-                MainActivity.mLookEditPath = item.getPath();
+                ((TextView)msgObj[5]).setTag(item.getPath());
                 ((AlertDialog)msgObj[0]).show();
                 break;
             case FileUtils.FILE_SCRIPT:
@@ -258,7 +269,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 ((TextView)smsgObj[1]).setText(getString(R.string.tip_script));
                 ((TextView)smsgObj[2]).setText(getString(R.string.tip_script_content));
                 MainActivity.isWhat = MainActivity.LOOK_EDIT;
-                MainActivity.mLookEditPath = item.getPath();
+                ((TextView)smsgObj[4]).setTag(item.getPath());
+                ((TextView)smsgObj[5]).setTag(item.getPath());
                 ((AlertDialog)smsgObj[0]).show();
                 break;
             case FileUtils.FILE_APK:
@@ -285,7 +297,8 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         mFileUtils.createFile(cpath + name);
     }
 
-    public void rename(String oldN, String newN) {
+    public void rename(String oldN, String newN, int position) {
+        mUpdateIndex = position;
         String cpath = mCurrentPath.getPath();
         cpath = "/".equals(cpath) ? cpath : cpath + "/";
         if (oldN.equals(cpath + newN)) {
@@ -335,19 +348,27 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void sort(int whichSort) {
-        if (mFileListAdapter.getList() == null || mFileListAdapter.getList().size() <= 0) {
+        if (mAdapter.getList() == null || mAdapter.getList().size() <= 0) {
             return;
         }
-        /*FileItem item = mFileListAdapter.getList().get(0);
-        if (item.isUpper) {
-            mFileListAdapter.getList().remove(0);
-        }*/
-        mFileUtils.sortFileItem(mFileListAdapter.getList(), whichSort);
-        mFileListAdapter.notifyDataSetChanged();
+        mFileUtils.sortFileItem(mAdapter.getList(), whichSort);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void updateView(int itemIndex) {
+        //得到第一个可显示控件的位置，
+        int visiblePosition = mListView.getFirstVisiblePosition();
+        //只有当要更新的view在可见的位置时才更新，不可见时，跳过不更新
+        if (itemIndex - visiblePosition >= 0) {
+            //得到要更新的item的view
+            View view = mListView.getChildAt(itemIndex - visiblePosition);
+            //调用adapter更新界面
+            mAdapter.updateView(view, itemIndex);
+        }
     }
 
     public Set<FileItem> getCheckedItem() {
-        return mFileListAdapter.getCheckFileItem();
+        return mAdapter.getCheckFileItem();
     }
 
     public void countDirSize(String path) {
@@ -356,14 +377,14 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        FileItem item = (FileItem) mFileListAdapter.getItem(position);
+        FileItem item = (FileItem) mAdapter.getItem(position);
         if (item.isUpper) {
             isBackKey = false;
             goBackUpperDir();
             return;
         }
         //如果文件被选中则进入文件选择模式
-        if (mFileListAdapter.itemIsChecked()) {
+        if (mAdapter.itemIsChecked()) {
             CheckBox box = (CheckBox) ((PercentRelativeLayout)view).getChildAt(5);
             if (item.isCheck()) {
                 item.setCheck(false);
@@ -380,7 +401,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         if (item.isFolder()) {
             //文件夹
             showCurrentPathOnTextView(path);
-            mFileListAdapter.setList(null);
+            mAdapter.setList(null);
             int array[] = {mListView.getFirstVisiblePosition(), mListView.getChildAt(0).getTop()};
             mPositionMap.put(mCurrentPath.getPath(), array);
             mFileUtils.listAllFile(path);
@@ -399,10 +420,10 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     private View mLongClickLookOrEdit;
     @Override
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        if (mFileListAdapter.itemIsChecked()) {
+        if (mAdapter.itemIsChecked()) {
             return false;
         }
-        mLongSelFileItem = (FileItem) mFileListAdapter.getItem(position);
+        mLongSelFileItem = (FileItem) mAdapter.getItem(position);
         if (mLongSelFileItem.isUpper) {
             return true;
         }
@@ -486,7 +507,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             case R.id.listview_item_longclick_sendto:
                 mItemLongClickDialog.dismiss();
                 Intent share = new Intent(Intent.ACTION_SEND);
-                share.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(mLongSelFileItem.getPath())));
+                share.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + mLongSelFileItem.getPath()));
                 share.setType("*/*");//此处可发送多种文件
                 //share.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                // share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -499,6 +520,11 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 FileUtils.get().do_text(mLongSelFileItem.getPath(), App.tempFilePath, 'l');
                 break;
             case R.id.listview_item_longclick_openway:
+                //file open way
+                mItemLongClickDialog.dismiss();
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.parse("file://" + mLongSelFileItem.getPath()), "*/*");
+                startActivity(intent);
                 break;
         }
     }
@@ -518,7 +544,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     private boolean goBackUpperDir() {
-        if (mFileListAdapter.itemIsChecked()) {
+        if (mAdapter.itemIsChecked()) {
             cancelCheckedItem();
             return true;
         }
@@ -557,7 +583,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             if (!"/".equals(mCurrentPath.getPath())) {
                 items.add(0, new FileItem(true));
             }
-            mFileListAdapter.setList(items);
+            mAdapter.setList(items);
             int array[] = mPositionMap.get(mCurrentPath.getPath());
             if (array != null)
                 mListView.setSelectionFromTop(array[0], array[1]);
@@ -578,7 +604,11 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             JSONObject jb = JSON.parseObject(str);
             if (jb.getBooleanValue("state")) {
                 ToastUitls.showSMsg("重命名成功");
-                mFileUtils.listAllFile(mCurrentPath.getPath());
+                //mFileUtils.listAllFile(mCurrentPath.getPath());
+                String path = jb.getString("path");
+                mAdapter.getList().get(mUpdateIndex).p = path;
+                mAdapter.getList().get(mUpdateIndex).n = path.substring(path.lastIndexOf("/") + 1);
+                updateView(mUpdateIndex);
             } else {
                 ToastUitls.showSMsg("rename fail:" + jb.getString("reason"));
             }
@@ -623,13 +653,14 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         @Override
         public void onCpAction(String str) {
 
-            //mFileListAdapter.getList().add(mOperaItemSet.iterator().next());
+            //mAdapter.getList().add(mOperaItemSet.iterator().next());
             //mOperaItemSet.remove(mOperaItemSet.iterator().next());
-            //mFileUtils.sortFileItem(mFileListAdapter.getList(), SharePreferenceUtils.getFileSortMode());
-            //mFileListAdapter.notifyDataSetChanged();
+            //mFileUtils.sortFileItem(mAdapter.getList(), SharePreferenceUtils.getFileSortMode());
+            //mAdapter.notifyDataSetChanged();
             JSONObject cpJson = JSON.parseObject(str);
             if (cpJson.getBooleanValue("isOver")) {
                 mFileUtils.listAllFile(mCurrentPath.getPath());
+                ToastUitls.showSMsg("文件复制完成");
             } else {
                 /*if (progressObj == null) {
                     progressObj = DialogManager.get().getProgressConfirmDialog(getActivity(), (MainActivity)getActivity());
@@ -658,6 +689,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             Item item = JSON.parseObject(str, Item.class);
             if (item.isOver) {
                 mFileUtils.listAllFile(mCurrentPath.getPath());
+                ToastUitls.showSMsg("文件移动完成");
             }
         }
 
@@ -666,9 +698,10 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             Item item = JSON.parseObject(str, Item.class);
             if (item.isOver) {
                 for (FileItem fItem : mOperaItemSet) {
-                    mFileListAdapter.getList().remove(fItem);
+                    mAdapter.getList().remove(fItem.position());
                 }
-                mFileListAdapter.notifyDataSetChanged();
+                ToastUitls.showSMsg("文件删除完成");
+                mAdapter.notifyDataSetChanged();
             }
         }
 
@@ -716,8 +749,6 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private void showPermissionSetDialog() {
         mItemLongClickDialog.dismiss();
-        //System.out.println("----->" + mLongSelFileItem.getPath());
-        //System.out.println("----->" + mLongSelFileItem.getPer());
         mPermiss = FileUtils.getFilePermissionNum(mLongSelFileItem.getPer());
         Object objects[] = DialogManager.get().createPermissionSetDialog(getActivity(), this, this);
         CheckBox dirFilecheckBox = (CheckBox) objects[4];
@@ -747,6 +778,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         preparePerAndCheckBox();
         mPerSetFileName.setText(mLongSelFileItem.getName());
         mPermissionSetDialog.show();
+    }
+
+    public void showItemLongClickDialog() {
     }
 
     private void initItemLongClickDialog() {
