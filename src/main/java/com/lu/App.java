@@ -2,12 +2,11 @@ package com.lu;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Build;
 
+import com.lu.utils.BuildUtils;
 import com.lu.utils.SharePreferenceUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +21,7 @@ import java.util.List;
 public class App extends android.app.Application {
 
     protected static List<Activity> mActivities;
-    private static String exePath;
+    public static String exePath;
     public static String tools;
     public static String tempFilePath;
 
@@ -62,14 +61,20 @@ public class App extends android.app.Application {
     }
 
     public static boolean initTools() {
-        if (new File(exePath + "/tools").exists()) {
-            tools = exePath + "/tools";
-            return true;
-        }
         InputStream fis = null;
         OutputStream out = null;
         try {
-            fis = mContext.getAssets().open("libs/" + Build.CPU_ABI + "/tools");
+            /*File file = new File(exePath + "/error");
+            if (!file.isFile()) {
+                file.createNewFile();
+            }*/
+            if (new File(exePath + "/tools").exists()) {
+                tools = exePath + "/tools";
+                return true;
+            }
+
+
+            fis = mContext.getAssets().open("libs/" + BuildUtils.CPU_ABI + "/tools");
             out = new FileOutputStream(exePath + "/tools");
             int len = 0;
             byte buf[] = new byte[1024];

@@ -1,14 +1,17 @@
 package com.lu.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,8 +21,8 @@ import android.os.Message;
 
 import com.alibaba.fastjson.JSON;
 import com.lu.App;
+import com.lu.model.TempItem;
 import com.lu.model.FileItem;
-import com.lu.model.Item;
 
 public class ShellUtil {
 
@@ -47,7 +50,7 @@ public class ShellUtil {
             CD = "cd",
             SU = "su",
             PWD = "pwd",
-            SHELL = "/system/bin/sh";
+            SHELL = "sh";
 
     public static final String MOUNT_RW = "mount -o remount,rw ";
     public static final String MOUNT_RO = "mount -o remount,ro ";
@@ -104,10 +107,10 @@ public class ShellUtil {
      */
     private String result;
 
-    private List<FileItem> fileList;
-
     private Queue<String> commandQueue;
     private Queue<String> errorQueue;
+
+    private Map<Integer, List<FileItem>> mFileItemListMap;
 
 
     private ShellUtil() {
@@ -118,14 +121,14 @@ public class ShellUtil {
         //processBuilder.redirectErrorStream(true);
         try {
             //申请获取终端
-            mProcess = new ProcessBuilder(SHELL).start();
+            mProcess = new ProcessBuilder(SHELL).directory(new File(App.exePath)).start();
             mInStream = mProcess.getInputStream();
             mErrorStream = mProcess.getErrorStream();
             mOutStream = mProcess.getOutputStream();
-            exeCommand(App.tools + " -uid");
             //开启线程用来处理命令执行后的相关信息，正常结果和错误结果
             startNormalStreamThread();
             startErrorStreamThread();
+            exeCommand(App.tools + " -uid");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -155,14 +158,24 @@ public class ShellUtil {
 		return instance;
 	}
 
-    /**
-     * 多例
-     *
-     * @return
-     */
-    /*public static final ShellUtil get() {
-        return new ShellUtil();
-    }*/
+   private Map<Integer, List<FileItem>> getItemListMap() {
+        if (mFileItemListMap == null) {
+            mFileItemListMap = new HashMap<>();
+        }
+        return mFileItemListMap;
+   }
+
+   public void clearItemList(int index) {
+        if (getItemListMap().get(index) != null) {
+            getItemListMap().get(index).clear();
+        }
+    }
+
+    public void removeItemList(int index) {
+        if (getItemListMap().get(index) != null) {
+            getItemListMap().remove(index);
+        }
+    }
 
     /**
      * 执行用户输入的命令
@@ -202,74 +215,67 @@ public class ShellUtil {
             Matcher jsonMatcher = null;
             List<FileItem> itemList = null;
             FileItem item;
-            while ((content = mBr.readLine()) != null) {
-                //System.out.println("curtCommand-------- "+  "content--->" + content);
+            byte mBuffer[] = new byte[1024];
+            while(true) {
+                int read = mInStream.read(mBuffer);
+                System.out.println("read----->" + new String(mBuffer,0,read));
+            }
+           /* while ((content = mBr.readLine()) != null) {
                 jsonMatcher = patternJson.matcher(content);
                 if (jsonMatcher.matches()) {
                     item = JSON.parseObject(content, FileItem.class);
                     switch (item.flag){
                         case "f":
                             if (item.isOver) {
-                                fileList = itemList;
-                                itemList = null;
-                                mHandler.sendEmptyMessage(FLAG_F);
+                                mHandler.obtainMessage(FLAG_F, item.id, 0).sendToTarget();
                                 break;
                             }
-                            if (itemList == null) {
-                                itemList = new ArrayList<>();
+                            if ((itemList = getItemListMap().get(item.id)) == null) {
+                                getItemListMap().put(item.id, new ArrayList<FileItem>());
+                                itemList = getItemListMap().get(item.id);
                             }
+
                             itemList.add(item);
                             break;
                         case "s":
                             if (item.isOver) {
-                                mHandler.obtainMessage(FLAG_S, content).sendToTarget();
+                                mHandler.obtainMessage(FLAG_S, item.id, 0, content).sendToTarget();
                                 break;
                             }
                             break;
                         case "cp":
-                            if (item.isOver) {
-                                mHandler.obtainMessage(FLAG_CP, content).sendToTarget();
-                            }
-                            //mHandler.obtainMessage(FLAG_CP, content).sendToTarget();
+                            mHandler.obtainMessage(FLAG_CP,item.id, 0, content).sendToTarget();
                             System.out.println("shelluitl---cp-->" + content);
                             break;
                         case "mv":
-                            /*if (item.isOver) {
-                                mHandler.sendEmptyMessage(FLAG_MV);
-                                break;
-                            }*/
-                            mHandler.obtainMessage(FLAG_MV, content).sendToTarget();
+                            mHandler.obtainMessage(FLAG_MV,item.id, 0, content).sendToTarget();
                             System.out.println("mv-->" + content);
                             break;
                         case "del":
-                            /*if (item.isOver) {
-                                mHandler.sendEmptyMessage(FLAG_DEL);
-                                break;
-                            }*/
-                            mHandler.obtainMessage(FLAG_DEL, content).sendToTarget();
+                            mHandler.obtainMessage(FLAG_DEL,item.id, 0, content).sendToTarget();
                             System.out.println("del-->" + content);
                             break;
                         case "nd":
                             if (item.isOver) {
-                                mHandler.obtainMessage(FLAG_ND, content).sendToTarget();
+                                mHandler.obtainMessage(FLAG_ND,item.id, 0, content).sendToTarget();
                                 break;
                             }
                             break;
                         case "nf":
                             if (item.isOver) {
-                                mHandler.obtainMessage(FLAG_NF, content).sendToTarget();
+                                mHandler.obtainMessage(FLAG_NF,item.id, 0, content).sendToTarget();
                                 break;
                             }
                             break;
                         case "rn":
                             if (item.isOver) {
-                                mHandler.obtainMessage(FLAG_RN, content).sendToTarget();
+                                mHandler.obtainMessage(FLAG_RN,item.id, 0, content).sendToTarget();
                                 break;
                             }
                             break;
                         case "su":
                             System.out.println("su content-->" + content);
-                            Item itm = JSON.parseObject(content, Item.class);
+                            TempItem itm = JSON.parseObject(content, TempItem.class);
                             if ("0".equals(itm.content)) {
                                 isGetRoot = true;
                                 paseItem(itm);
@@ -281,14 +287,12 @@ public class ShellUtil {
                             break;
                         case "chm":
                             System.out.println("chm content-->" + content);
-                            if (item.isOver) {
-                                mHandler.obtainMessage(FLAG_CHM, content).sendToTarget();
-                            }
+                            mHandler.obtainMessage(FLAG_CHM,item.id, 0, content).sendToTarget();
                             break;
                         case "ltext":
                         case "etext":
                             if (item.isOver) {
-                                mHandler.obtainMessage("ltext".equals(item.flag) ? FLAG_L_TEXT : FLAG_E_TEXT, content).sendToTarget();
+                                mHandler.obtainMessage("ltext".equals(item.flag) ? FLAG_L_TEXT : FLAG_E_TEXT,item.id, 0, content).sendToTarget();
                             }
                             break;
                         case "uid":
@@ -307,12 +311,7 @@ public class ShellUtil {
                 } else {
                     System.out.println("jsonMatcher not matches()-------->" + curtCommand + ",  content--->" + content);
                 }
-
-                //System.out.println("=========================================");
-                if (!mBr.ready()) {
-                    System.out.println(curtCommand +" !mBr.ready()=======>" + !mBr.ready() + "--->" + content);
-                }
-            }
+            }*/
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -336,18 +335,18 @@ public class ShellUtil {
                 mErrorBr = new BufferedReader(mErrorReader);
             }
 
-            Item item = null;
+            TempItem TempItem = null;
             Matcher errorMatcher = null;
             while ((content = mErrorBr.readLine()) != null) {
                 System.out.println("command-error-> -error-conten--->:" +content);
                 errorMatcher = patternJson.matcher(content);
                 if (errorMatcher.matches()) {
-                    item = JSON.parseObject(content, Item.class);
-                    switch (item.flag){
+                    TempItem = JSON.parseObject(content, TempItem.class);
+                    switch (TempItem.flag){
                         case "f":
-                            System.out.println("error fg=f ====>" + item.error);
-                            if (item.error.toLowerCase().contains("permission denied")) {
-                                exeCommand(SU + "\necho \"{\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\"f\\\",\\\"path\\\":\\\"" + item.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
+                            System.out.println("error fg=f ====>" + TempItem.error);
+                            if (TempItem.error.toLowerCase().contains("permission denied")) {
+                                exeCommand(SU + "\necho \"{\\\"id\\\":\\\"" + TempItem.id + "\\\",\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\"f\\\",\\\"path\\\":\\\"" + TempItem.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
                             }
                             break;
                         case "s":
@@ -366,16 +365,16 @@ public class ShellUtil {
                             break;
                         case "chm":
                             //{"flag":"chm","error":"Read-only file system","mode":"0757","path":"/system"}
-                            if ("Read-only file system".equalsIgnoreCase(item.error)) {
-                                Object chmObj[] = PermissionUtils.isOnlyReadFileSys(item.path);
+                            if ("Read-only file system".equalsIgnoreCase(TempItem.error)) {
+                                Object chmObj[] = PermissionUtils.isOnlyReadFileSys(TempItem.path);
                                 System.out.println("mount remount-->" + chmObj[1] + "  " + chmObj[2]);
-                                exeCommand(MOUNT_RW + chmObj[1] + " " + chmObj[2] + "\necho \"{\\\"flag\\\":\\\"mount\\\",\\\"fg\\\":\\\"chm\\\",\\\"path\\\":\\\"" + item.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
+                                exeCommand(MOUNT_RW + chmObj[1] + " " + chmObj[2] + "\necho \"{\\\"id\\\":\\\"" + TempItem.id + "\\\",\\\"flag\\\":\\\"mount\\\",\\\"fg\\\":\\\"chm\\\",\\\"path\\\":\\\"" + TempItem.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
                             }
                             break;
                         case "ltext":
                         case "etext":
-                            if (item.error.toLowerCase().contains("permission denied")) {
-                                exeCommand(SU + "\necho \"{\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\""+ item.fg +"\\\",\\\"path\\\":\\\"" + item.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
+                            if (TempItem.error.toLowerCase().contains("permission denied")) {
+                                exeCommand(SU + "\necho \"{\\\"id:\\\"" + TempItem.id + "\\\",\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\""+ TempItem.fg +"\\\",\\\"path\\\":\\\"" + TempItem.path + "\\\",\\\"content\\\":\\\"$?\\\"}\"");
                             }
                             break;
                         case "su":
@@ -417,19 +416,24 @@ public class ShellUtil {
             switch (msg.what) {
                 case FLAG_F:
                     //System.out.println("result--->" + cmdUtil.result);
-                    cmdUtil.resultListener.onLoadComplete(cmdUtil.fileList);
+                    List<FileItem> fList = cmdUtil.getItemListMap().get(msg.arg1);
+                    if (fList == null) {
+                        fList = new ArrayList<>();
+                        cmdUtil.getItemListMap().put(msg.arg1, fList);
+                    }
+                    //cmdUtil.resultListener.onLsLoad(msg.arg1, fList);
                     break;
                 case FLAG_S:
-                    cmdUtil.resultListener.onSizeComplete(msg.obj.toString());
+                    cmdUtil.resultListener.onSizeComplete(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_RN:
-                    cmdUtil.resultListener.onRenameComplete(msg.obj.toString());
+                    cmdUtil.resultListener.onRenameComplete(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_ND:
-                    cmdUtil.resultListener.onCreateDirComplete(msg.obj.toString());
+                    cmdUtil.resultListener.onCreateDirComplete(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_NF:
-                    cmdUtil.resultListener.onCreateFileComplete(msg.obj.toString());
+                    cmdUtil.resultListener.onCreateFileComplete(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_CP:
                     /*JSONObject cpJson = JSON.parseObject(msg.obj.toString());
@@ -437,19 +441,16 @@ public class ShellUtil {
                     } else {
 
                     }*/
-                    cmdUtil.resultListener.onCpAction(msg.obj.toString());
-                    System.out.println("---onCpAction");
+                    cmdUtil.resultListener.onCpAction(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_MV:
-                    System.out.println("---onMvAction");
-                    cmdUtil.resultListener.onMvAction(msg.obj.toString());
+                    cmdUtil.resultListener.onMvAction(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_DEL:
-                    System.out.println("---onDelAction");
-                    cmdUtil.resultListener.onDelAction(msg.obj.toString());
+                    cmdUtil.resultListener.onDelAction(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_CHM:
-                    cmdUtil.resultListener.onCHMAction(msg.obj.toString());
+                    cmdUtil.resultListener.onCHMAction(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_E_TEXT:
                     if (cmdUtil.onTextActivityListener != null) {
@@ -457,10 +458,10 @@ public class ShellUtil {
                     }
                     break;
                 case FLAG_L_TEXT:
-                    cmdUtil.resultListener.onTextAction(msg.obj.toString());
+                    cmdUtil.resultListener.onTextAction(msg.arg1, msg.obj.toString());
                     break;
                 case FLAG_REQGETROOT:
-                    cmdUtil.resultListener.onReqGetRoot((Item) msg.obj);
+                    cmdUtil.resultListener.onReqGetRoot((TempItem) msg.obj);
                     break;
                 case FLAG_DEFAULT:
                     break;
@@ -472,11 +473,11 @@ public class ShellUtil {
         }
     }
 
-    private void paseItem(Item item) {
+    private void paseItem(TempItem TempItem) {
         FileUtils fileUtils = FileUtils.get();
-        switch (item.fg) {
+        switch (TempItem.fg) {
             case "f":
-                fileUtils.listAllFile(item.path);
+                fileUtils.listAllFile(TempItem.id, TempItem.path);
                 break;
             case "s":
                 break;
@@ -493,16 +494,16 @@ public class ShellUtil {
             case "rn":
                 break;
             case "per":
-                mHandler.obtainMessage(FLAG_REQGETROOT, item).sendToTarget();
+                mHandler.obtainMessage(FLAG_REQGETROOT, TempItem).sendToTarget();
                 break;
             case "ltext":
-                fileUtils.do_text(item.path, App.tempFilePath, 'l');
+                fileUtils.do_text(TempItem.id, TempItem.path, App.tempFilePath, 'l');
                 break;
             case "etext":
-                fileUtils.do_text(item.path, App.tempFilePath, 'e');
+                fileUtils.do_text(TempItem.id, TempItem.path, App.tempFilePath, 'e');
                 break;
             default:
-                System.out.println("default content--->" + item.content);
+                System.out.println("default content--->" + TempItem.content);
                 break;
         }
     }
@@ -537,18 +538,17 @@ public class ShellUtil {
     }
 
     public interface OnResultListener {
-        void onLoadComplete(List<FileItem> list);
-        void onLoadComplete(String str);
-        void onSizeComplete(String str);
-        void onRenameComplete(String str);
-        void onCreateDirComplete(String str);
-        void onCreateFileComplete(String str);
-        void onCpAction(String str);
-        void onMvAction(String str);
-        void onDelAction(String str);
-        void onCHMAction(String str);
-        void onTextAction(String str);
-        void onReqGetRoot(Item item);
+        void onLsLoad(FileItem item);
+        void onSizeComplete(int index, String str);
+        void onRenameComplete(int index, String str);
+        void onCreateDirComplete(int index, String str);
+        void onCreateFileComplete(int index, String str);
+        void onCpAction(int index, String str);
+        void onMvAction(int index, String str);
+        void onDelAction(int index, String str);
+        void onCHMAction(int index, String str);
+        void onTextAction(int index, String str);
+        void onReqGetRoot(TempItem TempItem);
         void onError(String msg);
     }
 

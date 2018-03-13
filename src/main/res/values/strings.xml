@@ -14,6 +14,8 @@
     <string name="del">删除</string>
     <string name="rename">重命名</string>
     <string name="copy">复制</string>
+    <string name="copy_file">复制文件</string>
+    <string name="move_file">移动文件</string>
     <string name="move">移动</string>
     <string name="permission_set">权限设定</string>
     <string name="property">属性</string>

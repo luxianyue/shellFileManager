@@ -12,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.lu.activity.TextActivity;
 import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
 import com.lu.filemanager2.databinding.PermissionSetMenuBinding;
@@ -116,17 +117,28 @@ public class DialogManager {
     }
 
     public AlertDialog createTiPDialog(Activity ay, View.OnClickListener listener) {
-        if (mTipDialog != null) {
+        if (ay instanceof MainActivity) {
+            if (mTipDialog == null) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ay);
+                LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.tip_dialog, null);
+                view.findViewById(R.id.tip_cancel).setOnClickListener(listener);
+                view.findViewById(R.id.tip_confirm).setOnClickListener(listener);
+                ((TextView)view.findViewById(R.id.tip_content)).setText(ay.getString(R.string.tip_content));
+                builder.setView(view);
+                mTipDialog = builder.create();
+            }
             return mTipDialog;
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(ay);
-        LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.tip_dialog, null);
-        view.findViewById(R.id.tip_cancel).setOnClickListener(listener);
-        view.findViewById(R.id.tip_confirm).setOnClickListener(listener);
-        ((TextView)view.findViewById(R.id.tip_content)).setText(ay.getString(R.string.tip_content));
-        builder.setView(view);
-        mTipDialog = builder.create();
-        return mTipDialog;
+        if (ay instanceof TextActivity) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(ay);
+            LinearLayout view = (LinearLayout) ay.getLayoutInflater().inflate(R.layout.tip_dialog, null);
+            view.findViewById(R.id.tip_cancel).setOnClickListener(listener);
+            view.findViewById(R.id.tip_confirm).setOnClickListener(listener);
+            ((TextView)view.findViewById(R.id.tip_content)).setText(ay.getString(R.string.tip_content));
+            builder.setView(view);
+            return builder.create();
+        }
+        return null;
     }
 
     public Object[] createNewFileOrDirDialog(Activity ay, View.OnClickListener listener) {
@@ -252,6 +264,7 @@ public class DialogManager {
         ll.getChildAt(0).setOnClickListener(listener);
         ll.getChildAt(2).setOnClickListener(listener);
         builder.setView(view);
+        builder.setCancelable(false);
         mProgressConfirmDialog[0] = builder.create();
         mProgressConfirmDialog[1] = view.getChildAt(0);
         mProgressConfirmDialog[2] = view.getChildAt(2);

@@ -29,8 +29,8 @@
         <item name="android:backgroundDimEnabled">true</item>
     </style>
 
-    <!--<item name="android:backgroundDimEnabled">true</item>
-        <item name="android:windowContentOverlay">@null</item>-->
+    <!-- <item name="android:backgroundDimEnabled"></item>
+    <item name="android:windowContentOverlay">@nuitem>-->
     <style name="Theme.ActivityDialogStyle" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowCloseOnTouchOutside">false</item>

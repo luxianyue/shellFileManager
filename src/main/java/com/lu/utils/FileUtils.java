@@ -5,9 +5,10 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.storage.StorageManager;
 
+import com.alibaba.fastjson.JSON;
 import com.lu.App;
 import com.lu.model.FileItem;
-import com.lu.model.Item;
+import com.lu.model.TempItem;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -22,13 +23,16 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by bulefin on 2017/4/27.
  */
 
-public class FileUtils implements ShellUtil.OnResultListener {
+public class FileUtils implements ShellUtils.OnResultListener {
 
     private static final long KB = 1L << 10;
     private static final long MB = 1L << 20;
@@ -70,19 +74,47 @@ public class FileUtils implements ShellUtil.OnResultListener {
 
     public static int userSortMode;
 
-    private OnLoadFileListener mLoadFileListener;
+    private Map<Integer, OnLoadFileListener> mLoadListenerMap;
+    private Map<Integer, OnCommonListener> mCommonListenerMap;
+    private onHandleFileListener mOnHandleFileListener;
 
     private static FileUtils instance;
 
     private static FileComparator mFileComparator;
 
     private FileUtils(){
-        getShellUtil().setResultListener(this);
+        getShellUtils().setResultListener(this);
         mFileComparator = new FileComparator();
     }
 
-    private static ShellUtil getShellUtil() {
-        return ShellUtil.get();
+    public Map<Integer, OnLoadFileListener> getLoadListenerMap() {
+        if (mLoadListenerMap == null) {
+            mLoadListenerMap = new HashMap<>();
+        }
+        return mLoadListenerMap;
+    }
+
+    public Map<Integer, OnCommonListener> getCommonListenerMap() {
+        if (mCommonListenerMap == null) {
+            mCommonListenerMap = new HashMap<>();
+        }
+        return mCommonListenerMap;
+    }
+
+    public void addLoadListener(int index, OnLoadFileListener loadListener) {
+        getLoadListenerMap().put(index, loadListener);
+    }
+
+    public void addCommonListener(int index, OnCommonListener listener) {
+        getCommonListenerMap().put(index, listener);
+    }
+
+    public void setOnHandleFileListener(onHandleFileListener OnHandleFileListener) {
+        this.mOnHandleFileListener = OnHandleFileListener;
+    }
+
+    private static ShellUtils getShellUtils() {
+        return ShellUtils.get();
     }
     /*public static FileUtils get() {
         return new FileUtils();
@@ -104,70 +136,88 @@ public class FileUtils implements ShellUtil.OnResultListener {
     }
 
     public void exeCommand(String command) {
-        getShellUtil().exeCommand(command);
+        getShellUtils().exeCommand(command);
     }
 
     /**
      * 列出路径path文件目录里的所有文件
      * @param path
      */
-    public void listAllFile(String path) {
-        System.out.println("list file--->" + path + "    ===shell-->>" + getShellUtil());
-        getShellUtil().exeCommand(App.tools + " -f " + getS(checkString(path)));
+    public void listAllFile(int index, String path) {
+        getShellUtils().exeCommand(App.tools + " -f_" + index + " " + getS(checkString(path)));
         //getShellUtil().exeCommand(App.tools + " -uid");
     }
 
-    public void countDirSize(String path) {
-        getShellUtil().exeCommand(App.tools + " -s " + getS(checkString(path)));
+    public void countDirSize(int index, String path) {
+        getShellUtils().exeCommand(App.tools + " -s_" + index + " " + getS(checkString(path)));
     }
 
     /**
      * 复制文件
      */
-    public void copy(String dest, String src) {
-        getShellUtil().exeCommand(App.tools + " -cp " + getS(checkString(dest)) + src);
+    public void copy(int index, String dest, String src) {
+        getShellUtils().exeCommand(App.tools + " -cp_" + index + " " + getS(checkString(dest)) + src);
     }
 
-    public void cut(String dest, String src) {
-        getShellUtil().exeCommand(App.tools + " -mv " + getS(checkString(dest)) + src);
+    public void cut(int index, String dest, String src) {
+        getShellUtils().exeCommand(App.tools + " -mv_" + index + " " + getS(checkString(dest)) + src);
     }
 
-    public void del(String src) {
-        getShellUtil().exeCommand(App.tools + " -del" + src);
+    public void del(int index,String path, String des) {
+        getShellUtils().exeCommand(App.tools + " -del_" + index + " " + getS(checkString(path)) + des);
     }
 
-    public void chmod(String path, String mode, String fg) {
+    public void chmod(int index, String path, String mode, String fg) {
         //fg only is -n, -d, -r
-        getShellUtil().exeCommand(App.tools + " -chm " + fg + " " + mode + path);
+        getShellUtils().exeCommand(App.tools + " -chm_" + index + " " + fg + " " + mode + path);
     }
 
-    public void do_text(String path, String desPath, char fg) {
+    public void do_text(int index, String path, String desPath, char fg) {
         if (fg == 'l') {
-            getShellUtil().exeCommand(App.tools + " -ltext " + getS(checkString(path)) + " " + getS(checkString(desPath)));
+            getShellUtils().exeCommand(App.tools + " -ltext_" + index + " " + getS(checkString(path)) + " " + getS(checkString(desPath)));
         }
         if (fg == 'e') {
-            getShellUtil().exeCommand(App.tools + " -etext " + getS(checkString(path)) + " " + getS(checkString(desPath)));
+            getShellUtils().exeCommand(App.tools + " -etext " + getS(checkString(path)) + " " + getS(checkString(desPath)));
         }
     }
 
-    public void mountRW(String dev, String name) {
-        getShellUtil().exeCommand(ShellUtil.MOUNT_RW + getS(dev) + " " + getS(name));
+    public void checkRealPath(int index, String path) {
+        getShellUtils().exeCommand(App.tools + " -realp_" + index + " " + getS(path));
+    }
+
+    public void requestRoot(int index) {
+        getShellUtils().setIndex(index);
+        exeCommand("su");
+    }
+
+    public void checkMount(int index, String path) {
+        PermissionUtils.index = index;
+        PermissionUtils.setCheckPath(path);
+        exeCommand("mount\necho \"mount end\"");
+    }
+
+    public void mountRW(String dev, String name, String sysFormat, int index) {
+        if (sysFormat != null) {
+            getShellUtils().exeCommand(App.tools + " -mou_" + index + " " + getS(dev) + " " + getS(name) + " " + getS(sysFormat));
+        } else {
+            getShellUtils().exeCommand(App.tools + " -mou_" + index + " " + getS(dev) + " " + getS(name));
+        }
     }
 
     public void mountRO(String dev, String name) {
-        getShellUtil().exeCommand(ShellUtil.MOUNT_RO + getS(dev) + " " + getS(name));
+        //getShellUtils().exeCommand(ShellUtils.MOUNT_RO + getS(dev) + " " + getS(name));
     }
 
-    public void createDir(String path) {
-        getShellUtil().exeCommand(App.tools + " -nd " + getS(checkString(path)));
+    public void createDir(int index, String path) {
+        getShellUtils().exeCommand(App.tools + " -nd_" + index + " " + getS(checkString(path)));
     }
 
-    public void createFile(String path) {
-        getShellUtil().exeCommand(App.tools + " -nf " + getS(checkString(path)));
+    public void createFile(int index, String path) {
+        getShellUtils().exeCommand(App.tools + " -nf_" + index + " " + getS(checkString(path)));
     }
 
-    public void rename(String oldN, String newN) {
-        getShellUtil().exeCommand(App.tools + " -rn " + getS(checkString(oldN)) + " " + getS(checkString(newN)));
+    public void rename(int index, String oldN, String newN) {
+        getShellUtils().exeCommand(App.tools + " -rn_" + index + " " + getS(checkString(oldN)) + " " + getS(checkString(newN)));
     }
 
     public static synchronized String getS(String str) {
@@ -175,80 +225,111 @@ public class FileUtils implements ShellUtil.OnResultListener {
     }
 
     @Override
-    public void onLoadComplete(List<FileItem> list) {
-        if (mLoadFileListener != null) {
-            sortFileItem(list, userSortMode);
-            mLoadFileListener.onLoadComplete(list);
+    public void onLsLoad(FileItem item) {
+        if (getLoadListenerMap().get(item.id) != null) {
+            getLoadListenerMap().get(item.id).onLoadFileAction(item);
         }
     }
 
     @Override
-    public void onLoadComplete(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onLoadComplete(str);
+    public void onSizeComplete(int index, String str) {
+        if (getLoadListenerMap().get(index) != null) {
+            getLoadListenerMap().get(index).onSizeComplete(str);
         }
     }
 
     @Override
-    public void onSizeComplete(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onSizeComplete(str);
+    public void onRenameComplete(int index, String str) {
+        if (getLoadListenerMap().get(index) != null) {
+            getLoadListenerMap().get(index).onRenameComplete(str);
         }
     }
 
     @Override
-    public void onRenameComplete(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onRenameComplete(str);
+    public void onCreateDirComplete(int index, String str) {
+        if (getLoadListenerMap().get(index) != null) {
+            getLoadListenerMap().get(index).onCreateDirComplete(str);
         }
     }
 
     @Override
-    public void onCreateDirComplete(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onCreateDirComplete(str);
+    public void onCreateFileComplete(int index, String str) {
+        if (getLoadListenerMap().get(index) != null) {
+            getLoadListenerMap().get(index).onCreateFileComplete(str);
         }
     }
 
     @Override
-    public void onCreateFileComplete(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onCreateFileComplete(str);
+    public void onCpAction(int index, String str) {
+        TempItem item = JSON.parseObject(str, TempItem.class);
+        mOnHandleFileListener.onCpAction(item);
+        if (item.isOver) {
+            getLoadListenerMap().get(index).onCpComplete(item.path);
+            /*Set<Integer> keySet = getLoadListenerMap().keySet();
+            for (Integer key : keySet) {
+                getLoadListenerMap().get(key).onCpComplete(item.path);
+            }*/
         }
     }
 
     @Override
-    public void onCpAction(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onCpAction(str);
+    public void onMvAction(int index, String str) {
+        TempItem item = JSON.parseObject(str, TempItem.class);
+        mOnHandleFileListener.onMvAction(item);
+        if (item.isOver) {
+            getLoadListenerMap().get(index).onMvComplete(item.path);
+            /*Set<Integer> keySet = getLoadListenerMap().keySet();
+            for (Integer key : keySet) {
+            }*/
         }
     }
 
     @Override
-    public void onMvAction(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onMvAction(str);
+    public void onDelAction(int index, String str) {
+        TempItem item = JSON.parseObject(str, TempItem.class);
+        mOnHandleFileListener.onDelAction(item);
+        getLoadListenerMap().get(index).onDelAction(item);
+        if (item.isOver) {
+            /*Set<Integer> keySet = getLoadListenerMap().keySet();
+            for (Integer key : keySet) {
+                getLoadListenerMap().get(key).onDelComplete(item.path);
+            }*/
         }
     }
 
     @Override
-    public void onDelAction(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onDelAction(str);
+    public void onRealPath(int index, String realPath) {
+        if (getCommonListenerMap().get(index) != null) {
+            getCommonListenerMap().get(index).onRealPath(realPath);
         }
     }
 
     @Override
-    public void onCHMAction(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onCHMAction(str);
+    public void onMountEvent(int index, boolean isCheck, boolean success) {
+        if (getCommonListenerMap().get(index) != null) {
+            getCommonListenerMap().get(index).onMountAction(isCheck, success);
         }
     }
 
     @Override
-    public void onTextAction(String str) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onTextAction(str);
+    public void onCHMAction(int index, String str) {
+        if (getLoadListenerMap().get(index) != null) {
+            getLoadListenerMap().get(index).onCHMAction(str);
+        }
+    }
+
+    @Override
+    public void onTextAction(int index, String str) {
+        if (getLoadListenerMap().get(index) != null) {
+            getLoadListenerMap().get(index).onTextAction(str);
+        }
+    }
+
+    @Override
+    public void onTextEdit(String str) {
+        if (getCommonListenerMap().get(-1) != null) {
+            TempItem item = JSON.parseObject(str, TempItem.class);
+            getCommonListenerMap().get(-1).onTextSaveAction(item);
         }
     }
 
@@ -261,17 +342,17 @@ public class FileUtils implements ShellUtil.OnResultListener {
     }
 
     @Override
-    public void onReqGetRoot(Item item) {
-        if (mLoadFileListener != null) {
-            mLoadFileListener.onReqGetRoot(item);
+    public void onRequestRoot(int index, boolean success) {
+        if (getCommonListenerMap().get(index) != null) {
+            getCommonListenerMap().get(index).onRequestRoot(success);
         }
     }
 
     @Override
     public void onError(String msg) {
-        if (mLoadFileListener != null) {
+        /*if (mLoadFileListener != null) {
             mLoadFileListener.onError(msg);
-        }
+        }*/
     }
 
     public static int[] getFilePermissionNum(String per) {
@@ -463,6 +544,10 @@ public class FileUtils implements ShellUtil.OnResultListener {
         if (isScript(name))       return FILE_SCRIPT;
         if (isApkFile(name))      return FILE_APK;
         if (isCompressFile(name)) return FILE_COMPRESS;
+        if (isExcel(name))        return FILE_XLS;
+        if (isWord(name))         return FILE_WORD;
+        if (isPPt(name))          return FILE_PPT;
+        if (isPdf(name))          return FILE_PDF;
         return FILE_OTHER;
     }
 
@@ -576,7 +661,7 @@ public class FileUtils implements ShellUtil.OnResultListener {
      */
     public static boolean isTextFile(String name) {
         name = name.toLowerCase();
-        if (name.endsWith(".txt")
+        if (name.endsWith(".txt") || name.endsWith(".prop")
                 || name.endsWith(".conf") || name.endsWith(".inf")
                 || name.endsWith(".log") || name.endsWith(".xml")
                 || name.endsWith(".java") || name.endsWith(".c")
@@ -590,6 +675,38 @@ public class FileUtils implements ShellUtil.OnResultListener {
     public static boolean isScript(String name) {
         name = name.toLowerCase();
         if (name.endsWith(".sh") || name.endsWith(".rc")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isExcel(String name) {
+        name = name.toLowerCase();
+        if (name.endsWith(".xls") || name.endsWith(".xlsx")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isWord(String name) {
+        name = name.toLowerCase();
+        if (name.endsWith(".doc") || name.endsWith(".docx")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isPPt(String name) {
+        name = name.toLowerCase();
+        if (name.endsWith(".ppt") || name.endsWith(".pptx")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isPdf(String name) {
+        name = name.toLowerCase();
+        if (name.endsWith(".pdf")) {
             return true;
         }
         return false;
@@ -687,7 +804,13 @@ public class FileUtils implements ShellUtil.OnResultListener {
                     if (index == -1 && index2 != -1) {
                         return -1;
                     }
+                    if (index == -1 && index2 == -1) {
+                        return first.getName().toLowerCase().compareTo(second.getName().toLowerCase());
+                    }
 
+                    if (first.getName().substring(index).equalsIgnoreCase(second.getName().substring(index2))) {
+                        return first.getName().toLowerCase().compareTo(second.getName().toLowerCase());
+                    }
                     return first.getName().substring(index + 1).toLowerCase().compareTo(second.getName().substring(index2 + 1).toLowerCase());
                 case SORT_BY_FILE_DATE_ASC:
                     //日期 升序
@@ -851,22 +974,30 @@ public class FileUtils implements ShellUtil.OnResultListener {
      * 加载文件时状态的接口
      */
     public interface OnLoadFileListener {
-        void onLoadComplete(List<FileItem> items);
-        void onLoadComplete(String str);
+        void onLoadFileAction(FileItem item);
         void onSizeComplete(String str);
         void onRenameComplete(String str);
         void onCreateDirComplete(String str);
         void onCreateFileComplete(String str);
-        void onCpAction(String str);
-        void onMvAction(String str);
-        void onDelAction(String str);
+        void onCpComplete(String path);
+        void onMvComplete(String path);
+        void onDelAction(TempItem item);
         void onCHMAction(String str);
         void onTextAction(String str);
-        void onReqGetRoot(Item item);
         void onError(String msg);
     }
 
-    public void setOnLoadFileListener(OnLoadFileListener loadFileListener) {
-        this.mLoadFileListener = loadFileListener;
+    public interface onHandleFileListener {
+        void onCpAction(TempItem item);
+        void onMvAction(TempItem item);
+        void onDelAction(TempItem item);
     }
+
+    public interface OnCommonListener {
+        void onTextSaveAction(TempItem item);
+        void onMountAction(boolean isCheck, boolean success);
+        void onRealPath(String realPath);
+        void onRequestRoot(boolean success);
+    }
+
 }

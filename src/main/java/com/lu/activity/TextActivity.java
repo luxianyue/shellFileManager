@@ -1,5 +1,6 @@
 package com.lu.activity;
 
+import android.app.AlertDialog;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,16 +17,18 @@ import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.alibaba.fastjson.JSON;
 import com.lu.App;
 import com.lu.filemanager2.R;
+import com.lu.model.TempItem;
 import com.lu.utils.FileUtils;
-import com.lu.utils.ShellUtil;
+import com.lu.utils.PermissionUtils;
+import com.lu.utils.ShellUtils;
 import com.lu.utils.ToastUitls;
-import com.lu.view.MyProgressDialog;
+import com.lu.view.DialogManager;
 
 import java.lang.ref.WeakReference;
 
@@ -33,16 +36,24 @@ import java.lang.ref.WeakReference;
  * Created by bulefin on 2017/11/28.
  */
 
-public class TextActivity extends BasedActivity implements View.OnClickListener, ShellUtil.onTextActivityListener {
+public class TextActivity extends BasedActivity implements View.OnClickListener, FileUtils.OnCommonListener {
+
+    private static int req_flag_mount = 1;
+    private static int req_flag_save_edit = 2;
+    private int req_flag;
+
     EditText editText;
     TextView textViewName;
-    TextView tvLookMode, tvEditMode;
+    TextView tvSave, tvLookMode, tvEditMode;
     PopupWindow popupWindow;
     MyHandler myHandler;
     ImageView animationImg;
+    AlertDialog mTipDialog;
 
     String mPath;
     int textFlag;
+    int mIndex;
+    String mStrs[];
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -56,6 +67,7 @@ public class TextActivity extends BasedActivity implements View.OnClickListener,
         animationImg.setTag(animationImg.getAnimation());
         textViewName = (TextView) ((HorizontalScrollView) ((LinearLayout)ll.getChildAt(0)).getChildAt(1)).getChildAt(0);
         mPath = getIntent().getStringExtra("path");
+        mIndex = getIntent().getIntExtra("index", -1);
         textViewName.setText(mPath.substring(mPath.lastIndexOf("/") + 1));
         ((LinearLayout)ll.getChildAt(0)).getChildAt(2).setOnClickListener(this);
 
@@ -67,7 +79,7 @@ public class TextActivity extends BasedActivity implements View.OnClickListener,
         editText.getText().clear();
         showProgress();
         textFlag = 1;
-        ShellUtil.get().setTextActivityListener(this);
+        FileUtils.get().addCommonListener(-1, this);
         final WeakReference<MyHandler> handler = new WeakReference<MyHandler>(myHandler);
         new Thread() {
             @Override
@@ -88,10 +100,98 @@ public class TextActivity extends BasedActivity implements View.OnClickListener,
     }
 
     @Override
-    public void onTextSaveAction(String str) {
+    public void onTextSaveAction(TempItem item) {
         textFlag = 0;
         closeProgress();
-        ToastUitls.showSMsg("保存成功");
+        if (item.error != null) {
+            if (item.error.toLowerCase().contains("permission denied")) {
+                req_flag = req_flag_save_edit;
+                FileUtils.get().requestRoot(-1);
+            }
+            if (item.error.toLowerCase().contains("read-only file system")) {
+                req_flag = req_flag_save_edit;
+                FileUtils.get().requestRoot(-1);
+            }
+        } else {
+            ToastUitls.showSMsg("保存成功");
+        }
+    }
+
+    @Override
+    public void onRealPath(String realPath) {
+        FileUtils.get().checkMount(-1, realPath);
+    }
+
+    @Override
+    public void onRequestRoot(boolean success) {
+        if (success) {
+            if (req_flag == req_flag_mount) {
+                FileUtils.get().mountRW(mStrs[1], mStrs[2], mStrs[3], -1);
+            }
+            if (req_flag == req_flag_save_edit) {
+                FileUtils.get().checkMount(-1, mPath);
+                //saveText();
+            }
+        } else {
+            if (req_flag == req_flag_save_edit) {
+                ToastUitls.showSMsg("保存失败");
+            }
+        }
+    }
+
+    @Override
+    public void onMountAction(boolean isCheck, boolean sucess) {
+        if (isCheck) {
+            mStrs = PermissionUtils.arrays;
+            System.out.println("====================================================>"+mStrs[0] + "  " + mStrs[1] + "  " + mStrs[2]);
+            if (req_flag == req_flag_mount) {
+                if (Boolean.parseBoolean(mStrs[0])) {
+                    if (mTipDialog == null) {
+                        mTipDialog = DialogManager.get().createTiPDialog(this, this);
+                    }
+                    mTipDialog.show();
+                    return;
+                }
+                setEditTextState(true);
+            }
+            if (req_flag == req_flag_save_edit) {
+                if (Boolean.parseBoolean(mStrs[0])) {
+                    FileUtils.get().mountRW(mStrs[1], mStrs[2], mStrs[3], -1);
+                } else {
+                    saveText();
+                }
+            }
+
+        } else {
+            if (sucess) {
+                // mount success
+                if (req_flag == req_flag_mount) {
+                    setEditTextState(true);
+                }
+                if (req_flag == req_flag_save_edit) {
+                    saveText();
+                }
+            }
+        }
+    }
+
+    private void setEditTextState(boolean state) {
+        editText.setFocusableInTouchMode(state);
+        editText.setFocusable(state);
+        editText.requestFocus();
+        popupWindow.dismiss();
+        tvSave.setEnabled(state);
+        tvEditMode.setEnabled(!state);
+        tvLookMode.setEnabled(state);
+        if (state) {
+            tvSave.setTextColor(getResources().getColor(R.color.white));
+            tvLookMode.setTextColor(getResources().getColor(R.color.white));
+            tvEditMode.setTextColor(getResources().getColor(R.color.per_setfont_color_notable));
+        } else {
+            tvSave.setTextColor(getResources().getColor(R.color.per_setfont_color_notable));
+            tvLookMode.setTextColor(getResources().getColor(R.color.per_setfont_color_notable));
+            tvEditMode.setTextColor(getResources().getColor(R.color.white));
+        }
     }
 
     @Override
@@ -108,6 +208,7 @@ public class TextActivity extends BasedActivity implements View.OnClickListener,
                 }
                 if (popupWindow == null) {
                     LinearLayout ll = (LinearLayout) getLayoutInflater().inflate(R.layout.text_imagebutton_menu, null);
+                    tvSave = (TextView) ll.getChildAt(0);
                     tvLookMode = (TextView) ll.getChildAt(2);
                     tvEditMode = (TextView) ll.getChildAt(4);
                     ll.getChildAt(0).setOnClickListener(this);
@@ -124,42 +225,47 @@ public class TextActivity extends BasedActivity implements View.OnClickListener,
                 popupWindow.showAtLocation(v, Gravity.NO_GRAVITY, location[0] - popupWindow.getWidth() + v.getWidth() * 9 / 10, location[1] + textViewName.getHeight());
                 break;
             case R.id.text_imagebutton_saveedit:
-                popupWindow.dismiss();
-                showProgress();
-                textFlag = 2;
-                new Thread() {
-                    @Override
-                    public void run() {
-                        FileUtils.saveTextContent(myHandler, editText.getText().toString().getBytes());
+                saveText();
+                break;
+            case R.id.tip_confirm:
+                mTipDialog.dismiss();
+                if (mStrs != null) {
+                    System.out.println("dev: "+ mStrs[1] + "<--->name: " + mStrs[2] + "<--->format: " + mStrs[3]);
+                    if (ShellUtils.get().isRoot()) {
+                        FileUtils.get().mountRW(mStrs[1], mStrs[2], mStrs[3], -1);
+                    } else {
+                        FileUtils.get().requestRoot(-1);
                     }
-                }.start();
+                }
+                break;
+            case R.id.tip_cancel:
+                mTipDialog.dismiss();
                 break;
             case R.id.text_imagebutton_lookmode:
                 //设置不可编辑状态：
-                editText.setFocusable(false);
-                editText.setFocusableInTouchMode(false);
-                popupWindow.dismiss();
-                tvLookMode.setEnabled(false);
-                tvLookMode.setTextColor(getResources().getColor(R.color.per_setfont_color_notable));
-                tvEditMode.setEnabled(true);
-                tvEditMode.setTextColor(getResources().getColor(R.color.white));
+                setEditTextState(false);
                 break;
             case R.id.text_imagebutton_editmode:
                 //设置可编辑状态：
-                editText.setFocusableInTouchMode(true);
-                editText.setFocusable(true);
-                editText.requestFocus();
-                popupWindow.dismiss();
-                tvEditMode.setEnabled(false);
-                tvEditMode.setTextColor(getResources().getColor(R.color.per_setfont_color_notable));
-                tvLookMode.setEnabled(true);
-                tvLookMode.setTextColor(getResources().getColor(R.color.white));
+                req_flag = req_flag_mount;
+                FileUtils.get().checkRealPath(-1, mPath);
                 break;
             case R.id.text_imagebutton_exit:
                 popupWindow.dismiss();
                 finish();
                 break;
         }
+    }
+
+    private void saveText() {
+        showProgress();
+        textFlag = 2;
+        new Thread() {
+            @Override
+            public void run() {
+                FileUtils.saveTextContent(myHandler, editText.getText().toString().getBytes());
+            }
+        }.start();
     }
 
     static class MyHandler extends Handler {
@@ -180,7 +286,7 @@ public class TextActivity extends BasedActivity implements View.OnClickListener,
                         ty.editText.append(msg.obj.toString());
                         break;
                     case 2:
-                        FileUtils.get().do_text(ty.mPath, App.tempFilePath, 'e');
+                        FileUtils.get().do_text(ty.mIndex, ty.mPath, App.tempFilePath, 'e');
                         break;
                 }
             }

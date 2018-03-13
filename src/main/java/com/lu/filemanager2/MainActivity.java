@@ -2,6 +2,9 @@ package com.lu.filemanager2;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.graphics.drawable.ColorDrawable;
@@ -10,6 +13,7 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -22,6 +26,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -34,10 +39,12 @@ import com.lu.adapter.FragmentAdapter;
 import com.lu.activity.BasedActivity;
 import com.lu.filemanager2.databinding.ActivityMainBinding;
 import com.lu.fragment.ContentFragment;
+import com.lu.model.TempItem;
 import com.lu.model.FileItem;
 import com.lu.utils.FileUtils;
 import com.lu.utils.PermissionUtils;
 import com.lu.utils.SharePreferenceUtils;
+import com.lu.utils.ShellUtils;
 import com.lu.utils.TimeUtils;
 import com.lu.utils.ToastUitls;
 import com.lu.view.MyViewPager;
@@ -57,6 +64,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
     private TabLayout mTabLayout;
     private MyViewPager mViewPager;
 
+    private int offes;
     private PopupWindow mPopupWindowFloorBarMenu;
     private PopupWindow mPopupWindowFloorBarAdd;
     private PopupWindow mPopupWindowFloorBarSort;
@@ -64,6 +72,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
     private AlertDialog mPopupWindowFloorBarSearch;
 
     private AlertDialog mPropertyDialog;
+    private HandleFile mHandleFile;
 
     private int[] mClickLocation;
     private static final int menu = 1;
@@ -80,6 +89,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
 
     private Set<FileItem> mCheckItems;
     private Set<FileItem> mCheckItems2;
+    private Set<Integer> mPidSet;
 
     private List<Fragment> mFragmentList;
     private List<String> mFragmentTitleList;
@@ -115,7 +125,16 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
         super.onResume();
         int visibleIndex = SharePreferenceUtils.getVisibleIndex();
         mViewPager.setCurrentItem(visibleIndex);
+        mHandleFile = new HandleFile();
+        FileUtils.get().setOnHandleFileListener(mHandleFile);
+        offes = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 10f, getResources().getDisplayMetrics());
+    }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        System.out.println("pid---------->"+getIntent().getIntExtra("pid", 0));
+        System.out.println("pid2---------->"+intent.getIntExtra("pid", 0));
     }
 
     @Override
@@ -241,7 +260,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                         }
                     }
                 }
-                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location[0] + 10, location[1] - mPopupWindowFloorBarAdd.getHeight() - 10);
+                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location[0] + offes, location[1] - mPopupWindowFloorBarAdd.getHeight() - offes);
                 break;
             case R.id.floor_menu_search:
                 if (mPopupWindowFloorBarSearch == null) {
@@ -298,7 +317,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                         }
                     }
                 }
-                mPopupWindowFloorBarMenu.showAtLocation(v, Gravity.NO_GRAVITY, location2[0] + v.getWidth() - mPopupWindowFloorBarMenu.getWidth() - 10, location2[1] - mPopupWindowFloorBarMenu.getHeight() - 10);
+                mPopupWindowFloorBarMenu.showAtLocation(v, Gravity.NO_GRAVITY, location2[0] + v.getWidth() - mPopupWindowFloorBarMenu.getWidth() - offes, location2[1] - mPopupWindowFloorBarMenu.getHeight() - offes);
                 break;
             case R.id.image_copy:
                 System.out.println("menu1_image_copy");
@@ -359,7 +378,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                     removeTab(index);
                 }
                 if (isWhat == LOOK_EDIT) {
-                    FileUtils.get().do_text(v.getTag().toString(), App.tempFilePath, 'l');
+                    FileUtils.get().do_text(getCurrentShowFragment().getIndex(), v.getTag().toString(), App.tempFilePath, 'l');
                 }
                 if (isWhat == MEDIA_VIDEO) {
                     //media open way
@@ -394,23 +413,45 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 break;
             case R.id.image_menu:
                 System.out.println("handle1_image_menu");
+                LinearLayout layout = null;
                 if (mPopupWindowFloorBar1Menu == null) {
                     int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 180f, getResources().getDisplayMetrics());
                     mPopupWindowFloorBar1Menu = initPopupWindow(R.layout.floor_menu1_menu, width, 0);
-                    LinearLayout layout = (LinearLayout) mPopupWindowFloorBar1Menu.getContentView();
+                    layout = (LinearLayout) mPopupWindowFloorBar1Menu.getContentView();
                     for (int i = 1; i < layout.getChildCount(); i++) {
                         if (layout.getChildAt(i) instanceof TextView) {
                             layout.getChildAt(i).setOnClickListener(this);
                         }
                     }
                 }
+                layout = (LinearLayout) mPopupWindowFloorBar1Menu.getContentView();
+                Set<FileItem> set = getCurrentShowFragment().getCheckedItem();
+                if (layout.getChildAt(4).getVisibility() == View.GONE) {
+                    layout.getChildAt(4).setVisibility(View.VISIBLE);
+                }
+                if (set.size() == 1 && !set.iterator().next().isFolder()) {
+                    if (layout.getChildAt(0).getVisibility() == View.GONE) {
+                        layout.getChildAt(0).setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    layout.getChildAt(0).setVisibility(View.GONE);
+                }
+                for (FileItem item : set) {
+                    if (item.isFolder()) {
+                        layout.getChildAt(4).setVisibility(View.GONE);
+                        break;
+                    }
+                }
                 int menu1Location[] = getIntArray();
                 v.getLocationOnScreen(menu1Location);
-                mPopupWindowFloorBar1Menu.showAtLocation(v, Gravity.NO_GRAVITY, menu1Location[0] + v.getWidth() - mPopupWindowFloorBar1Menu.getWidth() - 10, menu1Location[1] - mPopupWindowFloorBar1Menu.getHeight() - 10);
+                mPopupWindowFloorBar1Menu.showAtLocation(v, Gravity.NO_GRAVITY, menu1Location[0] + v.getWidth() - mPopupWindowFloorBar1Menu.getWidth() - offes, menu1Location[1] - mPopupWindowFloorBar1Menu.getHeight() - offes);
                 break;
             case R.id.menu1_open_way:
+
                 break;
             case R.id.menu1_permissionset:
+                mPopupWindowFloorBar1Menu.dismiss();
+                getCurrentShowFragment().preparePermissionSetDialog(true);
                 break;
             case R.id.menu1_sendto:
                 break;
@@ -425,6 +466,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 //ContentFragment fragment = getCurrentShowFragment();
                 //getCurrentShowFragment().operaItem(true, 1);
                 if ("复制到此".equals(((TextView)v).getText().toString())) {
+                    mHandleFile.mWhich = 1;
                     getCurrentShowFragment().copy(mCheckItems);
                 } else {
                     Object obj[] = PermissionUtils.isOnlyReadFileSys(mCheckItems.iterator().next().getPath());
@@ -438,6 +480,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                         DialogManager.get().createTiPDialog(this, this).show();
                         break;
                     }
+                    mHandleFile.mWhich = 2;
                     getCurrentShowFragment().cut(mCheckItems);
                 }
                 isFloorMenu2Mode = false;
@@ -451,14 +494,14 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                     DisplayMetrics metrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(metrics);
                     mPopupWindowFloorBarAdd = initPopupWindow(R.layout.floor_menu_add, (int) (metrics.widthPixels / ((float) 2.3)), 0);
-                    LinearLayout layout = (LinearLayout) mPopupWindowFloorBarAdd.getContentView();
-                    for (int i = 1; i < layout.getChildCount(); i++) {
-                        if (layout.getChildAt(i) instanceof TextView) {
-                            layout.getChildAt(i).setOnClickListener(this);
+                    LinearLayout ll = (LinearLayout) mPopupWindowFloorBarAdd.getContentView();
+                    for (int i = 1; i < ll.getChildCount(); i++) {
+                        if (ll.getChildAt(i) instanceof TextView) {
+                            ll.getChildAt(i).setOnClickListener(this);
                         }
                     }
                 }
-                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location2Create[0] + v.getWidth()/2  - 1, location2Create[1] - mPopupWindowFloorBarAdd.getHeight() - 10);
+                mPopupWindowFloorBarAdd.showAtLocation(v, Gravity.NO_GRAVITY, location2Create[0] + v.getWidth()/2  - 1, location2Create[1] - mPopupWindowFloorBarAdd.getHeight() - offes);
                 break;
             case R.id.tv_cancle:
                 System.out.println("menu2_tv_cancle");
@@ -480,6 +523,7 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 break;
             case R.id.menu_exit:
                 saveFragmentState();
+                mPopupWindowFloorBarMenu.dismiss();
                 finish();
                 break;
             case R.id.floor_menu_add_folder:
@@ -516,8 +560,14 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 DialogManager.get().createTiPDialog(this, this).dismiss();
                 break;
             case R.id.tip_confirm:
-                System.out.println("tip_confirm--->" + mMounts[0] + " " + mMounts[1]);
-                ToastUitls.showLMsgAtCenter(mMounts[0] + " " + mMounts[1]);
+                ///System.out.println("tip_confirm--->" + PermissionUtils.arrays[1] + " " + mMounts[1]);
+                //ToastUitls.showLMsgAtCenter(mMounts[0] + " " + mMounts[1]);
+                if (ShellUtils.get().isRoot()) {
+                    FileUtils.get().mountRW(PermissionUtils.arrays[1],PermissionUtils.arrays[2],PermissionUtils.arrays[3], getCurrentShowFragment().getIndex());
+                } else {
+                    getCurrentShowFragment().requestRoot(ContentFragment.REQ_ROOT_MOUNT_RW);
+                }
+                DialogManager.get().createTiPDialog(this, this).dismiss();
                 break;
             case R.id.newfiledir_cancel:
                 ((AlertDialog) DialogManager.get().createNewFileOrDirDialog(this, this)[0]).dismiss();
@@ -562,6 +612,12 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 mPopupWindowFloorBarSearch.dismiss();
                 break;
             case R.id.floor_menu_search_confirm:
+                break;
+            case R.id.progress_dialog_backrun:
+                mHandleFile.mWhich = 0;
+                ((AlertDialog)DialogManager.get().getProgressConfirmDialog(this, this)[0]).dismiss();
+                break;
+            case R.id.progress_dialog_cancel:
                 break;
         }
     }
@@ -613,9 +669,13 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
                 size = mCheckItems.size();
             }
         } else {
-            isWhat = DELETE;
-            mCheckItems().add(item);
+            if (isFloorMenu2Mode) {
+                mCheckItems2().add(item);
+            } else {
+                mCheckItems().add(item);
+            }
         }
+        isWhat = DELETE;
         System.out.println("delete---->" + item.getPath());
         Object msgConfirmDialog[] = DialogManager.get().getMsgConfirmDialog(this, this, 2);
         ((TextView)msgConfirmDialog[1]).setText(item.getName());
@@ -639,13 +699,13 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
         } else {
             checkItems = mCheckItems;
         }
-        Object obj2[] = PermissionUtils.isOnlyReadFileSys(checkItems.iterator().next().getPath());
-        if (Boolean.parseBoolean(obj2[0].toString())) {
+        String obj2[] = PermissionUtils.isOnlyReadFileSys(checkItems.iterator().next().getPath());
+        if (Boolean.parseBoolean(obj2[0])) {
             if (mMounts == null) {
                 mMounts = new String[2];
             }
-            mMounts[0] = obj2[1].toString();
-            mMounts[1] = obj2[2].toString();
+            mMounts[0] = obj2[1];
+            mMounts[1] = obj2[2];
             //System.out.println(obj2[1] + " " + itemSet.iterator().next().getPath() + "------->is only read file sys");
             DialogManager.get().createTiPDialog(this, this).show();
             return;
@@ -728,6 +788,111 @@ public class MainActivity extends BasedActivity implements View.OnClickListener,
         mViewPager.setVisibility(View.VISIBLE);
         mViewBind.floorMenuBar.linearlayoutFloorMenuBar.setVisibility(View.VISIBLE);
     }
+
+    private class HandleFile implements FileUtils.onHandleFileListener {
+        //获取NotificationManager实例
+        NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        private Object[] progressObj;
+        public int mWhich;
+        public int mPid;
+        public HandleFile() {
+            mPidSet = new HashSet<>();
+            progressObj = DialogManager.get().getProgressConfirmDialog(MainActivity.this, MainActivity.this);
+        }
+        @Override
+        public void onCpAction(TempItem item) {
+            if (item.isOver) {
+                ((AlertDialog)progressObj[0]).dismiss();
+                notifyManager.cancel(item.pid);
+                ToastUitls.showSMsg("文件复制完成");
+            } else {
+                //System.out.println("totalSize:" + item.totalSize + "  curenSize:" + item.currentSize);
+                if (!mPidSet.contains(item.pid)) {
+                    mPidSet.add(item.pid);
+                    mPid = item.pid;
+                    sendNotification(item.pid, "正在复制到:" + item.path);
+                }
+                if (mWhich == 0) {
+                    if (((AlertDialog)progressObj[0]).isShowing()) {
+                        ((AlertDialog)progressObj[0]).dismiss();
+                    }
+                }
+                if (mWhich == 1 && mPid == item.pid) {
+                    showProgressDialog(item, R.string.copy_file, R.string.copy_ed, R.string.copy_ing);
+                }
+            }
+        }
+
+        @Override
+        public void onMvAction(TempItem item) {
+            if (item.isOver) {
+                ((AlertDialog)progressObj[0]).dismiss();
+                notifyManager.cancel(item.pid);
+                ToastUitls.showSMsg("文件移动完成");
+            } else {
+                if (!mPidSet.contains(item.pid)) {
+                    mPidSet.add(item.pid);
+                    mPid = item.pid;
+                    sendNotification(item.pid, "正在移动到:" + item.path);
+                }
+                if (mWhich == 0) {
+                    if (((AlertDialog)progressObj[0]).isShowing()) {
+                        ((AlertDialog)progressObj[0]).dismiss();
+                    }
+                }
+                if (mWhich == 2 && mPid == item.pid) {
+                    showProgressDialog(item, R.string.move_file, R.string.move_ed, R.string.move_ing);
+                }
+            }
+        }
+
+        private void showProgressDialog(TempItem item, int titleId, int contId, int contId2) {
+            if (!((AlertDialog)progressObj[0]).isShowing()) {
+                ((AlertDialog)progressObj[0]).show();
+            }
+            ((TextView)progressObj[1]).setText(titleId);
+            ((TextView)progressObj[2]).setText(getString(R.string.total_size) + "：" + FileUtils.getFormatByte(item.totalSize));
+            ((TextView)progressObj[3]).setText(getString(contId) + "：" + FileUtils.getFormatByte(item.currentSize));
+            ((TextView)progressObj[4]).setText(getString(contId2) + "：" + item.path);
+            if (item.totalSize > Integer.MAX_VALUE) {
+                if (((ProgressBar)progressObj[5]).getMax() != 100000000) {
+                    ((ProgressBar)progressObj[5]).setMax(100000000);
+                }
+                ((ProgressBar)progressObj[5]).setProgress((int) (((float) item.currentSize / item.totalSize) * 100000000));
+            } else {
+                if (((ProgressBar)progressObj[5]).getMax() != item.totalSize) {
+                    ((ProgressBar)progressObj[5]).setMax((int) item.totalSize);
+                }
+                ((ProgressBar)progressObj[5]).setProgress((int) item.currentSize);
+            }
+        }
+
+        @Override
+        public void onDelAction(TempItem item) {
+            if (item.isOver) {
+                ToastUitls.showSMsg("完成");
+            }
+        }
+
+        private void sendNotification(int pid, String title) {
+            //实例化NotificationCompat.Builde并设置相关属性
+            Intent intent = new Intent(MainActivity.this, MainActivity.class);
+            intent.putExtra("pid", pid);
+            PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this)
+                    //设置小图标
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    //设置通知标题
+                    .setContentTitle(title)
+                    //设置通知内容
+                    .setContentText("请稍等...")
+                    .setProgress(100, 0, true)
+                    .setAutoCancel(false)
+                    .setContentIntent(pendingIntent);
+            //通过builder.build()方法生成Notification对象,并发送通知,id=1
+            notifyManager.notify(pid, builder.build());
+        }
+    };
 
     private void setShowWhichFoolMenuBar(int which) {
         if (which == 1) {

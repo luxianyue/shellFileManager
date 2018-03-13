@@ -14,8 +14,110 @@ import java.util.regex.Pattern;
  */
 
 public class PermissionUtils {
-    public static Object[] isOnlyReadFileSys(String absolutePath) {
-        Object obj[] = {true, "rootfs", "/"};
+
+    public static int index;
+    private static String sysName;
+    public static String arrays[] = {"", "", "", null};
+
+    public static void setCheckPath(String path) {
+        PermissionUtils.sysName = getFs(path);
+    }
+
+    public static boolean parseSys(String str) {
+        String strs[] = str.split("[ ]+");
+        //System.out.println("sysName:" + sysName + " (array:" + strs[1]);
+        if ("/".equals(strs[1])) {
+            arrays[0] = strs[3].substring(0,2);
+            arrays[1] = strs[0];
+            arrays[2] = strs[1];
+            arrays[3] = strs[2];
+            if ("rw".equals(arrays[0])) {
+                arrays[0] = "false";
+            }
+            if ("ro".equals(arrays[0])) {
+                arrays[0] = "true";
+            }
+        }
+        if ("/".equals(sysName)) {
+            if (strs[1].equals(sysName)) {
+                arrays[0] = strs[3].substring(0,2);
+                arrays[1] = strs[0];
+                arrays[2] = strs[1];
+                arrays[3] = strs[2];
+                if ("rw".equals(arrays[0])) {
+                    arrays[0] = "false";
+                }
+                if ("ro".equals(arrays[0])) {
+                    arrays[0] = "true";
+                }
+                return true;
+            }
+        } else {
+            if (sysName.contains(strs[1]) && sysName.startsWith(strs[1]) && sysName.charAt(strs[1].length()) == '/') {
+                arrays[0] = strs[3].substring(0,2);
+                arrays[1] = strs[0];
+                arrays[2] = strs[1];
+                arrays[3] = strs[2];
+                if ("rw".equals(arrays[0])) {
+                    arrays[0] = "false";
+                }
+                if ("ro".equals(arrays[0])) {
+                    arrays[0] = "true";
+                }
+                return true;
+            }
+        }
+        if ("mount end".equals(str)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static String[] isOnlyReadFileSys2(String absolutePath) {
+        String strs[] = {"true", "rootfs", "/", null};
+        String path = "/proc/mounts";
+        InputStream is = null;
+        InputStreamReader isr = null;
+        BufferedReader br = null;
+        try {
+            is = new FileInputStream(path);
+            isr = new InputStreamReader(is);
+            br = new BufferedReader(isr);
+            String str = null;
+            String array[] = null;
+            while ((str = br.readLine()) != null) {
+                array = str.split("[ ]+");
+                if (array[1].equals(getFs(absolutePath))) {
+                    strs[0] = array[3].substring(0,2);
+                    strs[1] = array[0];
+                    strs[2] = array[1];
+                    strs[3] = array[2];
+                    if ("rw".equals(strs[0])) {
+                        strs[0] = "false";
+                    }
+                    if ("ro".equals(strs[0])) {
+                        strs[0] = "true";
+                    }
+                    return strs;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                br.close();
+                isr.close();
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return strs;
+    }
+
+    public static String[] isOnlyReadFileSys(String absolutePath) {
+        String strs[] = {"true", "rootfs", "/", null};
         String path = "/proc/mounts";
         InputStream is = null;
         InputStreamReader isr = null;
@@ -39,21 +141,21 @@ public class PermissionUtils {
                         matcher = patternRW.matcher(str);
                         if (matcher.find()) {
                             String row = matcher.group().trim().substring(0, 2);
-                            obj[1] = str.substring(0, index).trim();
-                            obj[2] = fname;
+                            strs[1] = str.substring(0, index).trim();
+                            strs[2] = fname;
                             //System.out.println(str.substring(0, index).trim());
                             if ("rw".equals(row)) {
-                                obj[0] = false;
-                                return obj;
+                                strs[0] = "false";
+                                return strs;
                             } else {
-                                obj[0] = true;
-                                return obj;
+                                strs[0] = "true";
+                                return strs;
                             }
                         }
                     }
                 }
             }
-            obj[0] = false;
+            strs[0] = "false";
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -66,14 +168,15 @@ public class PermissionUtils {
             }
 
         }
-        return obj;
+        return strs;
     }
 
     public static String getFs(String path) {
+        // /system/aa.txt
         String str[] = path.split("/");
-        if (str.length > 2) {
-            return "/" + str[1];
+        if (str.length < 3) {
+            return "/";
         }
-        return "/";
+        return path;
     }
 }

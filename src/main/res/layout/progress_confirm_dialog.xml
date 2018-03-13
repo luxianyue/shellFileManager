@@ -9,13 +9,14 @@
             android:layout_height="50dp"
             android:gravity="center_vertical"
             android:paddingLeft="15dp"
-            android:textColor="#ffffff"
+            android:textColor="@color/wallet_holo_blue_light"
+            android:text="@string/copy_file"
             android:textSize="20sp" />
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="#67717e" />
+            android:layout_height="2dp"
+            android:background="@color/wallet_holo_blue_light" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

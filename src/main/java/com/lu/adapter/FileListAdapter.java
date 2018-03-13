@@ -115,7 +115,7 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
         if (item.isUpper) {
             holder.fileName.setText(item.getName());
             holder.fileSize.setText(item.formatSize());
-            holder.fileIcon.setImageResource(item.getIcon());
+            holder.fileIcon.setImageResource(R.drawable.folder_blue);
             if (holder.fileCheckBox.getVisibility() == View.VISIBLE) {
                 holder.fileCheckBox.setVisibility(View.GONE);
                 holder.filePermiss.setVisibility(View.GONE);
@@ -147,6 +147,10 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
 
         //Glide.with(context).load(item.getIcon()).into(holder.fileIcon);
 
+        if (item.isFolder()) {
+            holder.fileIcon.setImageResource(R.drawable.folder_blue);
+            return;
+        }
         switch (FileUtils.getFileType(item.getName())) {
             case FileUtils.FILE_IMAGE:
                 Glide.with(context).load(item.getPath())
@@ -182,9 +186,21 @@ public class FileListAdapter extends BasedAdapter<FileItem> implements CompoundB
                         .error(R.drawable.image)
                         .into(holder.fileIcon);
                 break;
+            case FileUtils.FILE_XLS:
+                holder.fileIcon.setImageResource(R.drawable.excel);
+                break;
+            case FileUtils.FILE_WORD:
+                holder.fileIcon.setImageResource(R.drawable.word);
+                break;
+            case FileUtils.FILE_PPT:
+                holder.fileIcon.setImageResource(R.drawable.powerpoint);
+                break;
+            case FileUtils.FILE_PDF:
+                holder.fileIcon.setImageResource(R.drawable.pdf);
+                break;
             case FileUtils.FILE_OTHER:
             default:
-                holder.fileIcon.setImageResource(item.getIcon());
+                holder.fileIcon.setImageResource(R.drawable.unknown);
                 break;
         }
     }

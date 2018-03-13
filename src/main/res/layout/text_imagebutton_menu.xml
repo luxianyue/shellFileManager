@@ -14,7 +14,8 @@
         android:paddingLeft="15dp"
         android:text="@string/save_edit"
         android:textSize="@dimen/floor_menu_front_size"
-        android:textColor="#ffffff" />
+        android:enabled="false"
+        android:textColor="@color/per_setfont_color_notable" />
 
     <View
         android:layout_width="match_parent"

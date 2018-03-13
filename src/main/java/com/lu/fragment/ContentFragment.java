@@ -28,19 +28,22 @@ import com.alibaba.fastjson.JSONObject;
 import com.lu.App;
 import com.lu.activity.TextActivity;
 import com.lu.adapter.FileListAdapter;
+import com.lu.common.Common;
 import com.lu.filemanager2.MainActivity;
 import com.lu.filemanager2.R;
+import com.lu.model.TempItem;
 import com.lu.model.FileItem;
-import com.lu.model.Item;
 import com.lu.model.Path;
 import com.lu.utils.FileUtils;
+import com.lu.utils.PermissionUtils;
 import com.lu.utils.SharePreferenceUtils;
-import com.lu.utils.ShellUtil;
+import com.lu.utils.ShellUtils;
 import com.lu.utils.ToastUitls;
 import com.lu.view.DialogManager;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +56,7 @@ import java.util.Stack;
 public class ContentFragment extends Fragment implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private ListView mListView;
     private FileListAdapter mAdapter;
+    private List<FileItem> mItemList;
 
     private Stack<Path> mBackStack;
 
@@ -60,17 +64,14 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private TextView mTextViewPath;
 
-    private FileUtils mFileUtils;
-
     private boolean isShowToUser;
-
-    private boolean isFirstEnter;
 
     private TextView mPerSetFileName;
 
     private CheckBox mPerCheckBoxs[];
 
     private FileItem mLongSelFileItem;
+    private TempItem mErrorItem;
 
     private AlertDialog mItemLongClickDialog;
 
@@ -92,13 +93,22 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     private boolean isBackKey;
 
-    private Set<FileItem> mOperaItemSet;
-
     private String mFg = "-o";
 
     private Map<String, int[]> mPositionMap;
+    private Map<String, FileItem> mPerItemMap;
+    private Map<String, FileItem> mDelItemMap;
+
+    private Set<FileItem> mSelectFileItem;
 
     private int mUpdateIndex;
+
+    private int mReqRootFlag;
+    private static final int REQ_ROOT_OPEN_PERMISSION_SET_DIALOG = 1;
+    private static final int REQ_ROOT_OPEN_PERMISSION_SET_DIALOG2 = 2;
+    public static final int REQ_ROOT_MOUNT_RW = 3;
+    public static final int REQ_ROOT_MOUNT_DEL = 4;
+    public static final int REQ_ROOT_LOOKOREDIT_TEXT = 5;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -107,18 +117,17 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mBackStack = new Stack<>();
         }
 
-        if (mFileUtils == null) {
-            mFileUtils = FileUtils.get();
-        }
-
         if (mAdapter == null) {
             mAdapter = new FileListAdapter(getActivity());
+            mItemList = new ArrayList<>();
+            mAdapter.setList(mItemList);
         }
 
         mPositionMap = new HashMap<>();
+        mPerItemMap = new HashMap<>();
+        mDelItemMap = new HashMap<>();
 
         mExternalStoragePath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        isFirstEnter = true;
         String savePath = mInitDir;
         if (mInitDir == null) {
             String str[] = SharePreferenceUtils.getSavedFragmentState(mIndex);
@@ -137,6 +146,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         int array[] = {SharePreferenceUtils.getListViewFirstPos(mIndex), SharePreferenceUtils.getListViewTop(mIndex)};
         mPositionMap.put(mCurrentPath.getPath(), array);
         FileUtils.userSortMode = SharePreferenceUtils.getFileSortMode();
+        FileUtils.get().addLoadListener(mIndex, loadFileListener);
+        FileUtils.get().addCommonListener(mIndex, onCommonListener);
+
 
     }
 
@@ -172,19 +184,25 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        getView().setVisibility(isVisibleToUser ? View.VISIBLE : View.GONE);
+        //getView().setVisibility(isVisibleToUser ? View.VISIBLE : View.GONE);
         isShowToUser = isVisibleToUser;
-       if (isVisibleToUser && mFileUtils != null) {
-            mFileUtils.setOnLoadFileListener(loadFileListener);
-            if (mAdapter.getList() == null) {
-                mFileUtils.listAllFile(mCurrentPath.getPath());
-                //mFileUtils.listAllFile("/");
-                //mFileUtils.listAllFile("/");
-                //String str = "";
-                //FileUtils.checkString(str);
-                //mFileUtils.exeCommand(App.tools + " " + str);
-            }
+       if (isVisibleToUser) {
+           if (mItemList.size() == 0) {
+               listPathFile();
+           }
         }
+    }
+    
+    private void listPathFile(String path) {
+        mItemList.clear();
+        mAdapter.notifyDataSetChanged();
+        FileUtils.get().listAllFile(mIndex, path);
+    }
+
+    private void listPathFile() {
+        mItemList.clear();
+        mAdapter.notifyDataSetChanged();
+        FileUtils.get().listAllFile(mIndex, mCurrentPath.getPath());
     }
 
     /**
@@ -288,13 +306,13 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     public void createDir(String name) {
         String cpath = mCurrentPath.getPath();
         cpath = "/".equals(cpath) ? cpath : cpath + "/";
-        mFileUtils.createDir(cpath + name);
+        FileUtils.get().createDir(mIndex, cpath + name);
     }
 
     public void createFile(String name) {
         String cpath = mCurrentPath.getPath();
         cpath = "/".equals(cpath) ? cpath : cpath + "/";
-        mFileUtils.createFile(cpath + name);
+        FileUtils.get().createFile(mIndex, cpath + name);
     }
 
     public void rename(String oldN, String newN, int position) {
@@ -305,53 +323,63 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             return;
         }
         System.out.println("oldName-->" + oldN + "  -->" + newN);
-        mFileUtils.rename(oldN,cpath + newN);
+        FileUtils.get().rename(mIndex, oldN,cpath + newN);
     }
 
     public void copy(Set<FileItem> items) {
-        mOperaItemSet = items;
         String srcPath = "";
         for (FileItem item : items) {
             srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
         }
-        mFileUtils.copy(mCurrentPath.path(), srcPath);
+        FileUtils.get().copy(mIndex, mCurrentPath.getPath(), srcPath);
     }
 
     public void cut(Set<FileItem> items) {
-        mOperaItemSet = items;
         String srcPath = "";
         for (FileItem item : items) {
             srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
         }
-        mFileUtils.cut(mCurrentPath.path(), srcPath);
+        FileUtils.get().cut(mIndex, mCurrentPath.getPath(), srcPath);
         //cancelCheckedItem();
         //mFileUtils.listAllFile(mCurrentPath.getPath());
     }
 
     public void del(Set<FileItem> items) {
-        mOperaItemSet = items;
         String srcPath = "";
         for (FileItem item : items) {
+            mDelItemMap.put(item.getPath(), item);
             srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
         }
-        mFileUtils.del(srcPath);
+        FileUtils.get().del(mIndex,mCurrentPath.getPath(), srcPath);
         //cancelCheckedItem();
         //mFileUtils.listAllFile(mCurrentPath.getPath());
     }
 
-    public void chmod(Set<FileItem> set, String mode, String mfg) {
+    public void chmod(Set<FileItem> set) {
+        mPerItemMap.clear();
         String srcPath = "";
         for (FileItem item : set) {
+            mPerItemMap.put(item.getPath(), item);
             srcPath = srcPath + " " + FileUtils.getS(FileUtils.checkString(item.getPath()));
         }
-        mFileUtils.chmod(srcPath, mode, mfg);
+        String mode = "" + perFlagSet + owner + userGroup + other;
+        System.out.println("fragmet---------chmod---mfg-->" + mFg);
+        FileUtils.get().chmod(mIndex, srcPath, mode, mFg);
+    }
+
+    public void chmod(FileItem item) {
+        mPerItemMap.clear();
+        mPerItemMap.put(item.getPath(), item);
+        String mode = "" + perFlagSet + owner + userGroup + other;
+        System.out.println("fragmet---------chmod---mfg-->" + mFg);
+        FileUtils.get().chmod(mIndex, " " + FileUtils.getS(FileUtils.checkString(item.getPath())), mode, mFg);
     }
 
     public void sort(int whichSort) {
-        if (mAdapter.getList() == null || mAdapter.getList().size() <= 0) {
+        if (mItemList.size() <= 0) {
             return;
         }
-        mFileUtils.sortFileItem(mAdapter.getList(), whichSort);
+        FileUtils.get().sortFileItem(mItemList, whichSort);
         mAdapter.notifyDataSetChanged();
     }
 
@@ -372,7 +400,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     public void countDirSize(String path) {
-        mFileUtils.countDirSize(path);
+        FileUtils.get().countDirSize(mIndex, path);
     }
 
     @Override
@@ -401,10 +429,9 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         if (item.isFolder()) {
             //文件夹
             showCurrentPathOnTextView(path);
-            mAdapter.setList(null);
             int array[] = {mListView.getFirstVisiblePosition(), mListView.getChildAt(0).getTop()};
             mPositionMap.put(mCurrentPath.getPath(), array);
-            mFileUtils.listAllFile(path);
+            listPathFile(path);
             mCurrentPath = mBackStack.push(new Path(path, item.getName()));
             setTabTitle(item.getName());
         } else {
@@ -453,33 +480,38 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         return true;
     }
 
+    private Set<FileItem> getSelectFileItem() {
+        if (mSelectFileItem == null) {
+            mSelectFileItem = new HashSet<>();
+        }
+        mSelectFileItem.clear();
+        return mSelectFileItem;
+    }
+
+    public void preparePermissionSetDialog(boolean isMultiple) {
+        if (ShellUtils.get().isRoot()) {
+            showPermissionSetDialog(isMultiple);
+        } else {
+            mReqRootFlag = isMultiple ? REQ_ROOT_OPEN_PERMISSION_SET_DIALOG2 : REQ_ROOT_OPEN_PERMISSION_SET_DIALOG;
+            FileUtils.get().requestRoot(mIndex);
+            //mFileUtils.exeCommand("su\necho \"{\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\"per\\\",\\\"content\\\":\\\"$?\\\"}\"");
+        }
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.listview_item_longclick_permissionset:
-                showPermissionSetDialog();
-                if (ShellUtil.isGetRoot()) {
-                } else {
-                    //mFileUtils.exeCommand("su\necho \"{\\\"flag\\\":\\\"su\\\",\\\"fg\\\":\\\"per\\\",\\\"content\\\":\\\"$?\\\"}\"");
-                }
+                preparePermissionSetDialog(false);
                 break;
             case R.id.permission_cancel:
                 mPermissionSetDialog.dismiss();
                 break;
             case R.id.permission_confirm:
                 String oldMode = "" + mPermiss[0] + mPermiss[1] + mPermiss[2] + mPermiss[3];
-                String mode = "" + perFlagSet + owner + userGroup + other;
                 //System.out.println(oldMode + "--permission_confirm:" + perFlagSet + owner + userGroup + other);
                 mPermissionSetDialog.dismiss();
-                if (!mLongSelFileItem.isFolder()) {
-                    mFg = "-o";
-                }
-                if ("-o".equals(mFg) && mode.equals(oldMode)) {
-                    return;
-                }
-                //System.out.println("permission_confirm:--> " + mFg);
-                //DialogManager.get().getDefaultProgress(getActivity(), "", getString(R.string.working_per)).show();
-                mFileUtils.chmod(" " + FileUtils.getS(FileUtils.checkString(mLongSelFileItem.getPath())), mode, mFg);
+                chmod(mSelectFileItem);
                 break;
             case R.id.listview_item_longclick_property:
                 mItemLongClickDialog.dismiss();
@@ -517,12 +549,13 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
                 break;
             case R.id.listview_item_longclick_lookoredit:
                 mItemLongClickDialog.dismiss();
-                FileUtils.get().do_text(mLongSelFileItem.getPath(), App.tempFilePath, 'l');
+                FileUtils.get().do_text(mIndex, mLongSelFileItem.getPath(), App.tempFilePath, 'l');
                 break;
             case R.id.listview_item_longclick_openway:
                 //file open way
                 mItemLongClickDialog.dismiss();
                 Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.addCategory(Intent.CATEGORY_DEFAULT);
                 intent.setDataAndType(Uri.parse("file://" + mLongSelFileItem.getPath()), "*/*");
                 startActivity(intent);
                 break;
@@ -560,7 +593,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mCurrentPath = mBackStack.peek();
             showCurrentPathOnTextView(mCurrentPath.getPath());
             setTabTitle(mCurrentPath.getName());
-            mFileUtils.listAllFile(mCurrentPath.getPath());
+            listPathFile();
             return true;
         }
         return false;
@@ -573,24 +606,102 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         }
         mTextViewPath.setText(currentPath + "/");
     }
-    private FileUtils.OnLoadFileListener loadFileListener = new FileUtils.OnLoadFileListener() {
+
+    public void requestRoot(int reqFlag) {
+        mReqRootFlag = reqFlag;
+        FileUtils.get().requestRoot(mIndex);
+    }
+
+    private FileUtils.OnCommonListener onCommonListener = new Common() {
         @Override
-        public void onLoadComplete(List<FileItem> items) {
-            if (items == null) {
-                return;
+        public void onMountAction(boolean isCheck, boolean success) {
+            if (isCheck) {
+                String str[] = PermissionUtils.arrays;
+                System.out.println("fragment----------------->"+str[0] + "-->" + str[1] + "--->"+str[2] + "--->"+str[3]);
+                if (Boolean.parseBoolean(str[0])) {
+                    DialogManager.get().createTiPDialog(getActivity(), (MainActivity)getActivity()).show();
+                }
+            } else {
+                if (success) {
+                    ToastUitls.showLMsgAtCenter("挂载成功");
+                    if (mErrorItem != null) {
+                        switch (mErrorItem.flag) {
+                            case "nf":
+                                FileUtils.get().createFile(mIndex, mErrorItem.path);
+                                break;
+                            case "nd":
+                                FileUtils.get().createDir(mIndex, mErrorItem.path);
+                                break;
+                            case "del":
+                                FileUtils.get().del(mIndex, mCurrentPath.getPath(), mErrorItem.path);
+                                break;
+                        }
+                    }
+                } else {
+                    ToastUitls.showLMsgAtCenter("挂载失败");
+                }
+                System.out.println("------>fragment--onMountAction-->" + success);
             }
-            System.out.println("complete---file count--->" + items.size());
-            if (!"/".equals(mCurrentPath.getPath())) {
-                items.add(0, new FileItem(true));
-            }
-            mAdapter.setList(items);
-            int array[] = mPositionMap.get(mCurrentPath.getPath());
-            if (array != null)
-                mListView.setSelectionFromTop(array[0], array[1]);
         }
 
         @Override
-        public void onLoadComplete(String str) {
+        public void onRequestRoot(boolean success) {
+            System.out.println("contentFragment---------------onRequestRoot>" + success);
+            if (success) {
+                switch (mReqRootFlag) {
+                    case REQ_ROOT_OPEN_PERMISSION_SET_DIALOG:
+                        showPermissionSetDialog(false);
+                        break;
+                    case REQ_ROOT_OPEN_PERMISSION_SET_DIALOG2:
+                        showPermissionSetDialog(true);
+                        break;
+                    case REQ_ROOT_MOUNT_RW:
+                        FileUtils.get().mountRW(PermissionUtils.arrays[1],PermissionUtils.arrays[2],PermissionUtils.arrays[3], mIndex);
+                        break;
+                    case REQ_ROOT_MOUNT_DEL:
+                        FileUtils.get().del(mIndex, mCurrentPath.getPath(), mErrorItem.path);
+                        break;
+                    case REQ_ROOT_LOOKOREDIT_TEXT:
+                        //startTextActivity(mErrorItem.path);
+                        FileUtils.get().do_text(mIndex, mErrorItem.path, App.tempFilePath, 'l');
+                        break;
+                }
+            } else {
+                switch (mReqRootFlag) {
+                    case REQ_ROOT_OPEN_PERMISSION_SET_DIALOG:
+                    case REQ_ROOT_OPEN_PERMISSION_SET_DIALOG2:
+                        Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
+                        ((TextView)obj[1]).setText("此功能仅对已经取得root权限的设备有效，应用获取root权限失败。");
+                        ((AlertDialog)obj[0]).show();
+                        break;
+                }
+            }
+            mReqRootFlag = 0;
+        }
+    };
+
+    private FileUtils.OnLoadFileListener loadFileListener = new FileUtils.OnLoadFileListener() {
+        @Override
+        public void onLoadFileAction(FileItem item) {
+            if (mCurrentPath.getPath().equals(item.getCurPath())) {
+                if (item.isOver) {
+                    out : if (!"/".equals(mCurrentPath.getPath())) {
+                        if (mItemList.size() > 0 && mItemList.get(0).isUpper) {
+                            break out;
+                        }
+                        mItemList.add(0, new FileItem(true));
+                    }
+                    FileUtils.get().sortFileItem(mItemList, FileUtils.userSortMode);
+                    sort(FileUtils.userSortMode);
+                    mAdapter.notifyDataSetChanged();
+                    int array[] = mPositionMap.get(mCurrentPath.getPath());
+                    if (array != null) {
+                        mListView.setSelectionFromTop(array[0], array[1]);
+                    }
+                } else {
+                    mItemList.add(item);
+                }
+            }
         }
 
         @Override
@@ -604,7 +715,6 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             JSONObject jb = JSON.parseObject(str);
             if (jb.getBooleanValue("state")) {
                 ToastUitls.showSMsg("重命名成功");
-                //mFileUtils.listAllFile(mCurrentPath.getPath());
                 String path = jb.getString("path");
                 mAdapter.getList().get(mUpdateIndex).p = path;
                 mAdapter.getList().get(mUpdateIndex).n = path.substring(path.lastIndexOf("/") + 1);
@@ -616,15 +726,38 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
         @Override
         public void onCreateDirComplete(String str) {
-            JSONObject jb = JSON.parseObject(str);
-            if (jb.getBooleanValue("state")) {
+            TempItem item = JSON.parseObject(str, TempItem.class);
+            if (item.state) {
                 ToastUitls.showSMsg("文件夹创建成功");
-                mFileUtils.listAllFile(mCurrentPath.getPath());
+                FileItem fileItem = new FileItem();
+                fileItem.tp = item.tp;
+                fileItem.dt = item.dt;
+                fileItem.p = item.path;
+                fileItem.n = item.path.substring(item.path.lastIndexOf("/") + 1);
+                mAdapter.getList().add(fileItem);
+                sort(FileUtils.userSortMode);
             } else {
                 //ToastUitls.showSMsg("create dir fail:" + jb.getString("reason"));
+                if (item.error.toLowerCase().contains("permission denied")) {
+                    ToastUitls.showSMsg("权限不足，文件夹创建失败");
+                    mErrorItem = item;
+                    FileUtils.get().requestRoot(mIndex);
+                    return;
+                }
+                if (item.error.toLowerCase().contains("read-only file system")) {
+                    ToastUitls.showSMsg("文件系统为只读，文件夹创建失败");
+                    mErrorItem = item;
+                    FileUtils.get().checkMount(mIndex, item.path);
+                    return;
+                }
                 Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
-                if ("File exists".toLowerCase().contains(jb.getString("reason").toLowerCase())) {
-                    ((TextView)obj[1]).setText("该名称已存在，文件夹创建失败");
+                TextView tv = (TextView) obj[1];
+                tv.setText("");
+                if (item.error.toLowerCase().contains("file exists")) {
+                    tv.setText("该名称已存在，文件夹创建失败");
+                }
+                if ("".equals(tv.getText())) {
+                    tv.setText("未知错误，文件夹创建失败");
                 }
                 ((AlertDialog)obj[0]).show();
             }
@@ -633,111 +766,123 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         @Override
         public void onCreateFileComplete(String str) {
             System.out.println("onCreateFileComplete-->" + str);
-            JSONObject jb = JSON.parseObject(str);
-            if (jb.getBooleanValue("state")) {
+            TempItem item = JSON.parseObject(str, TempItem.class);
+            if (item.state) {
                 ToastUitls.showSMsg("文件创建成功");
-                mFileUtils.listAllFile(mCurrentPath.getPath());
+                FileItem fileItem = new FileItem();
+                fileItem.tp = item.tp;
+                fileItem.dt = item.dt;
+                fileItem.p = item.path;
+                fileItem.n = item.path.substring(item.path.lastIndexOf("/") + 1);
+                mAdapter.getList().add(fileItem);
+                FileUtils.get().sortFileItem(mAdapter.getList(), FileUtils.userSortMode);
+                mAdapter.notifyDataSetChanged();
             } else {
                 //ToastUitls.showSMsg("create file fail:" + jb.getString("reason"));
+                if (item.error.toLowerCase().contains("permission denied")) {
+                    ToastUitls.showSMsg("权限不足，文件创建失败");
+                    mErrorItem = item;
+                    FileUtils.get().requestRoot(mIndex);
+                    return;
+                }
+                if (item.error.toLowerCase().contains("read-only file system")) {
+                    ToastUitls.showSMsg("文件系统为只读，文件创建失败");
+                    mErrorItem = item;
+                    FileUtils.get().checkMount(mIndex, item.path);
+                    return;
+                }
                 Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
-                if ("File exists".toLowerCase().contains(jb.getString("reason").toLowerCase())) {
-                    ((TextView)obj[1]).setText("该名称已存在，文件创建失败");
+                TextView tv = (TextView)obj[1];
+                tv.setText("");
+                if (item.error.toLowerCase().contains("file exists")) {
+                    tv.setText("该名称已存在，文件创建失败");
+                }
+                if ("".equals(tv.getText())) {
+                    tv.setText("未知错误，文件创建失败");
                 }
                 ((AlertDialog)obj[0]).show();
             }
         }
 
-        Object progressObj[];
-        long totalSize;
-        long curenSize;
         @Override
-        public void onCpAction(String str) {
+        public void onCpComplete(String path) {
+            if (path.equals(mCurrentPath.getPath())) {
+                listPathFile();
+            }
+        }
 
-            //mAdapter.getList().add(mOperaItemSet.iterator().next());
-            //mOperaItemSet.remove(mOperaItemSet.iterator().next());
-            //mFileUtils.sortFileItem(mAdapter.getList(), SharePreferenceUtils.getFileSortMode());
-            //mAdapter.notifyDataSetChanged();
-            JSONObject cpJson = JSON.parseObject(str);
-            if (cpJson.getBooleanValue("isOver")) {
-                mFileUtils.listAllFile(mCurrentPath.getPath());
-                ToastUitls.showSMsg("文件复制完成");
+        @Override
+        public void onMvComplete(String path) {
+            if (path.equals(mCurrentPath.getPath())) {
+                listPathFile();
+            }
+        }
+
+        @Override
+        public void onDelAction(TempItem item) {
+            if (item.error != null) {
+                if (item.error.toLowerCase().contains("permission denied")) {
+                    ToastUitls.showSMsg("权限不足，文件删除失败");
+                    mErrorItem = item;
+                    mReqRootFlag = REQ_ROOT_MOUNT_DEL;
+                    FileUtils.get().requestRoot(mIndex);
+                }
+                if (item.error.toLowerCase().contains("read-only file system")) {
+                    ToastUitls.showSMsg("文件系统为只读，文件删除失败");
+                    mErrorItem = item;
+                    mReqRootFlag = REQ_ROOT_MOUNT_DEL;
+                    FileUtils.get().exeCommand("");
+                    FileUtils.get().checkMount(mIndex, item.path);
+                }
             } else {
-                /*if (progressObj == null) {
-                    progressObj = DialogManager.get().getProgressConfirmDialog(getActivity(), (MainActivity)getActivity());
+                if (mDelItemMap.containsKey(item.path)) {
+                    if (mAdapter.getList().contains(mDelItemMap.get(item.path))) {
+                        mAdapter.getList().remove(mDelItemMap.get(item.path));
+                        mAdapter.notifyDataSetChanged();
+                    }
+                    mDelItemMap.remove(item.path);
                 }
-                totalSize = cpJson.getLongValue("totalSize");
-                curenSize = cpJson.getLongValue("currentSize");
-                System.out.println("totalSize:" + totalSize + "  curenSize:" + curenSize);
-                if (totalSize > Integer.MAX_VALUE) {
-                    ((ProgressBar)progressObj[5]).setMax(100000000);
-                    ((ProgressBar)progressObj[5]).setProgress((int) (((float)curenSize / totalSize) * 100000000));
-                } else {
-                    ((ProgressBar)progressObj[5]).setMax((int) totalSize);
-                    ((ProgressBar)progressObj[5]).setProgress((int) curenSize);
-                }
-                ((TextView)progressObj[2]).setText(getString(R.string.total_size) + "：" + FileUtils.getFormatByte(totalSize));
-                ((TextView)progressObj[3]).setText(getString(R.string.copy_ed) + "：" + FileUtils.getFormatByte(curenSize));
-                ((TextView)progressObj[4]).setText(getString(R.string.copy_ing) + "：" + cpJson.getString("name"));
-                if (!((AlertDialog)progressObj[0]).isShowing()) {
-                    ((AlertDialog)progressObj[0]).show();
-                }*/
-            }
-        }
-
-        @Override
-        public void onMvAction(String str) {
-            Item item = JSON.parseObject(str, Item.class);
-            if (item.isOver) {
-                mFileUtils.listAllFile(mCurrentPath.getPath());
-                ToastUitls.showSMsg("文件移动完成");
-            }
-        }
-
-        @Override
-        public void onDelAction(String str) {
-            Item item = JSON.parseObject(str, Item.class);
-            if (item.isOver) {
-                for (FileItem fItem : mOperaItemSet) {
-                    mAdapter.getList().remove(fItem.position());
-                }
-                ToastUitls.showSMsg("文件删除完成");
-                mAdapter.notifyDataSetChanged();
             }
         }
 
         @Override
         public void onCHMAction(String str) {
             DialogManager.get().getDefaultProgress(getContext(), "", "").dismiss();
-            Item item = JSON.parseObject(str, Item.class);
-            String per = FileUtils.getPermissionByMode(item.mode);
-            if (item.state) {
-                mLongSelFileItem.tp = mLongSelFileItem.tp.substring(0, 2) + per;
-                mLongSelFileItem.tvPermission.setText(mLongSelFileItem.getPer());
-                System.out.println(mLongSelFileItem.tp.substring(0, 2));
+            TempItem item = JSON.parseObject(str, TempItem.class);
+            if (item.isOver) {
+                //ToastUitls.showSMsg("权限修改完成");
+                return;
+            }
+            if (item.error != null) {
+                if (item.error.toLowerCase().contains("read-only file system")) {
+                    ToastUitls.showSMsg("文件系统为只读，操作失败");
+                    FileUtils.get().checkMount(mIndex, item.path);
+                }
+            } else {
+                FileItem fItem = mPerItemMap.get(item.path);
+                if (fItem != null) {
+                    String per = FileUtils.getPermissionByMode(item.mode);
+                    fItem.tp = fItem.tp.substring(0, 2) + per;
+                    fItem.tvPermission.setText(fItem.getPer());
+                }
             }
             System.out.println("fragment-onCHMAction------>"+str);
         }
 
         @Override
         public void onTextAction(String str) {
-            Intent activityIntent = new Intent(getContext(), TextActivity.class);
-            activityIntent.putExtra("path", JSON.parseObject(str).getString("path"));
-            startActivity(activityIntent);
-        }
-
-        @Override
-        public void onReqGetRoot(Item item) {
-            System.out.println(item.fg + "--onReqGetRoot-->" + item.content);
-            switch (item.fg) {
-                case "per":
-                    if ("0".equals(item.content)) {
-                        showPermissionSetDialog();
-                    } else {
-                        Object obj[] = DialogManager.get().getMsgDialog(getActivity(), (MainActivity)getActivity());
-                        ((TextView)obj[1]).setText("此功能仅对已经取得root权限的设备有效，应用获取root权限失败。");
-                        ((AlertDialog)obj[0]).show();
-                    }
-                    break;
+            TempItem item = JSON.parseObject(str, TempItem.class);
+            if (item.error != null) {
+                if (item.error.toLowerCase().contains("permission denied")) {
+                    mErrorItem = item;
+                    mReqRootFlag = REQ_ROOT_LOOKOREDIT_TEXT;
+                    FileUtils.get().requestRoot(mIndex);
+                }
+            } else {
+                Intent activityIntent = new Intent(getContext(), TextActivity.class);
+                activityIntent.putExtra("index", mIndex);
+                activityIntent.putExtra("path", item.path);
+                startActivity(activityIntent);
             }
         }
 
@@ -747,14 +892,36 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
         }
     };
 
-    private void showPermissionSetDialog() {
-        mItemLongClickDialog.dismiss();
-        mPermiss = FileUtils.getFilePermissionNum(mLongSelFileItem.getPer());
+    private void showPermissionSetDialog(boolean isMultiple) {
+        if (mItemLongClickDialog != null && mItemLongClickDialog.isShowing()) {
+            mItemLongClickDialog.dismiss();
+        }
+        FileItem item = null;
+        if (isMultiple) {
+            getSelectFileItem().addAll(getCheckedItem());
+            cancelCheckedItem();
+            for (FileItem fileItem : mSelectFileItem) {
+                if (fileItem.isFolder()) {
+                    item = fileItem;
+                    break;
+                }
+            }
+            if (item == null) {
+                item = mSelectFileItem.iterator().next();
+            }
+            if (mSelectFileItem.size() == 1) {
+                isMultiple = false;
+            }
+        } else {
+            getSelectFileItem().add(mLongSelFileItem);
+            item = mLongSelFileItem;
+        }
+        mPermiss = FileUtils.getFilePermissionNum(item.getPer());
         Object objects[] = DialogManager.get().createPermissionSetDialog(getActivity(), this, this);
         CheckBox dirFilecheckBox = (CheckBox) objects[4];
         CheckBox onlyFilecheckBox = (CheckBox) objects[5];
         dirFilecheckBox.setChecked(false);
-        if (mLongSelFileItem.isFolder()) {
+        if (item.isFolder()) {
             dirFilecheckBox.setVisibility(View.VISIBLE);
             onlyFilecheckBox.setVisibility(View.VISIBLE);
         } else {
@@ -768,7 +935,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             mPerSetFileName = (TextView) objects[2];
             mPermissionOctalValueTextView = (TextView) objects[3];
             preparePerAndCheckBox();
-            mPerSetFileName.setText(mLongSelFileItem.getName());
+            mPerSetFileName.setText(isMultiple ? "权限设定" : item.getName());
             mPermissionSetDialog.show();
             WindowManager.LayoutParams params = mPermissionSetDialog.getWindow().getAttributes();
             params.width = width + (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 50f, getResources().getDisplayMetrics());
@@ -776,7 +943,7 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
             return;
         }
         preparePerAndCheckBox();
-        mPerSetFileName.setText(mLongSelFileItem.getName());
+        mPerSetFileName.setText(isMultiple ? "权限设定" : item.getName());
         mPermissionSetDialog.show();
     }
 
@@ -970,7 +1137,10 @@ public class ContentFragment extends Fragment implements AdapterView.OnItemClick
 
     @Override
     public void onDestroy() {
+        mItemList.clear();
+        FileUtils.get().getLoadListenerMap().remove(mIndex);
         super.onDestroy();
+
         System.out.println(mIndex + "fragment onDestroy");
     }
 }

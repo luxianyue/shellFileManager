@@ -11,10 +11,14 @@ import com.lu.utils.FileUtils;
  */
 
 public class FileItem {
+    //fragment index
+    public int id;
     //date and time
     public long dt;
     //link to
     public String lt;
+    //current path
+    public String lsp;
     //type and permission of file
     public String tp;
     //group of file
@@ -31,7 +35,8 @@ public class FileItem {
     public long ct;
 
     public String flag;
-    public String content;
+    public String error;
+    public boolean state;
     public boolean isOver;
 
     //文件类型
@@ -104,10 +109,6 @@ public class FileItem {
         return lt;
     }
 
-    public int getIcon() {
-        return isFolder() ? R.drawable.folder_blue : R.drawable.unknown;
-    }
-
     /**
      * 文件的大小
      */
@@ -124,6 +125,10 @@ public class FileItem {
      */
     public long lastModified() {
         return dt * 1000;
+    }
+
+    public String getCurPath() {
+        return lsp;
     }
 
     /**

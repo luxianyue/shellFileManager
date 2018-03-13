@@ -34,10 +34,6 @@ public class Path {
         return path;
     }
 
-    public String path() {
-       return FileUtils.checkString(path);
-    }
-
     public void setName(String name) {
         this.name = name;
     }

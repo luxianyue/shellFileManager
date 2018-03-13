@@ -1,32 +1,60 @@
 {
   "buildFiles": [
-    "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android-tools.mk"
+    "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android.mk"
   ],
   "cleanCommands": [
-    "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android-tools.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\lib clean"
+    "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\lib clean"
   ],
   "libraries": {
-    "tools-release-x86": {
-      "buildCommand": "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android-tools.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\lib E:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj/local/x86/tools",
+    "androidterm5-release-x86": {
+      "buildCommand": "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\lib E:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj/local/x86/libandroidterm5.so",
       "toolchain": "toolchain-x86",
       "abi": "x86",
-      "artifactName": "tools",
+      "artifactName": "androidterm5",
       "files": [
         {
-          "src": "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\tools.c",
-          "flags": "\"-gcc-toolchain\" \"D:/Local/Android/sdk/ndk-bundle/build//../toolchains/x86-4.9/prebuilt/windows-x86_64\" \"-target\" \"i686-none-linux-android\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fPIC\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-IE:/luxianyue/studio-work/shellFileManager/src/main/jni\" \"-DANDROID\" \"-D__ANDROID_API__\u003d14\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-mstackrealign\" \"--sysroot\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot\" \"-isystem\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot/usr/include/i686-linux-android\""
+          "src": "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\common.cpp",
+          "flags": "\"-gcc-toolchain\" \"D:/Local/Android/sdk/ndk-bundle/build//../toolchains/x86-4.9/prebuilt/windows-x86_64\" \"-target\" \"i686-none-linux-android\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fPIC\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-g\" \"-fno-exceptions\" \"-fno-rtti\" \"-O2\" \"-DNDEBUG\" \"-ID:/Local/Android/sdk/ndk-bundle/build//../sources/cxx-stl/system/include\" \"-IE:/luxianyue/studio-work/shellFileManager/src/main/jni\" \"-DANDROID\" \"-D__ANDROID_API__\u003d14\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-mstackrealign\" \"--sysroot\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot\" \"-isystem\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot/usr/include/i686-linux-android\""
+        },
+        {
+          "src": "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\fileCompat.cpp",
+          "flags": "\"-gcc-toolchain\" \"D:/Local/Android/sdk/ndk-bundle/build//../toolchains/x86-4.9/prebuilt/windows-x86_64\" \"-target\" \"i686-none-linux-android\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fPIC\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-g\" \"-fno-exceptions\" \"-fno-rtti\" \"-O2\" \"-DNDEBUG\" \"-ID:/Local/Android/sdk/ndk-bundle/build//../sources/cxx-stl/system/include\" \"-IE:/luxianyue/studio-work/shellFileManager/src/main/jni\" \"-DANDROID\" \"-D__ANDROID_API__\u003d14\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-mstackrealign\" \"--sysroot\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot\" \"-isystem\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot/usr/include/i686-linux-android\""
+        },
+        {
+          "src": "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\termExec.cpp",
+          "flags": "\"-gcc-toolchain\" \"D:/Local/Android/sdk/ndk-bundle/build//../toolchains/x86-4.9/prebuilt/windows-x86_64\" \"-target\" \"i686-none-linux-android\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fPIC\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-g\" \"-fno-exceptions\" \"-fno-rtti\" \"-O2\" \"-DNDEBUG\" \"-ID:/Local/Android/sdk/ndk-bundle/build//../sources/cxx-stl/system/include\" \"-IE:/luxianyue/studio-work/shellFileManager/src/main/jni\" \"-DANDROID\" \"-D__ANDROID_API__\u003d14\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-mstackrealign\" \"--sysroot\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot\" \"-isystem\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot/usr/include/i686-linux-android\""
         }
       ],
-      "output": "E:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\obj\\local\\x86\\tools"
+      "output": "E:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\obj\\local\\x86\\libandroidterm5.so"
+    },
+    "termexec2-release-x86": {
+      "buildCommand": "D:\\Local\\Android\\sdk\\ndk-bundle\\ndk-build.cmd NDK_PROJECT_PATH\u003dnull APP_BUILD_SCRIPT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\Android.mk APP_ABI\u003dx86 NDK_ALL_ABIS\u003dx86 NDK_DEBUG\u003d0 APP_PLATFORM\u003dandroid-14 NDK_OUT\u003dE:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj NDK_LIBS_OUT\u003dE:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\lib E:/luxianyue/studio-work/shellFileManager/build/intermediates/ndkBuild/release/obj/local/x86/libtermexec2.so",
+      "toolchain": "toolchain-x86",
+      "abi": "x86",
+      "artifactName": "termexec2",
+      "files": [
+        {
+          "src": "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\process.cpp",
+          "flags": "\"-gcc-toolchain\" \"D:/Local/Android/sdk/ndk-bundle/build//../toolchains/x86-4.9/prebuilt/windows-x86_64\" \"-target\" \"i686-none-linux-android\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fPIC\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-g\" \"-fno-exceptions\" \"-fno-rtti\" \"-O2\" \"-DNDEBUG\" \"-ID:/Local/Android/sdk/ndk-bundle/build//../sources/cxx-stl/system/include\" \"-IE:/luxianyue/studio-work/shellFileManager/src/main/jni\" \"-DANDROID\" \"-D__ANDROID_API__\u003d14\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-mstackrealign\" \"--sysroot\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot\" \"-isystem\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot/usr/include/i686-linux-android\""
+        },
+        {
+          "src": "E:\\luxianyue\\studio-work\\shellFileManager\\src\\main\\jni\\tools.c",
+          "flags": "\"-gcc-toolchain\" \"D:/Local/Android/sdk/ndk-bundle/build//../toolchains/x86-4.9/prebuilt/windows-x86_64\" \"-target\" \"i686-none-linux-android\" \"-ffunction-sections\" \"-funwind-tables\" \"-fstack-protector-strong\" \"-fPIC\" \"-Wno-invalid-command-line-argument\" \"-Wno-unused-command-line-argument\" \"-no-canonical-prefixes\" \"-g\" \"-O2\" \"-DNDEBUG\" \"-ID:/Local/Android/sdk/ndk-bundle/build//../sources/cxx-stl/system/include\" \"-IE:/luxianyue/studio-work/shellFileManager/src/main/jni\" \"-DANDROID\" \"-D__ANDROID_API__\u003d14\" \"-Wa,--noexecstack\" \"-Wformat\" \"-Werror\u003dformat-security\" \"-mstackrealign\" \"--sysroot\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot\" \"-isystem\" \"D:/Local/Android/sdk/ndk-bundle/build//../sysroot/usr/include/i686-linux-android\""
+        }
+      ],
+      "output": "E:\\luxianyue\\studio-work\\shellFileManager\\build\\intermediates\\ndkBuild\\release\\obj\\local\\x86\\libtermexec2.so"
     }
   },
   "toolchains": {
     "toolchain-x86": {
-      "cCompilerExecutable": "D:\\Local\\Android\\sdk\\ndk-bundle\\build\\..\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe"
+      "cCompilerExecutable": "D:\\Local\\Android\\sdk\\ndk-bundle\\build\\..\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "D:\\Local\\Android\\sdk\\ndk-bundle\\build\\..\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
     }
   },
   "cFileExtensions": [
     "c"
   ],
-  "cppFileExtensions": []
+  "cppFileExtensions": [
+    "cpp"
+  ]
 }

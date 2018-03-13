@@ -24,6 +24,7 @@ import com.lu.filemanager2.R;
 import com.lu.view.DialogManager;
 
 import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -78,6 +79,8 @@ public class VideoActivity extends BasedActivity implements View.OnClickListener
 
         mSdf = new SimpleDateFormat("mm:ss");
         mSdf2 = new SimpleDateFormat("HH:mm:ss");
+        mSdf.setTimeZone(TimeZone.getTimeZone("GMT+0:00"));
+        mSdf2.setTimeZone(TimeZone.getTimeZone("GMT+0:00"));
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
         mVideoView.setVideoPath(mVideoPath);
@@ -92,6 +95,7 @@ public class VideoActivity extends BasedActivity implements View.OnClickListener
         mPlayAndPauseBtn.setImageResource(R.drawable.ic_button_pause);
         mSeekBar.setMax(mp.getDuration());
         mTextViewTotalTime.setText(getStrTime(mp.getDuration()));
+        System.out.println("----->onPrepared--->" + mp.getDuration());
         scheduledExecutorService.scheduleAtFixedRate(mRunnable, 0, 1000, TimeUnit.MILLISECONDS);
         mp.setOnSeekCompleteListener(VideoActivity.this);
     }
@@ -110,6 +114,7 @@ public class VideoActivity extends BasedActivity implements View.OnClickListener
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        mp.reset();
         if (what == MediaPlayer.MEDIA_ERROR_UNKNOWN || what == MediaPlayer.MEDIA_ERROR_UNSUPPORTED) {
             Object obj[] = DialogManager.get().getMsgDialog(this, this);
             mSeekBar.setTag(obj[0]);
@@ -229,12 +234,14 @@ public class VideoActivity extends BasedActivity implements View.OnClickListener
         }
     };
 
+    private String strTime;
     private SimpleDateFormat mSdf, mSdf2;
     private String getStrTime(int totalTime) {
         if (totalTime < 3600000) {
             return mSdf.format(totalTime);
         }
-        return mSdf2.format(totalTime);
+        strTime = mSdf2.format(totalTime);
+        return strTime.charAt(0) == '0' ? strTime.substring(1) : strTime;
     }
 
 }

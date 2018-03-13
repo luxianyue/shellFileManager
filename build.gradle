@@ -42,7 +42,7 @@ android {
 
     externalNativeBuild {
         ndkBuild {
-            path 'src/main/jni/Android-tools.mk'
+            path 'src/main/jni/Android.mk'
         }
     }
 }
